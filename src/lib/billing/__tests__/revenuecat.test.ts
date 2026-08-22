@@ -14,6 +14,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   CustomerInfo,
   PurchasesOffering,
+  PurchasesOfferings,
   PurchasesPackage,
 } from '@revenuecat/purchases-capacitor';
 import { PACKAGE_TYPE } from '@revenuecat/purchases-capacitor';
@@ -87,6 +88,16 @@ function makeOffering(packages: PurchasesPackage[]): PurchasesOffering {
   } as PurchasesOffering;
 }
 
+function makeOfferings(
+  defaultOffering: PurchasesOffering | null,
+  current: PurchasesOffering | null = defaultOffering,
+): PurchasesOfferings {
+  return {
+    all: defaultOffering ? { default: defaultOffering } : {},
+    current,
+  } as PurchasesOfferings;
+}
+
 function makeCustomerInfo(hasEntitlement: boolean): CustomerInfo {
   return {
     entitlements: {
@@ -150,7 +161,7 @@ describe('SN-W01 V1 · plantyper', () => {
     // hvis oppslaget faktisk sjekker packageType, treffer det. Hvis noen
     // fremtidig endring legger til en 'quarterly'-oppføring, må testen
     // her oppdateres eksplisitt.
-    purchasesMock.getOfferings.mockResolvedValue({ current: offering });
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(offering));
     purchasesMock.purchasePackage.mockImplementation((arg) => {
       captured.push((arg as { aPackage: PurchasesPackage }).aPackage.identifier);
       return Promise.resolve({ customerInfo: makeCustomerInfo(true) });
@@ -164,12 +175,47 @@ describe('SN-W01 V1 · plantyper', () => {
 // ─── V2 · Plantype-lookup via PACKAGE_TYPE, ikke Apple-produkt-ID ─────────
 
 describe('SN-W01 V2 · plantype-lookup', () => {
+  it('getOfferings velger offering-id "default" selv når current peker på et annet tilbud', async () => {
+    const { getOfferings } = await bootInitialized();
+    const defaultOffering = makeOffering([makePackage(PACKAGE_TYPE.ANNUAL)]);
+    const targetedOffering = {
+      ...makeOffering([makePackage(PACKAGE_TYPE.MONTHLY)]),
+      identifier: 'targeted-promo',
+    } as PurchasesOffering;
+    purchasesMock.getOfferings.mockResolvedValue({
+      all: { default: defaultOffering, 'targeted-promo': targetedOffering },
+      current: targetedOffering,
+    } satisfies PurchasesOfferings);
+
+    await expect(getOfferings()).resolves.toBe(defaultOffering);
+  });
+
+  it('getOfferings avviser et vilkårlig current-tilbud når "default" mangler', async () => {
+    const { getOfferings } = await bootInitialized();
+    const targetedOffering = {
+      ...makeOffering([makePackage(PACKAGE_TYPE.ANNUAL)]),
+      identifier: 'targeted-promo',
+    } as PurchasesOffering;
+    purchasesMock.getOfferings.mockResolvedValue({
+      all: { 'targeted-promo': targetedOffering },
+      current: targetedOffering,
+    } satisfies PurchasesOfferings);
+
+    await expect(getOfferings()).resolves.toBeNull();
+  });
+
+  it('kontrakten navngir premium-entitlement og default-offering eksplisitt', async () => {
+    const mod = await importFresh();
+    expect(mod.REVENUECAT_ENTITLEMENT_ID).toBe('premium');
+    expect(mod.REVENUECAT_OFFERING_ID).toBe('default');
+  });
+
   it('purchasePlan("yearly") velger pakken med PACKAGE_TYPE.ANNUAL — ikke etter produktnavn', async () => {
     const { purchasePlan } = await bootInitialized();
     const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL, 'default-annual');
     const monthlyPkg = makePackage(PACKAGE_TYPE.MONTHLY, 'default-monthly');
     const offering = makeOffering([annualPkg, monthlyPkg]);
-    purchasesMock.getOfferings.mockResolvedValue({ current: offering });
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(offering));
     purchasesMock.purchasePackage.mockResolvedValue({
       customerInfo: makeCustomerInfo(true),
     });
@@ -184,7 +230,7 @@ describe('SN-W01 V2 · plantype-lookup', () => {
     const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL, 'default-annual');
     const monthlyPkg = makePackage(PACKAGE_TYPE.MONTHLY, 'default-monthly');
     const offering = makeOffering([annualPkg, monthlyPkg]);
-    purchasesMock.getOfferings.mockResolvedValue({ current: offering });
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(offering));
     purchasesMock.purchasePackage.mockResolvedValue({
       customerInfo: makeCustomerInfo(true),
     });
@@ -207,7 +253,7 @@ describe('SN-W01 V2 · plantype-lookup', () => {
       presentedOfferingContext: {} as PurchasesPackage['presentedOfferingContext'],
     } as PurchasesPackage;
     const offering = makeOffering([wrongLookalike]);
-    purchasesMock.getOfferings.mockResolvedValue({ current: offering });
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(offering));
 
     const result = await purchasePlan('yearly');
     expect(result.success).toBe(false);
@@ -223,7 +269,7 @@ describe('SN-W01 V2 · plantype-lookup', () => {
 describe('SN-W01 V5 · ingen stille feil', () => {
   it('avslag har ALLTID en reason og en brukervendt message (aldri bare "success: false")', async () => {
     const { purchasePlan } = await bootInitialized();
-    purchasesMock.getOfferings.mockResolvedValue({ current: null });
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(null));
     const result = await purchasePlan('yearly');
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -246,7 +292,7 @@ describe('SN-W01 V5 · ingen stille feil', () => {
 
   it('reason "no_offering": når RevenueCat ikke har et aktivt tilbud', async () => {
     const { purchasePlan } = await bootInitialized();
-    purchasesMock.getOfferings.mockResolvedValue({ current: null });
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(null));
     const result = await purchasePlan('yearly');
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -257,7 +303,7 @@ describe('SN-W01 V5 · ingen stille feil', () => {
   it('reason "plan_unavailable": tilbudet mangler den etterspurte plantypen', async () => {
     const { purchasePlan } = await bootInitialized();
     const monthlyOnly = makeOffering([makePackage(PACKAGE_TYPE.MONTHLY)]);
-    purchasesMock.getOfferings.mockResolvedValue({ current: monthlyOnly });
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(monthlyOnly));
     const result = await purchasePlan('yearly');
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -268,9 +314,7 @@ describe('SN-W01 V5 · ingen stille feil', () => {
   it('reason "no_entitlement": kjøp fullført men Premium ble ikke aktivert', async () => {
     const { purchasePlan } = await bootInitialized();
     const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL);
-    purchasesMock.getOfferings.mockResolvedValue({
-      current: makeOffering([annualPkg]),
-    });
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
     purchasesMock.purchasePackage.mockResolvedValue({
       customerInfo: makeCustomerInfo(false),
     });
@@ -284,9 +328,7 @@ describe('SN-W01 V5 · ingen stille feil', () => {
   it('reason "user_cancelled": bruker avbrøt kjøpsflyten', async () => {
     const { purchasePlan } = await bootInitialized();
     const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL);
-    purchasesMock.getOfferings.mockResolvedValue({
-      current: makeOffering([annualPkg]),
-    });
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
     purchasesMock.purchasePackage.mockRejectedValue({ userCancelled: true });
     const result = await purchasePlan('yearly');
     expect(result.success).toBe(false);
@@ -298,9 +340,7 @@ describe('SN-W01 V5 · ingen stille feil', () => {
   it('reason "store_error": andre feil fra StoreKit/RevenueCat', async () => {
     const { purchasePlan } = await bootInitialized();
     const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL);
-    purchasesMock.getOfferings.mockResolvedValue({
-      current: makeOffering([annualPkg]),
-    });
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
     purchasesMock.purchasePackage.mockRejectedValue(new Error('nettverksfeil'));
     const result = await purchasePlan('yearly');
     expect(result.success).toBe(false);
@@ -314,7 +354,7 @@ describe('SN-W01 V5 · ingen stille feil', () => {
     try {
       const { purchasePlan } = await bootInitialized();
       // no_offering
-      purchasesMock.getOfferings.mockResolvedValue({ current: null });
+      purchasesMock.getOfferings.mockResolvedValue(makeOfferings(null));
       await purchasePlan('yearly');
       expect(consoleErrSpy).toHaveBeenCalled();
       const noOfferingMessages = consoleErrSpy.mock.calls.map((c) => String(c[0]));
@@ -323,9 +363,7 @@ describe('SN-W01 V5 · ingen stille feil', () => {
       // user_cancelled skal IKKE logge feil
       consoleErrSpy.mockClear();
       const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL);
-      purchasesMock.getOfferings.mockResolvedValue({
-        current: makeOffering([annualPkg]),
-      });
+      purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
       purchasesMock.purchasePackage.mockRejectedValue({ userCancelled: true });
       await purchasePlan('yearly');
       expect(consoleErrSpy).not.toHaveBeenCalled();
@@ -342,9 +380,7 @@ describe('SN-W01 suksess-banen', () => {
     const { purchasePlan } = await bootInitialized();
     const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL);
     const info = makeCustomerInfo(true);
-    purchasesMock.getOfferings.mockResolvedValue({
-      current: makeOffering([annualPkg]),
-    });
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
     purchasesMock.purchasePackage.mockResolvedValue({ customerInfo: info });
     const result = await purchasePlan('yearly');
     expect(result.success).toBe(true);

@@ -22,7 +22,8 @@ import {
 } from '@revenuecat/purchases-capacitor';
 import { type PlanKey } from '../premium/products';
 
-const ENTITLEMENT_ID = 'premium';
+export const REVENUECAT_ENTITLEMENT_ID = 'premium';
+export const REVENUECAT_OFFERING_ID = 'default';
 
 const PUBLIC_KEY_IOS = import.meta.env.VITE_REVENUECAT_PUBLIC_KEY_IOS as string | undefined;
 const PUBLIC_KEY_ANDROID = import.meta.env.VITE_REVENUECAT_PUBLIC_KEY_ANDROID as string | undefined;
@@ -56,19 +57,19 @@ export async function checkPremium(): Promise<boolean> {
   if (!initialized || !Capacitor.isNativePlatform()) return false;
   try {
     const { customerInfo } = await Purchases.getCustomerInfo();
-    return Boolean(customerInfo.entitlements.active[ENTITLEMENT_ID]);
+    return Boolean(customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]);
   } catch (err) {
     console.error('[Babyora] checkPremium feilet', err);
     return false;
   }
 }
 
-/** Hent tilgjengelige tilbud (products fra App Store / Play). */
+/** Hent det kontraktsfestede standardtilbudet fra App Store / Play. */
 export async function getOfferings() {
   if (!initialized || !Capacitor.isNativePlatform()) return null;
   try {
-    const { current } = await Purchases.getOfferings();
-    return current ?? null;
+    const { all } = await Purchases.getOfferings();
+    return all[REVENUECAT_OFFERING_ID] ?? null;
   } catch (err) {
     console.error('[Babyora] getOfferings feilet', err);
     return null;
@@ -163,7 +164,7 @@ export async function purchasePlan(plan: PlanKey): Promise<PurchaseResult> {
     return fail('store_error');
   }
 
-  if (!customerInfo.entitlements.active[ENTITLEMENT_ID]) {
+  if (!customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]) {
     console.error(
       '[Babyora] purchasePlan: kjøp gjennomført, men entitlement mangler',
       customerInfo,
@@ -179,7 +180,7 @@ export async function restorePurchases(): Promise<boolean> {
   if (!initialized || !Capacitor.isNativePlatform()) return false;
   try {
     const { customerInfo } = await Purchases.restorePurchases();
-    return Boolean(customerInfo.entitlements.active[ENTITLEMENT_ID]);
+    return Boolean(customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]);
   } catch (err) {
     console.error('[Babyora] restorePurchases feilet', err);
     return false;

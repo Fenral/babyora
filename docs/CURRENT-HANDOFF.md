@@ -1,7 +1,23 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phases 0 and 1 are closed on `codex/phase-1/core-recommendation`. TASK-001 through TASK-020 are closed. TASK-006 was waived by owner, not passed. Phase 2 and TASK-021 are next.
+**Phase:** Product roadmap Phases 0 and 1 are closed. TASK-001 through TASK-020 are closed; TASK-006 was waived by owner, not passed. Phase 2 is active on `codex/phase-2/subscription-and-observability`. TASK-021 has passed its local contract and is waiting for owner-authenticated sandbox evidence.
+
+## 2026-08-22: TASK-021 local RevenueCat contract complete; sandbox gate open
+
+- The adapter now exports and consistently uses entitlement `premium` and
+  selects offering `default` from `offerings.all`; an unrelated targeted
+  `current` offering cannot replace it.
+- Purchases remain mapped only by RevenueCat package type: monthly and annual.
+  No component selects a hard-coded store product ID.
+- Focused adapter verification passed 17/17 tests, including missing-default
+  fail-closed behavior. Full verification passed ESLint, main/bare builds, and
+  217/217 test files with 3,316 passing and 1 todo. Record:
+  `docs/evidence/revenuecat-config.md`.
+- TASK-021 remains unchecked until an owner-authenticated native sandbox run
+  returns both required package types with localized prices. No credentials or
+  SDK-key values were inspected. **Next:** collect the four redacted evidence
+  points listed in the record, then close TASK-021 and start TASK-022.
 
 ## 2026-08-22: TASK-020 complete core magic moment E2E
 
