@@ -1,4 +1,4 @@
-import { defineConfig, mergeConfig } from 'vitest/config';
+import { configDefaults, defineConfig, mergeConfig } from 'vitest/config';
 import { resolve } from 'node:path';
 import viteConfig from './vite.config';
 
@@ -19,6 +19,11 @@ export default mergeConfig(
         '@data': resolve(__dirname, 'src/data'),
         '@hooks': resolve(__dirname, 'src/hooks'),
       },
+    },
+    test: {
+      // Nettleser-E2E er direktekjørte Playwright-programmer. Roadmapens
+      // `*.spec.ts`-navn skal derfor ikke gjøre dem til Vitest-suiter.
+      exclude: [...configDefaults.exclude, 'e2e/**'],
     },
   }),
 );

@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 19/56 tasks closed — 18 complete, 1 waived
+> **Roadmap status:** 20/56 tasks closed — 19 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -121,7 +121,7 @@
   Files: `src/lib/outfit/alternative-options.ts`, `src/lib/outfit/outfit-bundle-producer.ts`, `src/state/outfit-selection-store.ts`, `src/components/outfit/OutfitGarmentList.tsx`, `src/screens/__tests__/PaakledningScreen.result.test.tsx`, `docs/evidence/task-019-verification.md`
   Notes: Reject unsafe alternatives, preserve canonical order, and explain why a blocked preference lost to safety. Verify: hard-rule substitution fixtures cannot be bypassed through UI state.
 
-- [ ] **TASK-020** — Verify the complete core magic moment end to end.
+- [x] **TASK-020** — Verify the complete core magic moment end to end.
   Files: `e2e/core-recommendation.spec.ts`, `docs/evidence/phase-1-verification.md`
   Notes: Cover onboarding, manual/automatic location, all four activities, one denied permission, one weather failure, and one safety override. Verify: tests pass and the recorded returning-user path completes in under 5 seconds on the test device.
 

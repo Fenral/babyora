@@ -1,7 +1,25 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-019 are closed. TASK-006 was waived by owner, not passed. TASK-020 is next.
+**Phase:** Product roadmap Phases 0 and 1 are closed on `codex/phase-1/core-recommendation`. TASK-001 through TASK-020 are closed. TASK-006 was waived by owner, not passed. Phase 2 and TASK-021 are next.
+
+## 2026-08-22: TASK-020 complete core magic moment E2E
+
+- `e2e/core-recommendation.spec.ts` drives the production build at a 390×844
+  mobile viewport with reduced motion. It completes onboarding after denied
+  geolocation, selects a manual Trondheim home, and reaches a numbered result.
+- A separate consent flow grants automatic geolocation, reverse-geocodes
+  Tromsø, verifies weather uses the automatic coordinates, and confirms those
+  coordinates never enter persisted location state.
+- Outdoor play, stroller, carrier, and indoor sleep each reach a complete
+  canonical result. The 24 °C sleep case proves the safety finalizer replaces
+  2.5 TOG with 0.5 TOG. A 503 weather response exposes retry and no false
+  recommendation.
+- The final recorded cached returning-user path completed in **404 ms**, below
+  the 5,000 ms gate. Verification passed: core E2E 7/7, smoke E2E 2/2,
+  217/217 test files with 3,313 passing and 1 todo, full lint, typecheck, and
+  main+bare production build. Record: `docs/evidence/phase-1-verification.md`.
+  **Next:** create `phase-2/subscription-and-observability` and start TASK-021.
 
 ## 2026-08-22: TASK-019 safety-finalized garment substitution
 
