@@ -1,7 +1,25 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-015 are closed. TASK-006 was waived by owner, not passed. TASK-016 is next.
+**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-016 are closed. TASK-006 was waived by owner, not passed. TASK-017 is next.
+
+## 2026-08-22: TASK-016 versioned Motor 2.0 safety register
+
+- Motor 2.0 now resolves stable rule ID, severity, and source IDs from one
+  immutable `v2.1.0` register. All ten rules explicitly declare that UI,
+  preference, calibration, and feature flags cannot override them.
+- The source register uses precise AAP, NHS, Lullaby Trust, Red Nose Australia,
+  and NHTSA references. Exact Snudly temperature/time cutoffs remain visibly
+  identified as product policy; policy alone is rejected as evidence.
+- Rule-level NO, SE, and DK statuses are honestly `pending`. A typed production
+  assertion rejects every country until each selected V2 rule is externally
+  approved. This is separate from Norway's current contained-legacy gate.
+- Verification passed: 10 direct register tests, 116 focused tests, typecheck,
+  lint, 215/215 test files with 3,301 passing tests and 1 todo, main+bare build,
+  and E2E 2/2. Record: `docs/evidence/task-016-verification.md`.
+- No external clinical sign-off is claimed; the code now records and enforces
+  that missing gate. **Next:** TASK-017 implements the fast Home input-to-answer
+  interaction with all four explicit activity inputs and bounded engine errors.
 
 ## 2026-08-22: TASK-015 deterministic canonical engine
 

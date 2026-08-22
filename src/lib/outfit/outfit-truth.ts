@@ -154,6 +154,11 @@ const SAFETY_SOURCE = new Set<SafetySource>([
   'Pediatrics-Pram',
   'IHDI',
   'POLICY',
+  'AAP-HC-HEAT',
+  'AAP-HC-COLD',
+  'AAP-HC-CARSEAT',
+  'RN-AU-CARRIER',
+  'RN-AU-PRAM',
 ]);
 
 export class OutfitTruthInputError extends Error {

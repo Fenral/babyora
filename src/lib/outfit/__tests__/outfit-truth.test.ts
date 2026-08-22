@@ -46,6 +46,26 @@ const PROTOTYPE_PROPERTY_NAMES = [
 ] as const;
 
 describe('canonical outfit truth', () => {
+  it.each([
+    'AAP-HC-HEAT',
+    'AAP-HC-COLD',
+    'AAP-HC-CARSEAT',
+    'RN-AU-CARRIER',
+    'RN-AU-PRAM',
+  ] as const)('accepts registered Motor 2.0 safety source %s', (source) => {
+    const input = exactInput();
+    const finalizedRecommendation = structuredClone(recommend(input));
+    finalizedRecommendation.safetyFlags = [{
+      code: 'V2-SOURCE-CONTRACT',
+      message: 'Test',
+      sources: [source],
+      severity: 'MEDIUM',
+      category: 'sikkerhet',
+    }];
+
+    expect(() => build(input, finalizedRecommendation)).not.toThrow();
+  });
+
   it('projects canonical occurrences into the exact avatar resolver contract', () => {
     const input: RecommendInput = {
       weather: {

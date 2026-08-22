@@ -26,7 +26,9 @@ export type Severity = 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type SafetySource =
   | 'AAP-2022' | 'NHS' | 'LT-RT' | 'LT-TOG' | 'LT-PRAM'
   | 'RN-AU' | 'RN-WRAP' | 'CDC-NICHD' | 'AAP-HC'
-  | 'ASTM-2024' | 'NHTSA' | 'Pediatrics-Pram' | 'IHDI' | 'POLICY';
+  | 'ASTM-2024' | 'NHTSA' | 'Pediatrics-Pram' | 'IHDI' | 'POLICY'
+  | 'AAP-HC-HEAT' | 'AAP-HC-COLD' | 'AAP-HC-CARSEAT'
+  | 'RN-AU-CARRIER' | 'RN-AU-PRAM';
 
 export type SafetyFlag = {
   code: string;

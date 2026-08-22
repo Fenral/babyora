@@ -20,6 +20,21 @@ export { compareShadow, selectVisibleResult, type ShadowComparison, type ShadowS
 export { fingerprintV2, type FingerprintInputV2 } from './fingerprint.js';
 export { buildExplanations, explanationI18nKey } from './explanations.js';
 export { GARMENT_VARIANTS } from './catalog.js';
+export {
+  SAFETY_RULESET_VERSION,
+  SAFETY_RULE_IDS,
+  SAFETY_RULES,
+  SAFETY_SOURCES,
+  UnreviewedSafetyRulesError,
+  assertSafetyRulesApprovedForProduction,
+  buildSafetyFlag,
+  validateSafetyRuleRegistry,
+  type CountryRuleReviewStatus,
+  type SafetyRuleDefinition,
+  type SafetyRuleId,
+  type SafetySourceKind,
+  type SafetySourceRecord,
+} from './safety-rules.js';
 export type {
   AgeStage,
   ActivityRecommendInputV2,
