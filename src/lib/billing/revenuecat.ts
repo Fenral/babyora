@@ -78,6 +78,73 @@ export async function getOfferings() {
   }
 }
 
+export type StorePlanPrice = Readonly<{
+  price: number;
+  priceString: string;
+  pricePerMonthString: string | null;
+}>;
+
+export type StoreOfferSnapshot =
+  | { status: 'ready'; plans: Readonly<Record<PlanKey, StorePlanPrice>> }
+  | {
+      status: 'unavailable';
+      reason: 'not_configured' | 'no_offering' | 'packages_missing' | 'invalid_prices';
+      missingPlans: readonly PlanKey[];
+    }
+  | { status: 'error' };
+
+/** Henter en visningsklar, butikkautoritativ pris-snapshot for paywallen. */
+export async function getStoreOfferSnapshot(): Promise<StoreOfferSnapshot> {
+  if (!initialized || !Capacitor.isNativePlatform()) {
+    return { status: 'unavailable', reason: 'not_configured', missingPlans: [] };
+  }
+
+  try {
+    const offerings = await Purchases.getOfferings();
+    const offering = offerings.all[REVENUECAT_OFFERING_ID];
+    if (!offering) {
+      return { status: 'unavailable', reason: 'no_offering', missingPlans: [] };
+    }
+
+    const annual = offering.availablePackages.find(
+      (pkg) => pkg.packageType === PACKAGE_TYPE.ANNUAL,
+    );
+    const monthly = offering.availablePackages.find(
+      (pkg) => pkg.packageType === PACKAGE_TYPE.MONTHLY,
+    );
+    const missingPlans: PlanKey[] = [];
+    if (!annual) missingPlans.push('yearly');
+    if (!monthly) missingPlans.push('monthly');
+    if (missingPlans.length > 0 || !annual || !monthly) {
+      return { status: 'unavailable', reason: 'packages_missing', missingPlans };
+    }
+
+    const invalidPlans = ([['yearly', annual], ['monthly', monthly]] as const)
+      .filter(([, pkg]) => (
+        !Number.isFinite(pkg.product.price)
+        || pkg.product.price <= 0
+        || pkg.product.priceString.trim().length === 0
+      ))
+      .map(([plan]) => plan);
+    if (invalidPlans.length > 0) {
+      return { status: 'unavailable', reason: 'invalid_prices', missingPlans: invalidPlans };
+    }
+
+    const toPrice = (pkg: PurchasesPackage): StorePlanPrice => ({
+      price: pkg.product.price,
+      priceString: pkg.product.priceString.trim(),
+      pricePerMonthString: pkg.product.pricePerMonthString?.trim() || null,
+    });
+    return {
+      status: 'ready',
+      plans: { yearly: toPrice(annual), monthly: toPrice(monthly) },
+    };
+  } catch {
+    console.error('[Babyora] getStoreOfferSnapshot feilet');
+    return { status: 'error' };
+  }
+}
+
 /**
  * Alle kjøpsutfall har en diskriminerende status. Ikke-suksess får i tillegg
  * en typet grunn og en tekst PaywallDialog kan vise uten å tolke SDK-feil.

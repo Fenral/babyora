@@ -70,6 +70,24 @@ function makePackage(packageType: PACKAGE_TYPE, id = `pkg-${packageType}`): Purc
   } as PurchasesPackage;
 }
 
+function makePricedPackage(
+  packageType: PACKAGE_TYPE,
+  price: number,
+  priceString: string,
+  pricePerMonthString: string | null,
+): PurchasesPackage {
+  const pkg = makePackage(packageType);
+  return {
+    ...pkg,
+    product: {
+      ...pkg.product,
+      price,
+      priceString,
+      pricePerMonthString,
+    },
+  } as PurchasesPackage;
+}
+
 function makeOffering(packages: PurchasesPackage[]): PurchasesOffering {
   const annual = packages.find((p) => p.packageType === PACKAGE_TYPE.ANNUAL) ?? null;
   const monthly = packages.find((p) => p.packageType === PACKAGE_TYPE.MONTHLY) ?? null;
@@ -457,6 +475,74 @@ describe('TASK-022 · typed purchase contract', () => {
     purchasesMock.purchasePackage.mockResolvedValue({ customerInfo: makeCustomerInfo(true) });
     await expect(purchasePlan('yearly')).resolves.toMatchObject({ status: 'success' });
     expect(purchasesMock.purchasePackage).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('TASK-024 · store offer snapshot', () => {
+  it('returnerer begge påkrevde pakker med butikkens lokaliserte priser', async () => {
+    const { getStoreOfferSnapshot } = await bootInitialized();
+    const annual = makePricedPackage(PACKAGE_TYPE.ANNUAL, 299, '299,00 kr', '24,92 kr');
+    const monthly = makePricedPackage(PACKAGE_TYPE.MONTHLY, 49, '49,00 kr', '49,00 kr');
+    purchasesMock.getOfferings.mockResolvedValue(
+      makeOfferings(makeOffering([annual, monthly])),
+    );
+
+    await expect(getStoreOfferSnapshot()).resolves.toEqual({
+      status: 'ready',
+      plans: {
+        yearly: { price: 299, priceString: '299,00 kr', pricePerMonthString: '24,92 kr' },
+        monthly: { price: 49, priceString: '49,00 kr', pricePerMonthString: '49,00 kr' },
+      },
+    });
+  });
+
+  it('returnerer unavailable når default-offering mangler en påkrevd pakke', async () => {
+    const { getStoreOfferSnapshot } = await bootInitialized();
+    const monthly = makePricedPackage(PACKAGE_TYPE.MONTHLY, 49, '49,00 kr', '49,00 kr');
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([monthly])));
+
+    await expect(getStoreOfferSnapshot()).resolves.toMatchObject({
+      status: 'unavailable',
+      reason: 'packages_missing',
+      missingPlans: ['yearly'],
+    });
+  });
+
+  it('avviser tomme priser og bruker samme første pakke som kjøpsoppslaget', async () => {
+    const { getStoreOfferSnapshot } = await bootInitialized();
+    const firstAnnual = makePricedPackage(PACKAGE_TYPE.ANNUAL, 299, '299,00 kr', null);
+    const duplicateAnnual = makePricedPackage(PACKAGE_TYPE.ANNUAL, 999, '999,00 kr', null);
+    const invalidMonthly = makePricedPackage(PACKAGE_TYPE.MONTHLY, 49, '   ', '49,00 kr');
+    purchasesMock.getOfferings.mockResolvedValue(
+      makeOfferings(makeOffering([firstAnnual, duplicateAnnual, invalidMonthly])),
+    );
+
+    await expect(getStoreOfferSnapshot()).resolves.toMatchObject({
+      status: 'unavailable',
+      reason: 'invalid_prices',
+      missingPlans: ['monthly'],
+    });
+
+    const validMonthly = makePricedPackage(PACKAGE_TYPE.MONTHLY, 49, '49,00 kr', null);
+    purchasesMock.getOfferings.mockResolvedValue(
+      makeOfferings(makeOffering([firstAnnual, duplicateAnnual, validMonthly])),
+    );
+    await expect(getStoreOfferSnapshot()).resolves.toMatchObject({
+      status: 'ready',
+      plans: { yearly: { priceString: '299,00 kr' } },
+    });
+  });
+
+  it('returnerer error når RevenueCat-kallet feiler', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const { getStoreOfferSnapshot } = await bootInitialized();
+      purchasesMock.getOfferings.mockRejectedValue(new Error('offline'));
+
+      await expect(getStoreOfferSnapshot()).resolves.toMatchObject({ status: 'error' });
+    } finally {
+      consoleSpy.mockRestore();
+    }
   });
 });
 

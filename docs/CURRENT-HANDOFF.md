@@ -1,7 +1,23 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phases 0 and 1 are closed. Phase 2 is active on `codex/phase-2/subscription-and-observability`. TASK-021 waits for owner-authenticated sandbox evidence; owner authorized independent local work, and TASK-022–023 are complete.
+**Phase:** Product roadmap Phases 0 and 1 are closed. Phase 2 is active on `codex/phase-2/subscription-and-observability`. TASK-021 waits for owner-authenticated sandbox evidence; owner authorized independent local work, and TASK-022–024 are complete.
+
+## 2026-08-22: TASK-024 complete truthful store offers
+
+- The paywall reads the explicit RevenueCat default offering and renders the
+  store's localized monthly and annual price strings. Its display lookup and
+  purchase lookup use the same first matching monthly/annual package rule.
+- Loading, incomplete offering, invalid price, SDK error, live offer, and
+  explicit demo states are distinct. Outside exact `?seed=demo`, fallback
+  anchor prices are hidden and the purchase controls remain disabled.
+- Renewal and cancellation copy follows the selected live amount. A yearly
+  monthly-equivalent comparison appears only when the store supplies a
+  localized equivalent, so the UI does not invent misleading currency text.
+- Verification passed 61/61 focused tests, full lint/typecheck/build, 217/217
+  test files with 3,332 passing and 1 todo, and 4/4 browser purchase scenarios.
+  Record: `docs/evidence/task-024-verification.md`. **Next local task:**
+  TASK-025. TASK-021 remains open for owner sandbox evidence.
 
 ## 2026-08-22: TASK-023 complete first-value paywall gate
 

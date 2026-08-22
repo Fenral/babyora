@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 22/56 tasks closed — 21 complete, 1 waived
+> **Roadmap status:** 23/56 tasks closed — 22 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -151,7 +151,7 @@
   Files: `src/state/subscription.ts`, `src/components/PaywallDialog.tsx`, `src/state/subscription.test.ts`
   Notes: Persist first-value state safely and define the approved next value action/session that may open the paywall. Verify: a new user reads one full result before any paywall can appear.
 
-- [ ] **TASK-024** — Render truthful monthly and annual offers from the store.
+- [x] **TASK-024** — Render truthful monthly and annual offers from the store.
   Files: `src/components/PaywallDialog.tsx`, `src/components/PaywallDialog.test.tsx`
   Notes: Show localized live prices, renewal/cancellation copy, loading, missing-offering, error, and success states; anchor prices are never purchasable. Verify: tests cover two live packages and an unavailable offering.
 

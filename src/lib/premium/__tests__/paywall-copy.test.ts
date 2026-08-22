@@ -8,9 +8,13 @@ import {
   PAYWALL_VALUE_BULLETS,
   PLAN_ORDER,
   buildCapabilityPaywallCopy,
+  buildArmedCtaLabel,
   buildPlanAriaLabel,
+  buildPlanBreakdown,
+  buildPlanRowContent,
   computeYearlySavingsPercent,
   extractMonthlyEquivalent,
+  type LivePlanPrices,
 } from '../paywall-copy';
 
 describe('paywall-copy (P2 hard paywall) — copy-lint', () => {
@@ -37,6 +41,23 @@ describe('paywall-copy (P2 hard paywall) — copy-lint', () => {
 });
 
 describe('paywall-copy — hele-produktet-innhold (P2 hard paywall, PRODUCT.md 2026-07-31)', () => {
+  it('butikkens lokaliserte priser vinner i rad, CTA, aria og fornyelsesoversikt', () => {
+    const live: LivePlanPrices = {
+      yearly: { price: 299, priceString: 'SEK 299,00', pricePerMonthString: 'SEK 24,92' },
+      monthly: { price: 49, priceString: 'SEK 49,00', pricePerMonthString: 'SEK 49,00' },
+    };
+
+    expect(buildPlanRowContent('yearly', live)).toMatchObject({
+      sum: 'SEK 299,00',
+      note: 'SEK 24,92 per måned · spar 49 % mot månedsplan',
+    });
+    expect(buildPlanRowContent('monthly', live).sum).toBe('SEK 49,00');
+    expect(buildArmedCtaLabel('monthly', live)).toBe('Start gratis – deretter SEK 49,00/mnd');
+    expect(buildPlanAriaLabel('yearly', live)).toContain('SEK 299,00 per år');
+    expect(buildPlanBreakdown('yearly', Date.UTC(2026, 7, 22), live).renewalAmount)
+      .toBe('SEK 299,00');
+  });
+
   it('de tre låste verdi-bulletsene vises alltid, i låst rekkefølge', () => {
     const copy = buildCapabilityPaywallCopy();
     expect(copy.previewItems).toEqual([

@@ -23,6 +23,12 @@ import {
 
 export const PLAN_ORDER: ReadonlyArray<PlanKey> = ['yearly', 'monthly'];
 
+export type LivePlanPrices = Readonly<Record<PlanKey, Readonly<{
+  price: number;
+  priceString: string;
+  pricePerMonthString: string | null;
+}>>>;
+
 /** Visningsnavn i selve plan-raden. */
 export const PLAN_DISPLAY_NAME: Record<PlanKey, string> = {
   yearly: 'Årlig',
@@ -59,6 +65,14 @@ export const PAYWALL_COPY = {
    *  PaywallDialog.tsx faktisk bruker (resting/armert CTA, §8). */
   cta: 'Start 7 dager gratis',
   ctaPending: 'Behandler …',
+  offerLoading: 'Henter priser …',
+  offerUnavailableCta: 'Kjøp ikke tilgjengelig',
+  offerLoadingStatus: 'Henter lokale priser fra butikken …',
+  offerDemoStatus: 'Testmodus – eksempelprisene belastes ikke.',
+  offerUnavailable: 'Prisene er ikke tilgjengelige akkurat nå. Prøv igjen senere.',
+  offerError: 'Kunne ikke hente prisene fra butikken. Sjekk nettilkoblingen og prøv igjen.',
+  offerRowLoading: 'Henter butikkpris …',
+  offerRowFallback: 'Eksempelpris · ikke tilgjengelig for kjøp',
   /** v2 (§8): CTA hviler til et AKTIVT planvalg er gjort — ingen forhåndsvalgt plan. */
   ctaResting: 'Velg en plan for å starte gratis',
   /** v2: liten tekst-badge på Årlig sin rad ("Best verdi", IKKE en beregnet prosent-badge). */
@@ -144,22 +158,25 @@ export function buildCapabilityPaywallCopy(): CapabilityPaywallCopy {
 }
 
 /** Prosent spart på årlig vs. 12× månedlig — utledet, aldri hardkodet. */
-export function computeYearlySavingsPercent(): number {
-  const yearlyCost = PRODUCTS.yearly.anchorPriceNok;
-  const monthlyAnnualized = PRODUCTS.monthly.anchorPriceNok * 12;
+export function computeYearlySavingsPercent(live?: LivePlanPrices): number {
+  const yearlyCost = live?.yearly.price ?? PRODUCTS.yearly.anchorPriceNok;
+  const monthlyAnnualized = (live?.monthly.price ?? PRODUCTS.monthly.anchorPriceNok) * 12;
   if (monthlyAnnualized <= 0) return 0;
-  return Math.round((1 - yearlyCost / monthlyAnnualized) * 100);
+  return Math.max(0, Math.round((1 - yearlyCost / monthlyAnnualized) * 100));
 }
 
 /** Månedlig-ekvivalent («24,90») parset fra PRODUCTS.yearly.description. */
-export function extractMonthlyEquivalent(): string {
+export function extractMonthlyEquivalent(live?: LivePlanPrices): string {
+  if (live?.yearly.pricePerMonthString) return live.yearly.pricePerMonthString;
+  if (live) return '';
   const match = PRODUCTS.yearly.description?.match(/[\d,]+/);
   if (match) return match[0];
   return (PRODUCTS.yearly.anchorPriceNok / 12).toFixed(2).replace('.', ',');
 }
 
-export function formatPlanPrice(key: PlanKey): string {
+export function formatPlanPrice(key: PlanKey, live?: LivePlanPrices): string {
   const product = PRODUCTS[key];
+  if (live) return `${live[key].priceString}${product.periodLabel}`;
   return `${product.anchorPriceNok} kr${product.periodLabel}`;
 }
 
@@ -171,10 +188,20 @@ export function formatPlanPrice(key: PlanKey): string {
  * trialDays > 0) — aria-labelen sier derfor aldri at prøveperioden kun
  * gjelder årsplanen.
  */
-export function buildPlanAriaLabel(key: PlanKey): string {
+export function buildPlanAriaLabel(key: PlanKey, live?: LivePlanPrices): string {
   const product = PRODUCTS[key];
   const name = PLAN_ARIA_NAME[key];
   const trialSuffix = product.trialDays > 0 ? `, ${product.trialDays} dager gratis først` : '';
+  if (live) {
+    if (key === 'yearly') {
+      const monthlyEquivalent = extractMonthlyEquivalent(live);
+      const comparison = monthlyEquivalent
+        ? `, tilsvarer ${monthlyEquivalent} per måned, spar ${computeYearlySavingsPercent(live)} prosent`
+        : '';
+      return `${name}, ${live.yearly.priceString} per år${comparison}${trialSuffix}`;
+    }
+    return `${name}, ${live.monthly.priceString} per måned${trialSuffix}`;
+  }
   if (key === 'yearly') {
     const monthlyEq = extractMonthlyEquivalent();
     const savings = computeYearlySavingsPercent();
@@ -205,9 +232,15 @@ export type PlanRowContent = Readonly<{
  *    er en LÅST a11y-kontrakt og skal ikke endres).
  *  - monthly: «Fornyes månedlig» (statisk — ingen sammenligningstall å vise).
  */
-export function buildPlanNote(key: PlanKey): string {
+export function buildPlanNote(key: PlanKey, live?: LivePlanPrices): string {
   const product = PRODUCTS[key];
   if (key === 'yearly') {
+    if (live) {
+      const monthlyEquivalent = extractMonthlyEquivalent(live);
+      return monthlyEquivalent
+        ? `${monthlyEquivalent} per måned · spar ${computeYearlySavingsPercent(live)} % mot månedsplan`
+        : 'Fornyes årlig';
+    }
     const monthlyRounded = Math.round(product.anchorPriceNok / 12);
     return `${monthlyRounded} kr per måned · spar ${computeYearlySavingsPercent()} % mot månedsplan`;
   }
@@ -215,20 +248,20 @@ export function buildPlanNote(key: PlanKey): string {
 }
 
 /** Fullt plan-rad-innhold — PaywallDialog.tsx sin eneste kilde for hva som vises i en plan-rad. */
-export function buildPlanRowContent(key: PlanKey): PlanRowContent {
+export function buildPlanRowContent(key: PlanKey, live?: LivePlanPrices): PlanRowContent {
   const product = PRODUCTS[key];
   return {
     name: PLAN_DISPLAY_NAME[key],
     badge: key === 'yearly' ? PAYWALL_COPY.bestVerdiBadge : null,
-    note: buildPlanNote(key),
-    sum: `${product.anchorPriceNok} kr`,
+    note: buildPlanNote(key, live),
+    sum: live?.[key].priceString ?? `${product.anchorPriceNok} kr`,
     per: PLAN_PER_LABEL[key],
   };
 }
 
 /** Armert CTA («Start gratis – deretter 299 kr/år») — vises kun når en plan faktisk er valgt (§8: ingen forhåndsvalgt plan). */
-export function buildArmedCtaLabel(key: PlanKey): string {
-  return `Start gratis – deretter ${formatPlanPrice(key)}`;
+export function buildArmedCtaLabel(key: PlanKey, live?: LivePlanPrices): string {
+  return `Start gratis – deretter ${formatPlanPrice(key, live)}`;
 }
 
 const RENEWAL_CADENCE_LABEL: Record<PlanKey, string> = {
@@ -271,14 +304,18 @@ export type PlanBreakdown = Readonly<{
  * ved åpne-overgangen — samme "adjusting state" mønster som resten av
  * dialogen, se PaywallDialog.tsx) — denne funksjonen selv leser aldri klokka.
  */
-export function buildPlanBreakdown(key: PlanKey, fromMs: number): PlanBreakdown {
+export function buildPlanBreakdown(
+  key: PlanKey,
+  fromMs: number,
+  live?: LivePlanPrices,
+): PlanBreakdown {
   const product = PRODUCTS[key];
   const renewalDate = computeRenewalDate(fromMs, product.trialDays);
   return {
     todayLabel: 'I dag',
     todayAmount: '0 kr',
     renewalDateLabel: formatRenewalDateLabel(renewalDate),
-    renewalAmount: `${product.anchorPriceNok} kr`,
+    renewalAmount: live?.[key].priceString ?? `${product.anchorPriceNok} kr`,
     note: buildRenewalNote(key),
   };
 }

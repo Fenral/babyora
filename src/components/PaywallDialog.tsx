@@ -77,8 +77,10 @@ import { useNativeSettings } from '../hooks/useNativeSettings';
 import { track } from '../lib/analytics/track';
 import {
   isRevenueCatConfigured,
+  getStoreOfferSnapshot,
   purchasePlan,
   restorePurchases,
+  type StoreOfferSnapshot,
 } from '../lib/billing/revenuecat';
 import {
   type PaywallTrigger,
@@ -92,7 +94,10 @@ import {
   buildPlanAriaLabel,
   buildPlanBreakdown,
   buildPlanRowContent,
+  type LivePlanPrices,
 } from '../lib/premium/paywall-copy';
+
+type PaywallOfferState = StoreOfferSnapshot | { status: 'loading' } | { status: 'demo' };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Props — W2 bygger mot denne kontrakten. IKKE avvik.
@@ -729,6 +734,17 @@ export function PaywallDialog({
   const [pending, setPending] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const explicitDemoMode = typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('seed') === 'demo';
+  const demoPurchaseMode = explicitDemoMode
+    && (!Capacitor.isNativePlatform() || !isRevenueCatConfigured());
+  const [offerState, setOfferState] = useState<PaywallOfferState>(() =>
+    demoPurchaseMode ? { status: 'demo' } : { status: 'loading' },
+  );
+  const livePrices: LivePlanPrices | undefined = offerState.status === 'ready'
+    ? offerState.plans
+    : undefined;
+  const canPurchase = offerState.status === 'ready' || offerState.status === 'demo';
   // v2: "i dag" for fornyelses-breakdownen — fanget ved åpne-overgangen
   // (render-tids state-justering under, IKKE Date.now() lest inni JSX),
   // slik at «I dag / <dato+7 dager>» er stabil gjennom hele den åpne økten.
@@ -817,6 +833,7 @@ export function PaywallDialog({
       setPending(false);
       setStatusMessage('');
       setErrorMessage(null);
+      setOfferState(demoPurchaseMode ? { status: 'demo' } : { status: 'loading' });
       // `renewalBaseMs` ("i dag" i breakdownen) er BEVISST IKKE nullstilt
       // her — `Date.now()` er en impur funksjon (react-hooks/purity forbyr
       // å kalle den i render-kroppen, selv i en betinget render-tids
@@ -836,6 +853,31 @@ export function PaywallDialog({
     track({ type: 'paywall_viewed', trigger: trigger ?? 'generic' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    const loadOffers = async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      if (demoPurchaseMode) {
+        setOfferState({ status: 'demo' });
+        return;
+      }
+      if (!Capacitor.isNativePlatform() || !isRevenueCatConfigured()) {
+        setOfferState({ status: 'unavailable', reason: 'not_configured', missingPlans: [] });
+        return;
+      }
+
+      setOfferState({ status: 'loading' });
+      const snapshot = await getStoreOfferSnapshot();
+      if (!cancelled) setOfferState(snapshot);
+    };
+    void loadOffers();
+    return () => {
+      cancelled = true;
+    };
+  }, [demoPurchaseMode, open]);
 
   // Åpne/lukk det native <dialog>-elementet i takt med `open`. Fanger også
   // `renewalBaseMs` ("i dag" for fornyelses-breakdownen) her — SAMME effekt
@@ -906,14 +948,15 @@ export function PaywallDialog({
   // P9 (duel §3): «Prisplan velges» — selection, samme språk som andre valg.
   const handleSelectPlan = useCallback(
     (key: PlanKey) => {
+      if (!canPurchase) return;
       void fireSelection();
       setSelectedPlan(key);
     },
-    [],
+    [canPurchase],
   );
 
   const handlePurchase = useCallback(async () => {
-    if (pending || selectedPlan === null) return;
+    if (pending || selectedPlan === null || !canPurchase) return;
     const plan = selectedPlan;
     // P9 (duel §3): INGEN haptikk på selve kjøpsknapp-trykket (forbudt —
     // "kjøpsknapp-trykk" står eksplisitt i forbuds-listen). Suksess/feil
@@ -957,15 +1000,15 @@ export function PaywallDialog({
           void notifyError();
         }
       }
-    } catch (err) {
-      console.error('[Babyora] PaywallDialog purchase feilet', err);
+    } catch {
+      console.error('[Babyora] PaywallDialog purchase feilet');
       setStatusMessage('');
       setErrorMessage(PAYWALL_COPY.errorPurchaseException);
       void notifyError();
     } finally {
       setPending(false);
     }
-  }, [pending, selectedPlan, setPremium, scheduleAutoClose]);
+  }, [pending, selectedPlan, canPurchase, setPremium, scheduleAutoClose]);
 
   const handleRestore = useCallback(async () => {
     if (pending) return;
@@ -990,8 +1033,8 @@ export function PaywallDialog({
       } else {
         setStatusMessage(PAYWALL_COPY.statusNoRestore);
       }
-    } catch (err) {
-      console.error('[Babyora] PaywallDialog restore feilet', err);
+    } catch {
+      console.error('[Babyora] PaywallDialog restore feilet');
       setStatusMessage('');
       setErrorMessage(PAYWALL_COPY.errorRestoreException);
       void notifyError();
@@ -1010,13 +1053,29 @@ export function PaywallDialog({
     void handleRestore();
   };
 
-  const armed = selectedPlan !== null;
+  const armed = selectedPlan !== null && canPurchase;
   const ctaLabel = pending
     ? PAYWALL_COPY.ctaPending
+    : offerState.status === 'loading'
+      ? PAYWALL_COPY.offerLoading
+      : !canPurchase
+        ? PAYWALL_COPY.offerUnavailableCta
     : armed
-      ? buildArmedCtaLabel(selectedPlan)
+      ? buildArmedCtaLabel(selectedPlan, livePrices)
       : PAYWALL_COPY.ctaResting;
-  const breakdown = selectedPlan !== null ? buildPlanBreakdown(selectedPlan, renewalBaseMs) : null;
+  const breakdown = selectedPlan !== null
+    ? buildPlanBreakdown(selectedPlan, renewalBaseMs, livePrices)
+    : null;
+  const offerStatusMessage = offerState.status === 'loading'
+    ? PAYWALL_COPY.offerLoadingStatus
+    : offerState.status === 'demo'
+      ? PAYWALL_COPY.offerDemoStatus
+      : '';
+  const offerErrorMessage = offerState.status === 'error'
+    ? PAYWALL_COPY.offerError
+    : offerState.status === 'unavailable'
+      ? PAYWALL_COPY.offerUnavailable
+      : null;
 
   return (
     <dialog
@@ -1067,8 +1126,16 @@ export function PaywallDialog({
             <fieldset style={fieldsetStyle} role="radiogroup" aria-label={PAYWALL_COPY.legend}>
               <legend style={srOnlyStyle}>{PAYWALL_COPY.legend}</legend>
               {PLAN_ORDER.map((key) => {
-                const row = buildPlanRowContent(key);
+                const sourceRow = buildPlanRowContent(key, livePrices);
+                const row = canPurchase
+                  ? sourceRow
+                  : { ...sourceRow, sum: '—', per: '' };
                 const selected = selectedPlan === key;
+                const rowNote = canPurchase
+                  ? row.note
+                  : offerState.status === 'loading'
+                    ? PAYWALL_COPY.offerRowLoading
+                    : PAYWALL_COPY.offerRowFallback;
                 return (
                   <label key={key} className="pw-plan-label">
                     <input
@@ -1078,7 +1145,8 @@ export function PaywallDialog({
                       value={key}
                       checked={selected}
                       onChange={() => handleSelectPlan(key)}
-                      aria-label={buildPlanAriaLabel(key)}
+                      aria-label={buildPlanAriaLabel(key, livePrices)}
+                      disabled={!canPurchase}
                     />
                     <span className="pw-plan-unit">
                       <span className="pw-plan-row">
@@ -1088,7 +1156,7 @@ export function PaywallDialog({
                             {row.name}
                             {row.badge && <span className="pw-p-badge">{row.badge}</span>}
                           </span>
-                          <span className="pw-p-note">{row.note}</span>
+                          <span className="pw-p-note">{rowNote}</span>
                         </span>
                         <span className="pw-p-price">
                           <span className="pw-p-sum">{row.sum}</span>
@@ -1124,11 +1192,11 @@ export function PaywallDialog({
           </p>
 
           <p role="status" style={statusRegionStyle}>
-            {statusMessage}
+            {statusMessage || offerStatusMessage}
           </p>
-          {errorMessage && (
+          {(errorMessage || offerErrorMessage) && (
             <p role="alert" style={errorRegionStyle}>
-              {errorMessage}
+              {errorMessage || offerErrorMessage}
             </p>
           )}
         </div>

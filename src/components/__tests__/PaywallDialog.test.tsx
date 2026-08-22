@@ -55,7 +55,7 @@ describe('PaywallDialog dismissable contract', () => {
     // starte gratis"), not the old plan-agnostic "Start 7 dager gratis" —
     // no plan is preselected in the non-dismissable hard-wall gate either.
     expect(html).toContain('Gjenopprett kjøp');
-    expect(html).toContain('Velg en plan for å starte gratis');
+    expect(html).toContain('Henter priser …');
   });
 });
 
@@ -67,7 +67,7 @@ describe('PaywallDialog v2 — no preselected plan, resting CTA (§8: "aktivt va
     expect(html).not.toContain('checked=""');
     expect(html).not.toContain('checked/>');
     expect(html).toContain('aria-disabled="true"');
-    expect(html).toContain('>Velg en plan for å starte gratis<');
+    expect(html).toContain('>Henter priser …<');
     // No breakdown block should render before any plan is selected (the
     // STYLE_CSS block legitimately DEFINES the .pw-breakdown class — check
     // for an actual element using it, not the bare class-name substring).
@@ -82,10 +82,11 @@ describe('PaywallDialog v2 — no preselected plan, resting CTA (§8: "aktivt va
     expect(html).toContain('>Årlig<span class="pw-p-badge">Best verdi</span>');
     expect(html).toContain('>Månedlig<');
     expect(html).not.toContain('>Kvartal<');
-    expect(html).toContain('25 kr per måned · spar 36 % mot månedsplan');
-    expect(html).toContain('Fornyes månedlig');
-    expect(html).toContain('<span class="pw-p-sum">299 kr</span><span class="pw-p-per">per år</span>');
-    expect(html).toContain('<span class="pw-p-sum">39 kr</span><span class="pw-p-per">per måned</span>');
+    expect(html.match(/Henter butikkpris …/gu)?.length).toBe(2);
+    expect(html.match(/disabled=""/gu)?.length).toBe(2);
+    expect(html.match(/<span class="pw-p-sum">—<\/span>/gu)?.length).toBe(2);
+    expect(html).not.toContain('<span class="pw-p-sum">299 kr</span>');
+    expect(html).not.toContain('<span class="pw-p-sum">39 kr</span>');
     expect(html).not.toContain('per kvartal');
   });
 
@@ -118,9 +119,9 @@ describe('PaywallDialog v2 — selected-state contract (CSS + source-text, no js
 
   it('the armed CTA and the breakdown block are wired from the selected plan (source-text — behaviour needs a real click)', () => {
     const contents = source(dialogPath);
-    expect(contents).toContain('buildArmedCtaLabel(selectedPlan)');
+    expect(contents).toContain('buildArmedCtaLabel(selectedPlan, livePrices)');
     expect(contents).toContain("selected && breakdown && (");
-    expect(contents).toContain('buildPlanBreakdown(selectedPlan, renewalBaseMs)');
+    expect(contents).toContain('buildPlanBreakdown(selectedPlan, renewalBaseMs, livePrices)');
   });
 
   it('Fraunces WONK-0 is used ONLY on the price sums, never elsewhere in the dialog', () => {
