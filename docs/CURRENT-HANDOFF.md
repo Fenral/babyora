@@ -1,7 +1,24 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is active on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-007 are closed. TASK-006 was waived by owner, not passed. TASK-008 is next.
+**Phase:** Product roadmap Phase 0 is active on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-008 are closed. TASK-006 was waived by owner, not passed. TASK-009 is next.
+
+## 2026-08-22: Runtime configuration inventory
+
+- Safe template: `.env.example`; full responsibility/placement map:
+  `docs/evidence/environment-inventory.md`; reproducible gate:
+  `tools/verify-environment-inventory.mjs`.
+- All 12 PRD variables have a reader/scope, sensitivity, environment, owner,
+  current evidence status, and later console gate. No local or console secret
+  value was read or recorded.
+- Known gaps are assigned forward: Vercel domain plus MET identity to TASK-013;
+  RevenueCat console mappings to TASK-021; PostHog before behavioral validation;
+  Sentry after scrubbed implementation; Supabase remains deferred.
+- Candidate `fb24caa` passed independent content/security review. Full gate:
+  210/210 test files, 3,168 tests, lint, main+bare build, and 2/2 E2E PASS.
+- Verification record: `docs/evidence/task-008-verification.md`.
+- **Next:** TASK-009 models Norway production, Sweden pilot, and Denmark pilot
+  release gates independently from the selected language.
 
 ## 2026-08-22: Provisional Snudly Ro v0.1
 

@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 7/56 tasks closed — 6 complete, 1 waived
+> **Roadmap status:** 8/56 tasks closed — 7 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -59,8 +59,8 @@
   Files: `docs/design.md`, `docs/evidence/design-test.md`
   Notes: Build a new v0.1 design system on the current live layout, information order, and four-tab structure; replace visual tokens and component styling only where supported by evidence. Document tokens and interaction rules, explicitly listing what remains open and how the direction may change. Verify: `docs/design.md` contains a version, decision date, evidence, preserved-layout contract, and reversible assumptions.
 
-- [ ] **TASK-008** — Inventory runtime configuration and owner-controlled console actions.
-  Files: `.env.example`, `docs/evidence/environment-inventory.md`
+- [x] **TASK-008** — Inventory runtime configuration and owner-controlled console actions.
+  Files: `.env.example`, `docs/evidence/environment-inventory.md`, `tools/verify-environment-inventory.mjs`
   Notes: List required Vercel, MET, RevenueCat, PostHog, Sentry, Apple, and deferred Supabase settings without real secrets. Verify: secret values are absent and every variable in PRD section 2 has an owner and environment.
 
 - [ ] **TASK-009** — Define release and country gates independently of locale.
