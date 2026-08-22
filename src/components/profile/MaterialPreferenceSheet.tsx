@@ -6,17 +6,15 @@
  * ::backdrop og ingen animasjon — seks av hullene primitiven lukker.
  * Opprinnelig: native <dialog> etter repoets PlaggDetailSheet-mønster. Apply-on-select
  * (lead-krav 5): valget lagres umiddelbart, ingen bekreft-knapp; ESC/
- * backdrop lukker uten videre semantikk. Analytics fires kun ved reell
- * verdiendring, uten gammel/ny verdi (spec §18). IKKE wiret inn i skjermer
- * ennå — konsumeres av R7/Familie-profilen.
+ * backdrop lukker uten videre semantikk. IKKE wiret inn i skjermer ennå —
+ * konsumeres av R7/Familie-profilen.
  *
  * A11y (lead-krav): initial fokus på VALGT radio (autoFocus), «anbefalt»
  * inngår i tilgjengelig navn via i18n-teksten, native radios i fieldset.
  */
 
-import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
+import { useCallback, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { track } from '../../lib/analytics/track.js';
 import type { MaterialPreference } from '../../lib/clothing-engine-v2/types.js';
 import { Button } from '../controls/Button';
 import { Sheet } from '../controls/Sheet';
@@ -40,29 +38,7 @@ const radioStyle: CSSProperties = { marginTop: 3, width: 20, height: 20, accentC
 
 export function MaterialPreferenceSheet({ open, value, onChange, onClose, triggerRef }: Props) {
   const { t } = useTranslation();
-  const initialValueRef = useRef(value);
-  const sporetRef = useRef(false);
-
-  useEffect(() => {
-    if (open) {
-      initialValueRef.current = value;
-      sporetRef.current = false;
-    }
-    // value med vilje utelatt: verdien skal fryses ved AAPNING, ikke folge endringer.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  /* Analytics kun ved reell endring, uten gammel/ny verdi (spec §18).
-     sporetRef gjor kallet idempotent: bade «Ferdig»-knappen og arkets egen
-     close-hendelse kaller lukk(), og uten vakten ville en enkelt lukking
-     rapportert to ganger. */
-  const lukk = useCallback(() => {
-    if (!sporetRef.current && initialValueRef.current !== value) {
-      sporetRef.current = true;
-      track({ type: 'material_preference_changed' });
-    }
-    onClose();
-  }, [value, onClose]);
+  const lukk = useCallback(() => onClose(), [onClose]);
 
   return (
     <Sheet

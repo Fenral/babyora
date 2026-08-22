@@ -1,58 +1,87 @@
-/**
- * Motor 2.0 Task 14 — typede V2-events og PII-sanitisering.
- * Design-spec §18: kun grove kategorier; aldri navn, fødselsdato, eksakt
- * alder, koordinater, by, konto-/husholdnings-ID eller preferanse-verdier.
- */
-import { describe, expect, expectTypeOf, it } from 'vitest';
-import type { EngineV2FallbackReason, TrackedEvent } from '../track.js';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import {
+  applyAnalyticsOptOut,
+  dispatchAnalyticsEvent,
+  prepareCapture,
+  type TrackedEvent,
+} from '../track.js';
 
 type EventOf<T extends TrackedEvent['type']> = Extract<TrackedEvent, { type: T }>;
 
-describe('Motor 2.0 analytics-kontrakter', () => {
-  it('engine_v2_shadow_compared bærer kun grove kategorier', () => {
-    expectTypeOf<EventOf<'engine_v2_shadow_compared'>>().toEqualTypeOf<{
-      type: 'engine_v2_shadow_compared';
-      same_fingerprint: boolean;
-      age_stage: 'newborn' | 'mobile_baby' | 'young_toddler';
-      situation: 'stroller_awake' | 'stroller_sleeping' | 'carrier' | 'awake_low_mobility' | 'active_play' | 'calm_outdoors' | 'mixed_day' | 'indoor_sleep';
-      temp_band: 'tropisk' | 'varm' | 'mild' | 'kjolig' | 'kald' | 'frost' | 'streng_frost' | 'ekstrem' | 'ekstrem_varme';
+function client() {
+  return {
+    init: vi.fn(), capture: vi.fn(), identify: vi.fn(),
+    opt_out_capturing: vi.fn(), opt_in_capturing: vi.fn(), reset: vi.fn(),
+  };
+}
+
+describe('TASK-027 · lukket funnel-schema', () => {
+  it('tillater bare dokumenterte eventnavn med eksakte grove properties', () => {
+    expect(prepareCapture({ type: 'app_opened', source: 'direct' })).toEqual({
+      event: 'app_opened', properties: { source: 'direct' },
+    });
+    expect(prepareCapture({ type: 'plan_selected', plan: 'yearly' })).toEqual({
+      event: 'plan_selected', properties: { plan: 'yearly' },
+    });
+    expect(prepareCapture({
+      type: 'onboarding_completed', locale: 'nb-NO', country: 'NO',
+    })).toEqual({
+      event: 'onboarding_completed', properties: { locale: 'nb-NO', country: 'NO' },
+    });
+    expect(prepareCapture({ type: 'unknown_event' })).toBeNull();
+  });
+
+  it.each([
+    ['name', 'Ada'], ['dob', '2025-01-01'], ['exact_age_months', 12],
+    ['city', 'Trondheim'], ['latitude', 63.4], ['longitude', 10.4],
+    ['garments', ['ullbody']], ['free_text', 'barnet mitt fryser'],
+    ['raw_safety_flags', ['cold_extreme']],
+  ])('avviser hele eventet når forbudt felt %s injiseres', (key, value) => {
+    expect(prepareCapture({ type: 'recommendation_rendered', [key]: value })).toBeNull();
+  });
+
+  it('avviser ugyldige payload-typer og fritekst i et ellers kjent felt', () => {
+    expect(prepareCapture({ type: 'plan_selected', plan: 'weekly' })).toBeNull();
+    expect(prepareCapture({ type: 'app_opened', source: { toString: () => 'direct' } })).toBeNull();
+    expect(prepareCapture({ type: 'paywall_viewed', trigger: 'Ada fra Trondheim' })).toBeNull();
+    expect(prepareCapture({ type: 'recommendation_failed', reason: { raw: 'boom' } })).toBeNull();
+  });
+
+  it('typen tillater ikke identitet eller fritekst', () => {
+    expectTypeOf<EventOf<'recommendation_rendered'>>().toEqualTypeOf<{
+      type: 'recommendation_rendered';
     }>();
-  });
-
-  it('material_preference_changed kan IKKE bære gammel/ny verdi (typenivå)', () => {
-    expectTypeOf<EventOf<'material_preference_changed'>>().toEqualTypeOf<{
-      type: 'material_preference_changed';
-    }>();
-    // @ts-expect-error — preferanseverdi er forbudt i eventet
-    const illegal: EventOf<'material_preference_changed'> = { type: 'material_preference_changed', preference: 'avoid_wool' };
-    void illegal;
-  });
-
-  it('eventene kan ikke bære eksakt alder eller identitet (typenivå)', () => {
-    // @ts-expect-error — ageMonths er forbudt (kun age_stage)
-    const withAge: EventOf<'situation_changed'> = { type: 'situation_changed', situation: 'active_play', age_stage: 'young_toddler', ageMonths: 18 };
-    void withAge;
-    // @ts-expect-error — childId er forbudt
-    const withId: EventOf<'engine_v2_fallback_used'> = { type: 'engine_v2_fallback_used', reason: 'flag_off', childId: 'x' };
-    void withId;
-  });
-
-  it('fallback-årsak er en lukket, grov enum', () => {
-    expectTypeOf<EngineV2FallbackReason>().toEqualTypeOf<'flag_off' | 'engine_error' | 'shadow_disagreement'>();
+    // @ts-expect-error exact age is forbidden
+    const exactAge: EventOf<'recommendation_rendered'> = { type: 'recommendation_rendered', exact_age_months: 12 };
+    // @ts-expect-error arbitrary paywall trigger is forbidden
+    const freeText: EventOf<'paywall_viewed'> = { type: 'paywall_viewed', trigger: 'custom text' };
+    void exactAge;
+    void freeText;
   });
 });
 
-describe('Motor 2.0 analytics-sanitisering (runtime)', () => {
-  it('FORBIDDEN_KEYS-regexen i track.ts fanger identitetsnøkler', async () => {
-    // Sanitize er privat — verifiser regex-adferden via kildekode-kontrakt:
-    // nøkler som matcher (name|dob|birth|email|phone|lat|lon|location|child_id)
-    // skal aldri overleve. Vi tester mønsteret direkte.
-    const FORBIDDEN = /(name|dob|birth|email|phone|lat|lon|location|child_?id)/i;
-    for (const key of ['name', 'childName', 'dob', 'birthDate', 'email', 'phone', 'lat', 'lon', 'location', 'child_id', 'childId']) {
-      expect(FORBIDDEN.test(key), key).toBe(true);
-    }
-    for (const key of ['same_fingerprint', 'age_stage', 'situation', 'temp_band', 'material', 'role', 'reason']) {
-      expect(FORBIDDEN.test(key), key).toBe(false);
-    }
+describe('TASK-027 · opt-out', () => {
+  it('stopper fremtidig capture selv når klienten er initialisert', () => {
+    const posthog = client();
+    expect(dispatchAnalyticsEvent(posthog, true, {
+      type: 'app_opened', source: 'direct',
+    })).toBe(false);
+    expect(posthog.capture).not.toHaveBeenCalled();
+  });
+
+  it('fjerner lokal analyse-ID og nullstiller SDK-identitet', () => {
+    const values = new Map<string, string>([['babyora:analytics:distinct_id', 'anon-123']]);
+    const storage = {
+      setItem: (key: string, value: string) => void values.set(key, value),
+      removeItem: (key: string) => void values.delete(key),
+    };
+    const posthog = client();
+
+    applyAnalyticsOptOut(storage, posthog, true);
+
+    expect(values.get('babyora:analytics:distinct_id')).toBeUndefined();
+    expect(values.get('babyora:analytics:opt_out')).toBe('1');
+    expect(posthog.opt_out_capturing).toHaveBeenCalledOnce();
+    expect(posthog.reset).toHaveBeenCalledOnce();
   });
 });

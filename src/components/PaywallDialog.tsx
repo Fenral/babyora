@@ -951,6 +951,7 @@ export function PaywallDialog({
       if (!canPurchase) return;
       void fireSelection();
       setSelectedPlan(key);
+      track({ type: 'plan_selected', plan: key });
     },
     [canPurchase],
   );
@@ -970,8 +971,7 @@ export function PaywallDialog({
         // uten et ekte RevenueCat-oppsett.
         setPremium(true);
         setStatusMessage(PAYWALL_COPY.statusActivatedTestmode);
-        track({ type: 'paywall_converted', plan });
-        if (plan === 'yearly') track({ type: 'trial_started', plan });
+        track({ type: 'purchase_result', plan, status: 'success' });
         void notifySuccess();
         scheduleAutoClose();
         return;
@@ -980,11 +980,11 @@ export function PaywallDialog({
       if (result.status === 'success') {
         setPremium(true);
         setStatusMessage(PAYWALL_COPY.statusActivated);
-        track({ type: 'paywall_converted', plan });
-        if (plan === 'yearly') track({ type: 'trial_started', plan });
+        track({ type: 'purchase_result', plan, status: 'success' });
         void notifySuccess();
         scheduleAutoClose();
       } else {
+        track({ type: 'purchase_result', plan, status: result.status });
         // Eiervedtak V5: kj\u00f8p feiler aldri stille. Bruk den brukervendte
         // teksten fra `purchasePlan`. `user_cancelled` er ikke en feil vi
         // kjefter om — brukeren gjorde noe bevisst — s\u00e5 vi tilbakestiller
@@ -1003,6 +1003,7 @@ export function PaywallDialog({
     } catch {
       console.error('[Babyora] PaywallDialog purchase feilet');
       setStatusMessage('');
+      track({ type: 'purchase_result', plan, status: 'error' });
       setErrorMessage(PAYWALL_COPY.errorPurchaseException);
       void notifyError();
     } finally {
@@ -1019,6 +1020,7 @@ export function PaywallDialog({
     setStatusMessage(PAYWALL_COPY.statusRestoreChecking);
     try {
       if (!isRevenueCatConfigured() || !Capacitor.isNativePlatform()) {
+        track({ type: 'restore_result', status: 'unavailable' });
         setStatusMessage('');
         setErrorMessage(PAYWALL_COPY.errorRestoreDevOnly);
         void notifyError();
@@ -1026,13 +1028,16 @@ export function PaywallDialog({
       }
       const restored = await restorePurchases();
       if (restored.status === 'restored') {
+        track({ type: 'restore_result', status: 'restored' });
         setPremium(true);
         setStatusMessage(PAYWALL_COPY.statusActivated);
         void notifySuccess();
         scheduleAutoClose();
       } else if (restored.status === 'nothing-to-restore') {
+        track({ type: 'restore_result', status: 'nothing_to_restore' });
         setStatusMessage(PAYWALL_COPY.statusNoRestore);
       } else {
+        track({ type: 'restore_result', status: 'unavailable' });
         setStatusMessage('');
         setErrorMessage(PAYWALL_COPY.errorRestoreException);
         void notifyError();
@@ -1040,6 +1045,7 @@ export function PaywallDialog({
     } catch {
       console.error('[Babyora] PaywallDialog restore feilet');
       setStatusMessage('');
+      track({ type: 'restore_result', status: 'unavailable' });
       setErrorMessage(PAYWALL_COPY.errorRestoreException);
       void notifyError();
     } finally {

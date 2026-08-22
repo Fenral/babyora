@@ -190,7 +190,7 @@ describe('PaywallDialog v2 — behaviour preserved (entitlement/purchase/restore
   it('purchase/restore still update subscription-store and fire the same analytics events', () => {
     const contents = source(dialogPath);
     expect(contents).toContain('setPremium(true);');
-    expect(contents).toContain("track({ type: 'paywall_converted', plan });");
-    expect(contents).toContain("track({ type: 'trial_started', plan });");
+    expect(contents).toContain("track({ type: 'purchase_result', plan, status: 'success' });");
+    expect(contents).toContain("track({ type: 'restore_result', status: 'restored' });");
   });
 });

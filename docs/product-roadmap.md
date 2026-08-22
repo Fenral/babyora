@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 24/56 tasks closed — 23 complete, 1 waived
+> **Roadmap status:** 25/56 tasks closed — 24 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -163,7 +163,7 @@
   Files: `docs/evidence/store-pricing.md`, `src/config/products.ts`
   Notes: Record App Store Connect and RevenueCat evidence for live monthly/annual prices and trial; keep UI store-driven regardless of result. Verify: no conflicting purchasable price string remains in user-facing code.
 
-- [ ] **TASK-027** — Enforce a privacy-safe PostHog funnel schema.
+- [x] **TASK-027** — Enforce a privacy-safe PostHog funnel schema.
   Files: `src/lib/analytics/track.ts`, `src/lib/analytics/track.test.ts`, `docs/analytics-event-schema.md`
   Notes: Allow only approved events and coarse properties; drop names, DOB, exact age, city, coordinates, garments, free text, and raw safety flags. Verify: forbidden-property tests fail closed and opt-out stops capture.
 

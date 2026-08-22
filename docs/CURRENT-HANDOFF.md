@@ -1,7 +1,26 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phases 0 and 1 are closed. Phase 2 is active on `codex/phase-2/subscription-and-observability`. TASK-021 waits for owner-authenticated sandbox evidence; owner authorized independent local work, and TASK-022–025 are complete.
+**Phase:** Product roadmap Phases 0 and 1 are closed. Phase 2 is active on `codex/phase-2/subscription-and-observability`. TASK-021 and TASK-026 wait for owner-authenticated store evidence; owner authorized independent local work, and TASK-022–025 plus TASK-027 are complete.
+
+## 2026-08-22: TASK-027 complete privacy-safe analytics schema
+
+- PostHog now has one closed runtime funnel schema. Unknown events, extra keys,
+  arbitrary strings, objects, arrays, invalid categories, and forbidden child,
+  location, garment, free-text, or safety payloads reject the entire event.
+- Paywall tracking uses coarse plan selection, typed purchase outcome, and typed
+  restore outcome. The unused material-preference event was removed because it
+  is outside the agreed validation funnel. Trial events require an
+  authoritative provider result rather than inference from the selected plan.
+- Opt-out is enforced before initialization and every capture, removes the
+  anonymous local identifier, resets the SDK identity, and remains active in
+  memory if storage is blocked. Autocapture, page views, session recording, and
+  person profiles remain disabled.
+- Verification passed 32/32 focused tests, full lint/typecheck/build, 217/217
+  test files with 3,347 passing and 1 todo, and 4/4 browser purchase scenarios.
+  Schema: `docs/analytics-event-schema.md`. Record:
+  `docs/evidence/task-027-verification.md`. **Next local task:** TASK-028.
+
 
 ## 2026-08-22: TASK-025 complete subscription lifecycle
 
