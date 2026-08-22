@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 20/56 tasks closed — 19 complete, 1 waived
+> **Roadmap status:** 21/56 tasks closed — 20 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -143,7 +143,7 @@
   Files: `src/lib/billing/revenuecat.ts`, `docs/evidence/revenuecat-config.md`
   Notes: Confirm entitlement `premium`, offering `default`, and monthly/annual packages without hard-coded product IDs in components. Verify: configured sandbox offering returns both required package types.
 
-- [ ] **TASK-022** — Replace ambiguous billing outcomes with a typed purchase contract.
+- [x] **TASK-022** — Replace ambiguous billing outcomes with a typed purchase contract.
   Files: `src/lib/billing/revenuecat.ts`, `src/lib/billing/revenuecat.test.ts`
   Notes: Distinguish success, cancellation, pending, unavailable, entitlement-missing, and error; guard duplicate taps. Verify: adapter tests cover every outcome without real billing calls.
 

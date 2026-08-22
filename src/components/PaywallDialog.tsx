@@ -934,7 +934,7 @@ export function PaywallDialog({
         return;
       }
       const result = await purchasePlan(plan);
-      if (result.success) {
+      if (result.status === 'success') {
         setPremium(true);
         setStatusMessage(PAYWALL_COPY.statusActivated);
         track({ type: 'paywall_converted', plan });
@@ -947,8 +947,11 @@ export function PaywallDialog({
         // kjefter om — brukeren gjorde noe bevisst — s\u00e5 vi tilbakestiller
         // bare statuslinjen uten et rødt alert-panel.
         setStatusMessage('');
-        if (result.reason === 'user_cancelled') {
+        if (result.status === 'cancelled') {
           setErrorMessage(null);
+        } else if (result.status === 'pending') {
+          setErrorMessage(null);
+          setStatusMessage(result.message);
         } else {
           setErrorMessage(result.message);
           void notifyError();

@@ -17,7 +17,7 @@ import type {
   PurchasesOfferings,
   PurchasesPackage,
 } from '@revenuecat/purchases-capacitor';
-import { PACKAGE_TYPE } from '@revenuecat/purchases-capacitor';
+import { PACKAGE_TYPE, PURCHASES_ERROR_CODE } from '@revenuecat/purchases-capacitor';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────
 
@@ -167,7 +167,7 @@ describe('SN-W01 V1 · plantyper', () => {
       return Promise.resolve({ customerInfo: makeCustomerInfo(true) });
     });
     const result = await purchasePlan('yearly');
-    expect(result.success).toBe(true);
+    expect(result.status).toBe('success');
     expect(captured).toEqual(['probe']);
   });
 });
@@ -221,7 +221,7 @@ describe('SN-W01 V2 · plantype-lookup', () => {
     });
 
     const result = await purchasePlan('yearly');
-    expect(result.success).toBe(true);
+    expect(result.status).toBe('success');
     expect(purchasesMock.purchasePackage).toHaveBeenCalledWith({ aPackage: annualPkg });
   });
 
@@ -236,7 +236,7 @@ describe('SN-W01 V2 · plantype-lookup', () => {
     });
 
     const result = await purchasePlan('monthly');
-    expect(result.success).toBe(true);
+    expect(result.status).toBe('success');
     expect(purchasesMock.purchasePackage).toHaveBeenCalledWith({ aPackage: monthlyPkg });
   });
 
@@ -256,10 +256,7 @@ describe('SN-W01 V2 · plantype-lookup', () => {
     purchasesMock.getOfferings.mockResolvedValue(makeOfferings(offering));
 
     const result = await purchasePlan('yearly');
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.reason).toBe('plan_unavailable');
-    }
+    expect(result).toMatchObject({ status: 'unavailable', reason: 'plan_unavailable' });
     expect(purchasesMock.purchasePackage).not.toHaveBeenCalled();
   });
 });
@@ -267,12 +264,12 @@ describe('SN-W01 V2 · plantype-lookup', () => {
 // ─── V5 · Ingen stille feil ───────────────────────────────────────────────
 
 describe('SN-W01 V5 · ingen stille feil', () => {
-  it('avslag har ALLTID en reason og en brukervendt message (aldri bare "success: false")', async () => {
+  it('alle ikke-suksessutfall har reason og brukervendt message', async () => {
     const { purchasePlan } = await bootInitialized();
     purchasesMock.getOfferings.mockResolvedValue(makeOfferings(null));
     const result = await purchasePlan('yearly');
-    expect(result.success).toBe(false);
-    if (!result.success) {
+    expect(result.status).not.toBe('success');
+    if (result.status !== 'success') {
       expect(result.reason).toBeTruthy();
       expect(result.message).toBeTruthy();
       expect(result.message.length).toBeGreaterThan(5);
@@ -284,20 +281,14 @@ describe('SN-W01 V5 · ingen stille feil', () => {
     capacitorState.isNative = false;
     const { purchasePlan } = await importFresh();
     const result = await purchasePlan('yearly');
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.reason).toBe('not_configured');
-    }
+    expect(result).toMatchObject({ status: 'unavailable', reason: 'not_configured' });
   });
 
   it('reason "no_offering": når RevenueCat ikke har et aktivt tilbud', async () => {
     const { purchasePlan } = await bootInitialized();
     purchasesMock.getOfferings.mockResolvedValue(makeOfferings(null));
     const result = await purchasePlan('yearly');
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.reason).toBe('no_offering');
-    }
+    expect(result).toMatchObject({ status: 'unavailable', reason: 'no_offering' });
   });
 
   it('reason "plan_unavailable": tilbudet mangler den etterspurte plantypen', async () => {
@@ -305,10 +296,7 @@ describe('SN-W01 V5 · ingen stille feil', () => {
     const monthlyOnly = makeOffering([makePackage(PACKAGE_TYPE.MONTHLY)]);
     purchasesMock.getOfferings.mockResolvedValue(makeOfferings(monthlyOnly));
     const result = await purchasePlan('yearly');
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.reason).toBe('plan_unavailable');
-    }
+    expect(result).toMatchObject({ status: 'unavailable', reason: 'plan_unavailable' });
   });
 
   it('reason "no_entitlement": kjøp fullført men Premium ble ikke aktivert', async () => {
@@ -319,10 +307,10 @@ describe('SN-W01 V5 · ingen stille feil', () => {
       customerInfo: makeCustomerInfo(false),
     });
     const result = await purchasePlan('yearly');
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.reason).toBe('no_entitlement');
-    }
+    expect(result).toMatchObject({
+      status: 'entitlement_missing',
+      reason: 'no_entitlement',
+    });
   });
 
   it('reason "user_cancelled": bruker avbrøt kjøpsflyten', async () => {
@@ -331,10 +319,7 @@ describe('SN-W01 V5 · ingen stille feil', () => {
     purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
     purchasesMock.purchasePackage.mockRejectedValue({ userCancelled: true });
     const result = await purchasePlan('yearly');
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.reason).toBe('user_cancelled');
-    }
+    expect(result).toMatchObject({ status: 'cancelled', reason: 'user_cancelled' });
   });
 
   it('reason "store_error": andre feil fra StoreKit/RevenueCat', async () => {
@@ -343,10 +328,7 @@ describe('SN-W01 V5 · ingen stille feil', () => {
     purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
     purchasesMock.purchasePackage.mockRejectedValue(new Error('nettverksfeil'));
     const result = await purchasePlan('yearly');
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.reason).toBe('store_error');
-    }
+    expect(result).toMatchObject({ status: 'error', reason: 'store_error' });
   });
 
   it('logger tydelig til konsoll ved alle feilbaner utenom user_cancelled', async () => {
@@ -373,18 +355,123 @@ describe('SN-W01 V5 · ingen stille feil', () => {
   });
 });
 
+// ─── TASK-022 · Uttømmende kjøpsutfall + dobbelttrykk-vakt ───────────────
+
+describe('TASK-022 · typed purchase contract', () => {
+  it('skiller success fra alle ikke-suksessutfall', async () => {
+    const { purchasePlan } = await bootInitialized();
+    const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL);
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
+    purchasesMock.purchasePackage.mockResolvedValue({ customerInfo: makeCustomerInfo(true) });
+
+    const result = await purchasePlan('yearly');
+
+    expect(result.status).toBe('success');
+  });
+
+  it('mapper RevenueCat cancellation-koden til cancelled', async () => {
+    const { purchasePlan } = await bootInitialized();
+    const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL);
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
+    purchasesMock.purchasePackage.mockRejectedValue({
+      code: PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR,
+      userCancelled: false,
+    });
+
+    const result = await purchasePlan('yearly');
+
+    expect(result).toMatchObject({ status: 'cancelled', reason: 'user_cancelled' });
+  });
+
+  it('mapper ask-to-buy/payment-pending til pending, ikke error', async () => {
+    const { purchasePlan } = await bootInitialized();
+    const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL);
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
+    purchasesMock.purchasePackage.mockRejectedValue({
+      code: PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR,
+    });
+
+    const result = await purchasePlan('yearly');
+
+    expect(result).toMatchObject({ status: 'pending', reason: 'payment_pending' });
+  });
+
+  it('mapper RevenueCats operation-in-progress-kode til pending', async () => {
+    const { purchasePlan } = await bootInitialized();
+    const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL);
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
+    purchasesMock.purchasePackage.mockRejectedValue({
+      code: PURCHASES_ERROR_CODE.OPERATION_ALREADY_IN_PROGRESS_ERROR,
+    });
+
+    const result = await purchasePlan('yearly');
+
+    expect(result).toMatchObject({ status: 'pending', reason: 'purchase_in_progress' });
+  });
+
+  it('skiller unavailable fra generell butikkfeil', async () => {
+    const { purchasePlan } = await bootInitialized();
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(null));
+
+    const result = await purchasePlan('yearly');
+
+    expect(result).toMatchObject({ status: 'unavailable', reason: 'no_offering' });
+  });
+
+  it('skiller entitlement_missing fra generell butikkfeil', async () => {
+    const { purchasePlan } = await bootInitialized();
+    const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL);
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
+    purchasesMock.purchasePackage.mockResolvedValue({ customerInfo: makeCustomerInfo(false) });
+
+    const result = await purchasePlan('yearly');
+
+    expect(result).toMatchObject({ status: 'entitlement_missing', reason: 'no_entitlement' });
+  });
+
+  it('slipper bare ett butikk-kall gjennom ved samtidige dobbelttrykk', async () => {
+    const { purchasePlan } = await bootInitialized();
+    const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL);
+    purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
+    let finishPurchase!: (value: { customerInfo: CustomerInfo }) => void;
+    purchasesMock.purchasePackage.mockImplementation(
+      () =>
+        new Promise<{ customerInfo: CustomerInfo }>((resolve) => {
+          finishPurchase = resolve;
+        }),
+    );
+
+    const first = purchasePlan('yearly');
+    await vi.waitFor(() => expect(purchasesMock.purchasePackage).toHaveBeenCalledTimes(1));
+    const duplicate = await purchasePlan('yearly');
+
+    expect(duplicate).toMatchObject({
+      status: 'pending',
+      reason: 'purchase_in_progress',
+    });
+    expect(purchasesMock.purchasePackage).toHaveBeenCalledTimes(1);
+
+    finishPurchase({ customerInfo: makeCustomerInfo(true) });
+    await expect(first).resolves.toMatchObject({ status: 'success' });
+
+    purchasesMock.purchasePackage.mockResolvedValue({ customerInfo: makeCustomerInfo(true) });
+    await expect(purchasePlan('yearly')).resolves.toMatchObject({ status: 'success' });
+    expect(purchasesMock.purchasePackage).toHaveBeenCalledTimes(2);
+  });
+});
+
 // ─── Suksess-banen ────────────────────────────────────────────────────────
 
 describe('SN-W01 suksess-banen', () => {
-  it('returnerer success:true og customerInfo når entitlement er aktivt etter kjøp', async () => {
+  it('returnerer status:success og customerInfo når entitlement er aktivt etter kjøp', async () => {
     const { purchasePlan } = await bootInitialized();
     const annualPkg = makePackage(PACKAGE_TYPE.ANNUAL);
     const info = makeCustomerInfo(true);
     purchasesMock.getOfferings.mockResolvedValue(makeOfferings(makeOffering([annualPkg])));
     purchasesMock.purchasePackage.mockResolvedValue({ customerInfo: info });
     const result = await purchasePlan('yearly');
-    expect(result.success).toBe(true);
-    if (result.success) {
+    expect(result.status).toBe('success');
+    if (result.status === 'success') {
       expect(result.customerInfo).toBe(info);
     }
   });

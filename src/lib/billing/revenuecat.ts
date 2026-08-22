@@ -17,7 +17,9 @@ import {
   Purchases,
   LOG_LEVEL,
   PACKAGE_TYPE,
+  PURCHASES_ERROR_CODE,
   type CustomerInfo,
+  type PurchasesError,
   type PurchasesPackage,
 } from '@revenuecat/purchases-capacitor';
 import { type PlanKey } from '../premium/products';
@@ -47,8 +49,8 @@ export async function initRevenueCat(userId?: string): Promise<void> {
     await Purchases.setLogLevel({ level: LOG_LEVEL.WARN });
     await Purchases.configure({ apiKey, appUserID: userId ?? null });
     initialized = true;
-  } catch (err) {
-    console.error('[Babyora] RevenueCat init feilet', err);
+  } catch {
+    console.error('[Babyora] RevenueCat init feilet');
   }
 }
 
@@ -58,8 +60,8 @@ export async function checkPremium(): Promise<boolean> {
   try {
     const { customerInfo } = await Purchases.getCustomerInfo();
     return Boolean(customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]);
-  } catch (err) {
-    console.error('[Babyora] checkPremium feilet', err);
+  } catch {
+    console.error('[Babyora] checkPremium feilet');
     return false;
   }
 }
@@ -70,45 +72,70 @@ export async function getOfferings() {
   try {
     const { all } = await Purchases.getOfferings();
     return all[REVENUECAT_OFFERING_ID] ?? null;
-  } catch (err) {
-    console.error('[Babyora] getOfferings feilet', err);
+  } catch {
+    console.error('[Babyora] getOfferings feilet');
     return null;
   }
 }
 
 /**
- * Feilgrunner et kjøp kan strande på — V5-krav: hver grunn har en typet
- * kode PaywallDialog kan slå opp en brukervendt tekst for. Byggeren av
- * `purchasePlan` skal aldri returnere `{ success: false }` uten en grunn.
+ * Alle kjøpsutfall har en diskriminerende status. Ikke-suksess får i tillegg
+ * en typet grunn og en tekst PaywallDialog kan vise uten å tolke SDK-feil.
  */
-export type PurchaseFailureReason =
+export type PurchaseUnavailableReason =
   | 'not_configured'
   | 'no_offering'
   | 'plan_unavailable'
+  | 'store_unavailable';
+
+export type PurchasePendingReason = 'payment_pending' | 'purchase_in_progress';
+
+export type PurchaseReason =
+  | PurchaseUnavailableReason
+  | PurchasePendingReason
   | 'no_entitlement'
   | 'user_cancelled'
   | 'store_error';
 
 export type PurchaseResult =
-  | { success: true; customerInfo: CustomerInfo }
-  | { success: false; reason: PurchaseFailureReason; message: string };
+  | { status: 'success'; customerInfo: CustomerInfo }
+  | { status: 'cancelled'; reason: 'user_cancelled'; message: string }
+  | { status: 'pending'; reason: PurchasePendingReason; message: string }
+  | { status: 'unavailable'; reason: PurchaseUnavailableReason; message: string }
+  | { status: 'entitlement_missing'; reason: 'no_entitlement'; message: string }
+  | { status: 'error'; reason: 'store_error'; message: string };
 
-const REASON_MESSAGE: Record<PurchaseFailureReason, string> = {
+const REASON_MESSAGE: Record<PurchaseReason, string> = {
   not_configured:
     'Kjøp er ikke aktivert i denne versjonen. Åpne appen fra App Store eller Google Play for å kjøpe.',
   no_offering:
     'Kunne ikke hente prisene fra butikken. Sjekk nettilkoblingen og prøv igjen.',
   plan_unavailable:
     'Denne planen er ikke tilgjengelig i butikken akkurat nå. Prøv en annen plan, eller kom tilbake senere.',
+  store_unavailable:
+    'Butikken tillater ikke dette kjøpet akkurat nå. Sjekk kontoen din, eller prøv igjen senere.',
   no_entitlement:
     'Kjøpet ble registrert, men vi fant ikke tilgangen din. Prøv å gjenopprette kjøp, eller kontakt support.',
   user_cancelled: 'Kjøpet ble avbrutt.',
+  payment_pending:
+    'Kjøpet venter på godkjenning. Tilgangen aktiveres automatisk når betalingen er godkjent.',
+  purchase_in_progress: 'Et kjøp behandles allerede. Vent til butikkvinduet er ferdig.',
   store_error:
     'Noe gikk galt under kjøpet. Prøv igjen, eller sjekk nettilkoblingen din.',
 };
 
-function fail(reason: PurchaseFailureReason): PurchaseResult {
-  return { success: false, reason, message: REASON_MESSAGE[reason] };
+function unavailable(reason: PurchaseUnavailableReason): PurchaseResult {
+  return { status: 'unavailable', reason, message: REASON_MESSAGE[reason] };
+}
+
+function pending(reason: PurchasePendingReason): PurchaseResult {
+  return { status: 'pending', reason, message: REASON_MESSAGE[reason] };
+}
+
+function purchaseErrorCode(error: unknown): PURCHASES_ERROR_CODE | undefined {
+  if (!error || typeof error !== 'object') return undefined;
+  const code = (error as Partial<PurchasesError>).code;
+  return typeof code === 'string' ? code : undefined;
 }
 
 /**
@@ -126,17 +153,19 @@ export const PLAN_TO_PACKAGE_TYPE: Record<PlanKey, string> = {
  * det aktive tilbudet via `packageType` og gjennomfører kjøpet. Enhver ikke-
  * suksess får en typet grunn og en brukervendt tekst.
  */
-export async function purchasePlan(plan: PlanKey): Promise<PurchaseResult> {
+let purchaseInFlight: Promise<PurchaseResult> | null = null;
+
+async function performPurchase(plan: PlanKey): Promise<PurchaseResult> {
   if (!initialized || !Capacitor.isNativePlatform()) {
     console.error('[Babyora] purchasePlan: RevenueCat ikke initialisert (native only)');
-    return fail('not_configured');
+    return unavailable('not_configured');
   }
 
   // getOfferings() fanger sine egne feil og returnerer null — én sti holder.
   const offering = await getOfferings();
   if (!offering) {
     console.error('[Babyora] purchasePlan: no_offering (intet aktivt tilbud i RevenueCat)');
-    return fail('no_offering');
+    return unavailable('no_offering');
   }
 
   const wantedType = PLAN_TO_PACKAGE_TYPE[plan];
@@ -148,7 +177,7 @@ export async function purchasePlan(plan: PlanKey): Promise<PurchaseResult> {
     console.error(
       `[Babyora] purchasePlan: fant ingen pakke med packageType=${wantedType} for plan=${plan} i tilbud=${offering.identifier}`,
     );
-    return fail('plan_unavailable');
+    return unavailable('plan_unavailable');
   }
 
   let customerInfo: CustomerInfo;
@@ -156,23 +185,56 @@ export async function purchasePlan(plan: PlanKey): Promise<PurchaseResult> {
     const result = await Purchases.purchasePackage({ aPackage: pkg });
     customerInfo = result.customerInfo;
   } catch (err: unknown) {
-    const userCanceled = (err as { userCancelled?: boolean })?.userCancelled;
-    if (userCanceled) {
-      return fail('user_cancelled');
+    const code = purchaseErrorCode(err);
+    const legacyUserCancelled = (err as { userCancelled?: boolean })?.userCancelled === true;
+    if (code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR || legacyUserCancelled) {
+      return {
+        status: 'cancelled',
+        reason: 'user_cancelled',
+        message: REASON_MESSAGE.user_cancelled,
+      };
     }
-    console.error('[Babyora] purchasePlan: butikk-kall feilet', err);
-    return fail('store_error');
+    if (code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
+      return pending('payment_pending');
+    }
+    if (code === PURCHASES_ERROR_CODE.OPERATION_ALREADY_IN_PROGRESS_ERROR) {
+      return pending('purchase_in_progress');
+    }
+    if (
+      code === PURCHASES_ERROR_CODE.PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR ||
+      code === PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR
+    ) {
+      return unavailable('store_unavailable');
+    }
+    console.error(
+      `[Babyora] purchasePlan: butikk-kall feilet (code=${code ?? 'unknown'})`,
+    );
+    return { status: 'error', reason: 'store_error', message: REASON_MESSAGE.store_error };
   }
 
   if (!customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]) {
-    console.error(
-      '[Babyora] purchasePlan: kjøp gjennomført, men entitlement mangler',
-      customerInfo,
-    );
-    return { success: false, reason: 'no_entitlement', message: REASON_MESSAGE.no_entitlement };
+    console.error('[Babyora] purchasePlan: kjøp gjennomført, men entitlement mangler');
+    return {
+      status: 'entitlement_missing',
+      reason: 'no_entitlement',
+      message: REASON_MESSAGE.no_entitlement,
+    };
   }
 
-  return { success: true, customerInfo };
+  return { status: 'success', customerInfo };
+}
+
+/** Kjøp én plan. Samtidige kall avvises før et nytt butikk-kall kan starte. */
+export function purchasePlan(plan: PlanKey): Promise<PurchaseResult> {
+  if (purchaseInFlight) {
+    return Promise.resolve(pending('purchase_in_progress'));
+  }
+
+  const attempt = performPurchase(plan);
+  purchaseInFlight = attempt;
+  return attempt.finally(() => {
+    if (purchaseInFlight === attempt) purchaseInFlight = null;
+  });
 }
 
 /** Restore-funksjon — kalles fra paywall hvis bruker har kjøpt før. */
@@ -181,8 +243,8 @@ export async function restorePurchases(): Promise<boolean> {
   try {
     const { customerInfo } = await Purchases.restorePurchases();
     return Boolean(customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]);
-  } catch (err) {
-    console.error('[Babyora] restorePurchases feilet', err);
+  } catch {
+    console.error('[Babyora] restorePurchases feilet');
     return false;
   }
 }

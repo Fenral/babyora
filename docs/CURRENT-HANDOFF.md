@@ -1,7 +1,26 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phases 0 and 1 are closed. TASK-001 through TASK-020 are closed; TASK-006 was waived by owner, not passed. Phase 2 is active on `codex/phase-2/subscription-and-observability`. TASK-021 has passed its local contract and is waiting for owner-authenticated sandbox evidence.
+**Phase:** Product roadmap Phases 0 and 1 are closed. Phase 2 is active on `codex/phase-2/subscription-and-observability`. TASK-021 waits for owner-authenticated sandbox evidence; owner authorized independent local work, and TASK-022 is complete.
+
+## 2026-08-22: TASK-022 complete typed purchase contract
+
+- `purchasePlan` now returns one of six discriminated statuses: `success`,
+  `cancelled`, `pending`, `unavailable`, `entitlement_missing`, or `error`.
+  RevenueCat cancellation, payment-pending, operation-in-progress, and store
+  availability codes map to explicit user-safe outcomes.
+- A module-level in-flight guard rejects concurrent taps as
+  `purchase_in_progress` before a second RevenueCat call starts, and releases
+  after the first attempt settles. Paywall pending/cancellation states do not
+  render as errors.
+- Payment review removed raw RevenueCat error and `customerInfo` payloads from
+  billing logs. Verification passed 23/23 adapter tests, 42/42 focused billing
+  and Paywall tests, full lint/typecheck/build, 217/217 test files with 3,323
+  passing and 1 todo, and 4/4 web purchase E2E scenarios. Record:
+  `docs/evidence/task-022-verification.md`.
+- The external Codex review process timed out after 94 seconds without a
+  verdict; the recorded review is manual. **Next local task:** TASK-023. The
+  TASK-021 RevenueCat sandbox gate remains open.
 
 ## 2026-08-22: TASK-021 local RevenueCat contract complete; sandbox gate open
 
