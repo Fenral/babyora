@@ -507,6 +507,7 @@ export function HjemScreen({
     weather: engineInput?.weather ?? null,
     rec: resolvedRecommendation,
     activity,
+    cacheScope: effectivePlace?.cacheScope ?? 'persistent',
   });
 
   const currentOutfitContext = useMemo<PlannedOutfitContext | null>(() => {
@@ -1018,6 +1019,7 @@ export function HjemScreen({
         cityLabel={cityLabel}
         lat={lat}
         lon={lon}
+        cacheScope={effectivePlace?.cacheScope ?? 'persistent'}
         now={now}
         weatherStatus={weather.status}
         weatherFreshness={weather.freshness}

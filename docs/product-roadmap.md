@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 11/56 tasks closed — 10 complete, 1 waived
+> **Roadmap status:** 12/56 tasks closed — 11 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -89,8 +89,8 @@
   Files: `src/state/child-profile.ts`, `src/state/children-provider.tsx`, `src/state/children-store.tsx`, `src/state/children.test.tsx`, `src/state/__tests__/child-profile.test.ts`, `src/screens/OnboardingScreen.tsx`, `src/screens/InnstillingerScreen.tsx`, `e2e/smoke.ts`, `docs/evidence/task-011-verification.md`
   Notes: Validate date of birth, migrate known stored shapes, recover from corrupt storage, and reject unsupported ages without deleting data. Verify: tests cover valid, future, corrupt, migrated, and over-age profiles.
 
-- [ ] **TASK-012** — Harden manual home location and session-only automatic location.
-  Files: `src/state/location.ts`, `src/state/location.test.ts`, `src/lib/gdpr/local-data.ts`
+- [x] **TASK-012** — Harden manual home location and session-only automatic location.
+  Files: `src/state/location-pref-store.ts`, `src/state/__tests__/location-pref-store.test.ts`, `src/hooks/useAutoLocationRefresh.ts`, `src/state/scan-cache-store.ts`, `src/components/hjem/HjemMonter.tsx`, `src/lib/widget/use-widget-snapshot.ts`, `src/screens/HjemScreen.tsx`, related tests, `docs/evidence/task-012-verification.md`
   Notes: Persist only manual home details and location mode; keep automatic coordinates in memory and discard stale generation responses. Verify: storage inspection and tests show automatic coordinates never persist.
 
 - [ ] **TASK-013** — Validate the MET forecast proxy contract and failure behavior.

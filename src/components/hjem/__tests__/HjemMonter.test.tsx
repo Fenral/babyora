@@ -101,6 +101,7 @@ function baseProps() {
     cityLabel: 'Trondheim',
     lat: 63.43,
     lon: 10.39,
+    cacheScope: 'persistent' as const,
     now: {
       tempC: 4, feelsLikeC: 1, windMs: 3, windDir: 180, precipMmH: 0.3,
       symbolCode: 'lightrain', observedAt: new Date(),

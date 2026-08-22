@@ -41,6 +41,7 @@ describe('HjemScreen mater widgeten', () => {
     // widgeten skal vise det samme som skjermen.
     expect(args).toContain('rec: resolvedRecommendation');
     expect(args).toContain('activity,');
+    expect(args).toContain("cacheScope: effectivePlace?.cacheScope ?? 'persistent'");
   });
 
   it('står før den flag-gatede returen, så hook-rekkefølgen er lik i begge render-grener', () => {

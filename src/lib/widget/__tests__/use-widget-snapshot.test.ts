@@ -48,7 +48,13 @@ const rec: Recommendation = {
   severity: 'NONE',
 };
 
-const kilde = { childName: 'Lillian', weather: vaer, rec, activity: 'vogn' } as const;
+const kilde = {
+  childName: 'Lillian',
+  weather: vaer,
+  rec,
+  activity: 'vogn',
+  cacheScope: 'persistent',
+} as const;
 
 const T0 = Date.parse('2026-08-06T07:30:00.000Z');
 
@@ -113,6 +119,14 @@ describe('widgetInnholdsnokkel — struping på innhold, ikke på render', () =>
 });
 
 describe('sendWidgetSnapshotHvisEndret', () => {
+  it('lager eller sender aldri widgetdata fra automatisk posisjon', async () => {
+    const automatic = { ...kilde, cacheScope: 'memory-only' as const };
+
+    expect(widgetInnholdsnokkel(automatic)).toBeNull();
+    expect(await sendWidgetSnapshotHvisEndret(automatic, T0)).toBe('mangler-data');
+    expect(cap.updateSnapshot).not.toHaveBeenCalled();
+  });
+
   it('sender ikke uten vær eller anbefaling', async () => {
     expect(await sendWidgetSnapshotHvisEndret({ ...kilde, weather: null }, T0))
       .toBe('mangler-data');

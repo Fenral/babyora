@@ -31,6 +31,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { Activity, Recommendation, WeatherInput } from '../wool-layers/types.js';
+import type { LocationCacheScope } from '../location/cache-scope.js';
 import { CACHE_TTL_MS } from '../met-no/client';
 import { buildSnapshot, withBriefFields } from './snapshot.js';
 import { pushWidgetSnapshot, shouldPushSnapshot } from './bridge.js';
@@ -43,6 +44,8 @@ export type WidgetSnapshotKilde = Readonly<{
   /** Den swap-finaliserte anbefalingen — aldri en rå/uferdig en. */
   rec: Recommendation | null;
   activity: Activity;
+  /** Automatic-location output must remain inside the current app session. */
+  cacheScope: LocationCacheScope;
 }>;
 
 /** Hva ett forsøk på å mate widgeten endte med. */
@@ -57,8 +60,8 @@ export type WidgetSendResultat = 'sendt' | 'uendret' | 'mangler-data' | 'feilet'
  * `null` betyr «ikke klar»: vær eller anbefaling mangler.
  */
 export function widgetInnholdsnokkel(kilde: WidgetSnapshotKilde): string | null {
-  const { childName, weather, rec, activity } = kilde;
-  if (weather === null || rec === null) return null;
+  const { childName, weather, rec, activity, cacheScope } = kilde;
+  if (cacheScope === 'memory-only' || weather === null || rec === null) return null;
   return JSON.stringify([
     childName,
     activity,
@@ -84,8 +87,8 @@ export async function sendWidgetSnapshotHvisEndret(
   nowMs: number,
 ): Promise<WidgetSendResultat> {
   try {
-    const { childName, weather, rec, activity } = kilde;
-    if (weather === null || rec === null) return 'mangler-data';
+    const { childName, weather, rec, activity, cacheScope } = kilde;
+    if (cacheScope === 'memory-only' || weather === null || rec === null) return 'mangler-data';
     const nowISO = new Date(nowMs).toISOString();
     const raatt = buildSnapshot({ childName, weather, rec, activity, nowISO });
 

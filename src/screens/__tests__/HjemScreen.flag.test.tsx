@@ -70,7 +70,7 @@ describe('HjemScreen — P4 flag branch wiring', () => {
     const monterCallEnd = contents.indexOf('/>', monterCallStart);
     const monterCall = contents.slice(monterCallStart, monterCallEnd);
     for (const prop of [
-      'cityLabel', 'lat', 'lon', 'now', 'weatherStatus', 'activity',
+      'cityLabel', 'lat', 'lon', 'cacheScope', 'now', 'weatherStatus', 'activity',
       'onActivityChange', 'childId', 'childName', 'ageMonths', 'recommendation',
       'onStartDressing', 'startDressingDisabled', 'reducedMotion', 'outfitTransitionStatus',
     ]) {

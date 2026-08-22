@@ -111,6 +111,7 @@ function props(activity: 'utelek' | 'vogn' = 'utelek') {
     cityLabel: 'Trondheim',
     lat: LAT,
     lon: LON,
+    cacheScope: 'persistent' as const,
     now: NOW,
     weatherStatus: 'ready' as const,
     activity,
@@ -175,6 +176,17 @@ describe('Hjem-CTA-en leser fingerprintet FØR trykket', () => {
     expect(html).toContain(CTA_REVEAL_LINE);
     expect(html).toContain('data-cta-path="reveal"');
     expect(html).not.toContain('Finn dagens antrekk');
+  });
+
+  it('ignorerer samme persisterte slot når aktivt sted er memory-only', () => {
+    const key = fingerprintFor('utelek');
+    mockedSlots = { [CHILD_ID]: slotWith(key, 'utelek') };
+
+    const html = renderToStaticMarkup(
+      <HjemMonter {...props()} cacheScope="memory-only" />,
+    );
+    expect(html).toContain('Finn dagens antrekk');
+    expect(html).toContain('data-cta-path="ceremony"');
   });
 
   it('slot fra en ANNEN aktivitet, men samme utfall → reveal (nøkkeloppslag, ikke identitets-oppslag)', () => {

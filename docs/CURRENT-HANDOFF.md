@@ -1,7 +1,24 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-011 are closed. TASK-006 was waived by owner, not passed. TASK-012 is next.
+**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-012 are closed. TASK-006 was waived by owner, not passed. TASK-013 is next.
+
+## 2026-08-22: TASK-012 privacy-bounded location
+
+- Only location mode persists. Automatic coordinates, place labels, child
+  scope, and request generations remain session-only and use memory-only
+  weather/geocode clients.
+- Hjem's scan cache and widget source now receive explicit cache scope.
+  Automatic-location results cannot enter either persistent surface.
+- Scan-cache version 1 purges all legacy coordinate slots because version 0
+  could not distinguish fixed-home from automatic coordinates; its unrelated
+  lifetime choreography flag survives migration.
+- Verification passed: 133 focused tests, typecheck, full lint, 212/212 test
+  files with 3,214 passing tests and 1 todo, main+bare build, and E2E 2/2.
+  Record: `docs/evidence/task-012-verification.md`.
+- `FR-002` is now Verified. `FR-009` remains Conflicting only because the
+  fixed-home scan cache does not contain a renderable recommendation payload.
+  **Next:** TASK-013 hardens the MET forecast proxy and typed failure behavior.
 
 ## 2026-08-22: TASK-011 local child-profile contract
 

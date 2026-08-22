@@ -37,6 +37,7 @@
  */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { LocationCacheScope } from '../lib/location/cache-scope.js';
 import {
   isScanCacheSlot,
   sameScanIdentity,
@@ -49,7 +50,7 @@ export type ScanCacheState = Readonly<{
   /** P9 (duel §2): har den 1,1s full-koreografien blitt spilt NOENSINNE (ikke per dag)? */
   hasPlayedFullScanEver: boolean;
   /** Lagrer/overskriver slotten for slot.identity.childId. */
-  commitSlot: (slot: ScanCacheSlot) => void;
+  commitSlot: (slot: ScanCacheSlot, cacheScope: LocationCacheScope) => void;
   /** No-op hvis ingen slot finnes for barnet, eller den allerede er markert spilt. */
   markScanPlayed: (childId: string) => void;
   /** P9: setter livstids-flagget. Idempotent — no-op hvis allerede sann. */
@@ -114,6 +115,29 @@ export function mergeScanCache(
   return { ...current, slots: storedSlots, hasPlayedFullScanEver };
 }
 
+/**
+ * Version 1 removes every legacy coordinate-bearing slot once. Version 0 did
+ * not record whether a slot came from fixed home or automatic location, so a
+ * selective migration cannot be privacy-safe. The non-location lifetime flag
+ * is preserved.
+ */
+export function migrateScanCache(
+  persisted: unknown,
+  persistedVersion: number,
+): unknown {
+  if (persistedVersion >= 1) return persisted;
+  const record = typeof persisted === 'object' && persisted !== null
+    ? persisted as Record<string, unknown>
+    : null;
+  const legacySlots = record !== null && isValidSlotRecord(record.slots)
+    ? record.slots
+    : {};
+  return {
+    slots: {},
+    hasPlayedFullScanEver: deriveHasPlayedFullScanEver(record, legacySlots),
+  } satisfies PersistedScanCache;
+}
+
 /** Ren transformasjon — brukt både av store-actionen under og av testene. */
 export function markScanPlayed(slot: ScanCacheSlot): ScanCacheSlot {
   if (slot.scanPlayedInFullToday) return slot;
@@ -148,9 +172,11 @@ export const useScanCache = create<ScanCacheState>()(
     (set) => ({
       slots: {},
       hasPlayedFullScanEver: false,
-      commitSlot: (slot) => set((current) => ({
-        slots: { ...current.slots, [slot.identity.childId]: slot },
-      })),
+      commitSlot: (slot, cacheScope) => set((current) => (
+        cacheScope === 'memory-only'
+          ? current
+          : { slots: { ...current.slots, [slot.identity.childId]: slot } }
+      )),
       markFullScanPlayedEver: () => set((current) => (
         current.hasPlayedFullScanEver ? current : { hasPlayedFullScanEver: true }
       )),
@@ -176,6 +202,8 @@ export const useScanCache = create<ScanCacheState>()(
     }),
     {
       name: 'babyora.scan-cache',
+      version: 1,
+      migrate: migrateScanCache,
       partialize: partializeScanCache,
       merge: mergeScanCache,
     },

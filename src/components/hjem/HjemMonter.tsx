@@ -76,9 +76,11 @@ import {
   localDateKey,
   sameScanIdentity,
   WOOL_LAYERS_ENGINE_VERSION,
+  type ScanCacheSlot,
   type ScanIdentity,
   type ScanStaleReason,
 } from '../../lib/scan/types.js';
+import type { LocationCacheScope } from '../../lib/location/cache-scope.js';
 import { computeScanResultKey } from '../../lib/scan/result-key.js';
 import type { Recommendation } from '../../lib/wool-layers/types.js';
 import type { WeatherNow } from '../../lib/met-no/types.js';
@@ -191,10 +193,13 @@ function freshnessLineFor(
   }
 }
 
+const EMPTY_SCAN_SLOTS: Readonly<Record<string, ScanCacheSlot>> = Object.freeze({});
+
 export type HjemMonterProps = Readonly<{
   cityLabel: string;
   lat: number;
   lon: number;
+  cacheScope: LocationCacheScope;
   now: WeatherNow | null;
   weatherStatus: 'idle' | 'loading' | 'ready' | 'offline' | 'error';
   /** T9A: §5-cachematrisens tilstand fra useWeather — driver friskhetslinjen. */
@@ -240,6 +245,7 @@ export function HjemMonter({
   cityLabel,
   lat,
   lon,
+  cacheScope,
   now,
   weatherStatus,
   weatherFreshness,
@@ -262,6 +268,9 @@ export function HjemMonter({
 }: HjemMonterProps) {
   const scan = useScanCoordinator();
   const slots = useScanCache((state) => state.slots);
+  const scopedSlots: Readonly<Record<string, ScanCacheSlot>> = cacheScope === 'persistent'
+    ? slots
+    : EMPTY_SCAN_SLOTS;
   const commitSlot = useScanCache((state) => state.commitSlot);
   // Eier-override v3 (2026-08-01): hvert CTA-trykk spiller nå den FULLE
   // koreografien (se scan-orchestration.ts) — livstidsflagget over hvorvidt
@@ -309,7 +318,7 @@ export function HjemMonter({
   // knappeteksten, linja under den, OG hvilken vei `handleFindOutfitTap`
   // tar. Slottet er ETT oppslag (barnets persisterte svar); `sessionResult-
   // Keys` er resten av øktens nøkler — sammen utgjør de nøkkeloppslaget.
-  const daySlot = slots[identity.childId] ?? null;
+  const daySlot = scopedSlots[identity.childId] ?? null;
   const persistedResultKey = daySlot !== null && daySlot.identity.dateKey === identity.dateKey
     ? daySlot.resultKey
     : null;
@@ -474,8 +483,8 @@ export function HjemMonter({
       resultKey,
       completedAt: Date.now(),
       scanPlayedInFullToday: true,
-    });
-  }, [scan, commitSlot, identity, markFullScanPlayedEver, resultKeyMemoryScope]);
+    }, cacheScope);
+  }, [scan, cacheScope, commitSlot, identity, markFullScanPlayedEver, resultKeyMemoryScope]);
 
   // Auto-fullfører scanningen (uten et nytt trykk) idet motoren ENDELIG har
   // et resultat, hvis 3,2s-grensen rakk å gå ut mens vi ventet (se
@@ -506,9 +515,9 @@ export function HjemMonter({
       identity,
       resultKey,
       completedAt: Date.now(),
-      scanPlayedInFullToday: slots[identity.childId]?.scanPlayedInFullToday === true,
-    });
-  }, [scan, commitSlot, identity, slots, resultKeyMemoryScope]);
+      scanPlayedInFullToday: scopedSlots[identity.childId]?.scanPlayedInFullToday === true,
+    }, cacheScope);
+  }, [scan, cacheScope, commitSlot, identity, scopedSlots, resultKeyMemoryScope]);
 
   // ── Mount / identitetsendring ────────────────────────────────────────────
   useEffect(() => {
@@ -517,7 +526,7 @@ export function HjemMonter({
 
     if (phase === 'weather-ready') {
       if (seenIdentityRef.current === null) {
-        const exact = getSlotForIdentity(slots, identity);
+        const exact = getSlotForIdentity(scopedSlots, identity);
         const decision = decideScanEntry(exact);
         if (decision.kind === 'show-cached') {
           // isFresh er allerede false fra useState(false) — cachet
@@ -543,7 +552,7 @@ export function HjemMonter({
       scan.identityChanged(identity, { autoRecalculate: true });
       runTimer(QUICK_RECALC_DURATION_MS, completeRecalc);
     }
-  }, [identity, now, scan, slots, runTimer, completeRecalc, recommendation, resultKeyMemoryScope]);
+  }, [identity, now, scan, scopedSlots, runTimer, completeRecalc, recommendation, resultKeyMemoryScope]);
 
   /**
    * v4 «reveal»-veien: fingerprinten er kjent, altså holder appen allerede
@@ -566,9 +575,9 @@ export function HjemMonter({
       identity,
       resultKey,
       completedAt: Date.now(),
-      scanPlayedInFullToday: slots[identity.childId]?.scanPlayedInFullToday === true,
-    });
-  }, [clearTimer, clearHapticTimers, scan, identity, commitSlot, slots, resultKeyMemoryScope]);
+      scanPlayedInFullToday: scopedSlots[identity.childId]?.scanPlayedInFullToday === true,
+    }, cacheScope);
+  }, [clearTimer, clearHapticTimers, scan, identity, cacheScope, commitSlot, scopedSlots, resultKeyMemoryScope]);
 
   const handleFindOutfitTap = useCallback(() => {
     const resultKey = currentResultKeyRef.current;

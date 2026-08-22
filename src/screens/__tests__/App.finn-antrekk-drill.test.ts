@@ -88,7 +88,7 @@ describe('HjemMonter.tsx — cache-hit-on-mount logic is untouched by P5 (proves
     const mountEffectStart = hjemMonter.indexOf('// ── Mount / identitetsendring');
     const mountEffectEnd = hjemMonter.indexOf('const handleFindOutfitTap');
     const mountEffect = hjemMonter.slice(mountEffectStart, mountEffectEnd);
-    expect(mountEffect).toContain('const exact = getSlotForIdentity(slots, identity);');
+    expect(mountEffect).toContain('const exact = getSlotForIdentity(scopedSlots, identity);');
     expect(mountEffect).toContain('const decision = decideScanEntry(exact);');
     expect(mountEffect).toContain("if (decision.kind === 'show-cached') {");
     expect(mountEffect).toContain('scan.scanStarted(identity);');

@@ -4,6 +4,7 @@ import {
   deriveHasPlayedFullScanEver,
   getSlotForIdentity,
   markScanPlayed,
+  migrateScanCache,
   mergeScanCache,
   partializeScanCache,
   shouldPlayFullScan,
@@ -34,13 +35,18 @@ describe('useScanCache store actions', () => {
   });
 
   it('commitSlot stores the slot keyed by identity.childId', () => {
-    useScanCache.getState().commitSlot(slot());
+    useScanCache.getState().commitSlot(slot(), 'persistent');
     expect(useScanCache.getState().slots).toEqual({ 'barn-01': slot() });
   });
 
+  it('never admits a memory-only automatic-location slot to the persistent store', () => {
+    useScanCache.getState().commitSlot(slot(), 'memory-only');
+    expect(useScanCache.getState().slots).toEqual({});
+  });
+
   it('commitSlot overwrites any existing slot for the same child', () => {
-    useScanCache.getState().commitSlot(slot({ resultKey: 'current-finalized:["a"]' }));
-    useScanCache.getState().commitSlot(slot({ resultKey: 'current-finalized:["b"]' }));
+    useScanCache.getState().commitSlot(slot({ resultKey: 'current-finalized:["a"]' }), 'persistent');
+    useScanCache.getState().commitSlot(slot({ resultKey: 'current-finalized:["b"]' }), 'persistent');
     expect(useScanCache.getState().slots['barn-01']?.resultKey).toBe(
       'current-finalized:["b"]',
     );
@@ -49,8 +55,8 @@ describe('useScanCache store actions', () => {
 
   it('commitSlot keeps other children’s slots untouched', () => {
     const otherIdentity: ScanIdentity = { ...IDENTITY, childId: 'barn-02' };
-    useScanCache.getState().commitSlot(slot());
-    useScanCache.getState().commitSlot(slot({ identity: otherIdentity }));
+    useScanCache.getState().commitSlot(slot(), 'persistent');
+    useScanCache.getState().commitSlot(slot({ identity: otherIdentity }), 'persistent');
     expect(Object.keys(useScanCache.getState().slots).sort()).toEqual([
       'barn-01',
       'barn-02',
@@ -58,7 +64,7 @@ describe('useScanCache store actions', () => {
   });
 
   it('markScanPlayed flips scanPlayedInFullToday for an existing slot', () => {
-    useScanCache.getState().commitSlot(slot({ scanPlayedInFullToday: false }));
+    useScanCache.getState().commitSlot(slot({ scanPlayedInFullToday: false }), 'persistent');
     useScanCache.getState().markScanPlayed('barn-01');
     expect(useScanCache.getState().slots['barn-01']?.scanPlayedInFullToday).toBe(true);
   });
@@ -69,7 +75,7 @@ describe('useScanCache store actions', () => {
   });
 
   it('markScanPlayed is a no-op (same store reference) when already true', () => {
-    useScanCache.getState().commitSlot(slot({ scanPlayedInFullToday: true }));
+    useScanCache.getState().commitSlot(slot({ scanPlayedInFullToday: true }), 'persistent');
     const before = useScanCache.getState().slots;
     useScanCache.getState().markScanPlayed('barn-01');
     expect(useScanCache.getState().slots).toBe(before);
@@ -77,14 +83,14 @@ describe('useScanCache store actions', () => {
 
   it('clearSlotForChild removes only the targeted child', () => {
     const otherIdentity: ScanIdentity = { ...IDENTITY, childId: 'barn-02' };
-    useScanCache.getState().commitSlot(slot());
-    useScanCache.getState().commitSlot(slot({ identity: otherIdentity }));
+    useScanCache.getState().commitSlot(slot(), 'persistent');
+    useScanCache.getState().commitSlot(slot({ identity: otherIdentity }), 'persistent');
     useScanCache.getState().clearSlotForChild('barn-01');
     expect(Object.keys(useScanCache.getState().slots)).toEqual(['barn-02']);
   });
 
   it('clearSlotForChild is a no-op when the child has no slot', () => {
-    useScanCache.getState().commitSlot(slot());
+    useScanCache.getState().commitSlot(slot(), 'persistent');
     const before = useScanCache.getState().slots;
     useScanCache.getState().clearSlotForChild('unknown-child');
     expect(useScanCache.getState().slots).toBe(before);
@@ -92,8 +98,8 @@ describe('useScanCache store actions', () => {
 
   it('clearAll empties every slot', () => {
     const otherIdentity: ScanIdentity = { ...IDENTITY, childId: 'barn-02' };
-    useScanCache.getState().commitSlot(slot());
-    useScanCache.getState().commitSlot(slot({ identity: otherIdentity }));
+    useScanCache.getState().commitSlot(slot(), 'persistent');
+    useScanCache.getState().commitSlot(slot({ identity: otherIdentity }), 'persistent');
     useScanCache.getState().clearAll();
     expect(useScanCache.getState().slots).toEqual({});
   });
@@ -188,7 +194,7 @@ describe('partializeScanCache / mergeScanCache — persistence roundtrip', () =>
   });
 
   it('partializeScanCache exposes exactly {slots, hasPlayedFullScanEver}', () => {
-    useScanCache.getState().commitSlot(slot());
+    useScanCache.getState().commitSlot(slot(), 'persistent');
     useScanCache.getState().markFullScanPlayedEver();
     expect(partializeScanCache(useScanCache.getState())).toEqual({
       slots: { 'barn-01': slot() },
@@ -197,14 +203,14 @@ describe('partializeScanCache / mergeScanCache — persistence roundtrip', () =>
   });
 
   it('round-trips through JSON.stringify/JSON.parse and mergeScanCache with the slot AND the lifetime flag intact', () => {
-    useScanCache.getState().commitSlot(slot());
+    useScanCache.getState().commitSlot(slot(), 'persistent');
     useScanCache.getState().markFullScanPlayedEver();
     const otherIdentity: ScanIdentity = { ...IDENTITY, childId: 'barn-02' };
     useScanCache.getState().commitSlot(slot({
       identity: otherIdentity,
       resultKey: 'current-finalized:["b"]',
       scanPlayedInFullToday: true,
-    }));
+    }), 'persistent');
 
     const persisted = partializeScanCache(useScanCache.getState());
     const serialized = JSON.stringify(persisted);
@@ -230,6 +236,15 @@ describe('partializeScanCache / mergeScanCache — persistence roundtrip', () =>
     const freshState = { ...useScanCache.getState(), slots: {}, hasPlayedFullScanEver: false };
     const merged = mergeScanCache(JSON.parse(legacyRaw), freshState);
     expect(merged.hasPlayedFullScanEver).toBe(true);
+  });
+
+  it('version migration purges legacy coordinate slots while preserving the non-location lifetime flag', () => {
+    expect(migrateScanCache({
+      slots: { 'barn-01': slot({ scanPlayedInFullToday: true }) },
+    }, 0)).toEqual({
+      slots: {},
+      hasPlayedFullScanEver: true,
+    });
   });
 
   it('falls back to the current slots when persisted data is not an object', () => {
