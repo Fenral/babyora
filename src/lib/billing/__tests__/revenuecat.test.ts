@@ -125,6 +125,16 @@ function makeCustomerInfo(hasEntitlement: boolean): CustomerInfo {
   } as unknown as CustomerInfo;
 }
 
+function makeManagedCustomerInfo(
+  hasEntitlement: boolean,
+  managementURL: string | null,
+): CustomerInfo {
+  return {
+    ...makeCustomerInfo(hasEntitlement),
+    managementURL,
+  } as CustomerInfo;
+}
+
 async function importFresh() {
   vi.resetModules();
   return await import('../revenuecat');
@@ -187,6 +197,93 @@ describe('SN-W01 V1 · plantyper', () => {
     const result = await purchasePlan('yearly');
     expect(result.status).toBe('success');
     expect(captured).toEqual(['probe']);
+  });
+});
+
+describe('TASK-025 · entitlement lifecycle', () => {
+  it('skiller aktivt og inaktivt entitlement autoritativt', async () => {
+    const { checkPremium } = await bootInitialized();
+    purchasesMock.getCustomerInfo.mockResolvedValueOnce({
+      customerInfo: makeCustomerInfo(true),
+    });
+    await expect(checkPremium()).resolves.toEqual({ status: 'active' });
+
+    purchasesMock.getCustomerInfo.mockResolvedValueOnce({
+      customerInfo: makeCustomerInfo(false),
+    });
+    await expect(checkPremium()).resolves.toEqual({ status: 'inactive' });
+  });
+
+  it('behandler utløpt eller refundert kjøp som inaktivt entitlement', async () => {
+    const { checkPremium } = await bootInitialized();
+    purchasesMock.getCustomerInfo.mockResolvedValue({
+      customerInfo: makeManagedCustomerInfo(false, null),
+    });
+
+    await expect(checkPremium()).resolves.toEqual({ status: 'inactive' });
+  });
+
+  it('skiller offline butikk fra inaktivt entitlement', async () => {
+    const { checkPremium } = await bootInitialized();
+    purchasesMock.getCustomerInfo.mockRejectedValue(new Error('offline'));
+
+    await expect(checkPremium()).resolves.toEqual({
+      status: 'unavailable',
+      errorCode: 'store_unavailable',
+    });
+  });
+
+  it('returnerer typet restore-resultat for aktivt kjøp, tom restore og offline', async () => {
+    const { restorePurchases } = await bootInitialized();
+    purchasesMock.restorePurchases.mockResolvedValueOnce({
+      customerInfo: makeCustomerInfo(true),
+    });
+    await expect(restorePurchases()).resolves.toEqual({ status: 'restored' });
+
+    purchasesMock.restorePurchases.mockResolvedValueOnce({
+      customerInfo: makeCustomerInfo(false),
+    });
+    await expect(restorePurchases()).resolves.toEqual({ status: 'nothing-to-restore' });
+
+    purchasesMock.restorePurchases.mockRejectedValueOnce(new Error('offline'));
+    await expect(restorePurchases()).resolves.toEqual({
+      status: 'unavailable',
+      errorCode: 'store_unavailable',
+    });
+  });
+
+  it('henter RevenueCat sin autoritative administrasjonslenke', async () => {
+    const { getSubscriptionManagementUrl } = await bootInitialized();
+    purchasesMock.getCustomerInfo.mockResolvedValue({
+      customerInfo: makeManagedCustomerInfo(
+        true,
+        'https://apps.apple.com/account/subscriptions',
+      ),
+    });
+
+    await expect(getSubscriptionManagementUrl()).resolves.toEqual({
+      status: 'ready',
+      url: 'https://apps.apple.com/account/subscriptions',
+    });
+  });
+
+  it('avviser manglende eller uverifisert administrasjonslenke', async () => {
+    const { getSubscriptionManagementUrl } = await bootInitialized();
+    purchasesMock.getCustomerInfo.mockResolvedValueOnce({
+      customerInfo: makeManagedCustomerInfo(true, null),
+    });
+    await expect(getSubscriptionManagementUrl()).resolves.toEqual({
+      status: 'unavailable',
+      errorCode: 'no_active_subscription',
+    });
+
+    purchasesMock.getCustomerInfo.mockResolvedValueOnce({
+      customerInfo: makeManagedCustomerInfo(true, 'https://example.com/phishing'),
+    });
+    await expect(getSubscriptionManagementUrl()).resolves.toEqual({
+      status: 'unavailable',
+      errorCode: 'invalid_management_url',
+    });
   });
 });
 

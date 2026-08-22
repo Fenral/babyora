@@ -68,6 +68,7 @@ import {
 import { requestAppReview, type AppRateResult } from '../lib/feedback/app-rate';
 import { APP_VERSION } from '../lib/app-version';
 import { PaywallDialog } from '../components/PaywallDialog';
+import { getSubscriptionManagementUrl } from '../lib/billing/revenuecat';
 import { CareCircle } from '../components/family/CareCircle';
 import type { Caregiver } from '../components/family/care-circle-model';
 import { ToolsSection } from '../components/family/ToolsSection';
@@ -1434,6 +1435,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
   // holder kun åpen/lukket-state + trigger-raden for fokus-retur.
   const premiumRowRef = useRef<HTMLButtonElement | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [subscriptionActionPending, setSubscriptionActionPending] = useState(false);
   // Fanget i klikk-handleren (aldri under render — react-hooks/refs) og gitt
   // videre som PaywallDialog sin returnFocusTo.
   const [paywallReturnFocusTo, setPaywallReturnFocusTo] = useState<HTMLElement | null>(null);
@@ -1605,25 +1607,34 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
     setFeedbackOpen(false);
   }, [fire]);
 
-  const handlePremiumCtaClick = useCallback(() => {
+  const handlePremiumCtaClick = useCallback(async () => {
+    if (accessLoading || subscriptionActionPending) return;
     void fire('light');
     if (isPremium) {
-      // Administrer abonnement → åpne plattformens abonnements-side
+      // Foretrekk CustomerInfo sin autoritative butikkdestinasjon. Den faste
+      // plattformlenken er en trygg fallback ved offline SDK.
       const platform = Capacitor.getPlatform();
-      const url =
+      const fallbackUrl =
         platform === 'ios'
           ? 'https://apps.apple.com/account/subscriptions'
           : platform === 'android'
             ? 'https://play.google.com/store/account/subscriptions'
             : 'https://apps.apple.com/account/subscriptions';
-      if (typeof window !== 'undefined') {
-        window.open(url, '_blank', 'noopener,noreferrer');
+      setSubscriptionActionPending(true);
+      try {
+        const result = await getSubscriptionManagementUrl();
+        const url = result.status === 'ready' ? result.url : fallbackUrl;
+        if (typeof window !== 'undefined') {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }
+      } finally {
+        setSubscriptionActionPending(false);
       }
       return;
     }
     setPaywallReturnFocusTo(premiumRowRef.current);
     setPaywallOpen(true);
-  }, [fire, isPremium]);
+  }, [accessLoading, fire, isPremium, subscriptionActionPending]);
 
   // ──── Auto-posisjon: toggle + permission/geolocation-flyt ─────────────────
   //
@@ -2320,13 +2331,16 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
             ref={premiumRowRef}
             type="button"
             style={premiumCardStyle}
-            onClick={handlePremiumCtaClick}
+            onClick={() => void handlePremiumCtaClick()}
+            disabled={accessLoading || subscriptionActionPending}
             aria-label={
-              isPremium
+              accessLoading
+                ? 'Sjekker Babyora Pluss-status'
+                : isPremium
                 ? 'Babyora Pluss aktiv — administrer abonnement og fakturering'
                 : 'Ikke aktivert — start 7 dager gratis med Babyora Pluss'
             }
-            aria-haspopup={isPremium ? undefined : 'dialog'}
+            aria-haspopup={!accessLoading && !isPremium ? 'dialog' : undefined}
           >
             <span aria-hidden="true" style={premiumShineStyle} />
             <span style={premiumBodyStyle}>
@@ -2335,11 +2349,17 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
                   ikke lenger et gratis-nivå å beskrive her. */}
               <span style={premiumEyebrowStyle}>
                 <span aria-hidden="true" style={premiumStatusDotStyle} />
-                {isPremium ? 'Babyora Pluss aktiv' : 'Ikke aktivert'}
+                {accessLoading
+                  ? 'Sjekker abonnement …'
+                  : isPremium
+                    ? 'Babyora Pluss aktiv'
+                    : 'Ikke aktivert'}
               </span>
               <span style={premiumTitleStyle}>Babyora Pluss</span>
               <span style={premiumSubStyle}>
-                {isPremium
+                {accessLoading
+                  ? 'Henter status fra butikken'
+                  : isPremium
                   ? 'Administrer abonnement og fakturering'
                   : 'Dagens antrekk, planer fremover og egen profil for hvert barn'}
               </span>

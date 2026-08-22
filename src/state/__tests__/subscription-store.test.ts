@@ -52,12 +52,16 @@ describe('useSubscription (P2 hard paywall)', () => {
     expect(useSubscription.getState().firstRecommendationSeenAt).toBe(first);
   });
 
-  it('setPremium oppdaterer isPremium og lastSyncedAt uavhengig av firstRecommendationSeenAt', () => {
+  it('setPremium oppdaterer aktiv og utløpt/refundert status uten å slette lokal først-verdi', () => {
     useSubscription.getState().markFirstRecommendationSeen();
     const seenAt = useSubscription.getState().firstRecommendationSeenAt;
     useSubscription.getState().setPremium(true);
     expect(useSubscription.getState().isPremium).toBe(true);
     expect(useSubscription.getState().lastSyncedAt).not.toBeNull();
+    expect(useSubscription.getState().firstRecommendationSeenAt).toBe(seenAt);
+
+    useSubscription.getState().setPremium(false);
+    expect(useSubscription.getState().isPremium).toBe(false);
     expect(useSubscription.getState().firstRecommendationSeenAt).toBe(seenAt);
   });
 });

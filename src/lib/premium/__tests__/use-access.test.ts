@@ -2,6 +2,11 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
+type EntitlementCheckResult =
+  | { status: 'active' }
+  | { status: 'inactive' }
+  | { status: 'unavailable'; errorCode: string };
+
 const runtime = vi.hoisted(() => {
   const subscriptionState = {
     isPremium: false,
@@ -17,7 +22,7 @@ const runtime = vi.hoisted(() => {
   return {
     native: false,
     configured: false,
-    check: vi.fn<() => Promise<boolean>>(),
+    check: vi.fn<() => Promise<EntitlementCheckResult>>(),
     addListener: vi.fn<(
       eventName: string,
       listener: (state: { isActive: boolean }) => void,
@@ -66,7 +71,7 @@ type AccessSnapshot = {
 
 type ControllerDependencies = {
   configuredNative: boolean;
-  check: () => Promise<boolean>;
+  check: () => Promise<EntitlementCheckResult>;
   commit: (isPremium: boolean) => void;
   readDevPremium: () => boolean;
   warn?: (message: string, error: unknown) => void;
@@ -118,7 +123,7 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
-function nativeController(check: () => Promise<boolean>) {
+function nativeController(check: () => Promise<EntitlementCheckResult>) {
   const commits: boolean[] = [];
   const warnings: unknown[] = [];
   const controller = createController({
@@ -134,7 +139,7 @@ function nativeController(check: () => Promise<boolean>) {
 
 describe('configured-native entitlement freshness', () => {
   it('hides cached Plus while refreshing, then accepts a post-refresh purchase grant', async () => {
-    const checkResult = deferred<boolean>();
+    const checkResult = deferred<EntitlementCheckResult>();
     let persistedPremium = true;
     const controller = createController({
       configuredNative: true,
@@ -154,7 +159,7 @@ describe('configured-native entitlement freshness', () => {
     });
 
     const refresh = controller.refresh();
-    checkResult.resolve(false);
+    checkResult.resolve({ status: 'inactive' });
     await refresh;
 
     expect(resolveEffectiveAccess(
@@ -176,7 +181,7 @@ describe('configured-native entitlement freshness', () => {
   });
 
   it('publishes neutral synchronously, shares one promise, and publishes one fresh result', async () => {
-    const firstCheck = deferred<boolean>();
+    const firstCheck = deferred<EntitlementCheckResult>();
     const check = vi.fn(() => firstCheck.promise);
     const { controller, commits } = nativeController(check);
     const publications: AccessSnapshot[] = [];
@@ -200,7 +205,7 @@ describe('configured-native entitlement freshness', () => {
     });
     expect(commits).toEqual([]);
 
-    firstCheck.resolve(true);
+    firstCheck.resolve({ status: 'active' });
     await first;
 
     expect(publications).toHaveLength(2);
@@ -212,14 +217,14 @@ describe('configured-native entitlement freshness', () => {
   });
 
   it('starts a new generation only after the prior single flight settles', async () => {
-    const checks = [deferred<boolean>(), deferred<boolean>()];
+    const checks = [deferred<EntitlementCheckResult>(), deferred<EntitlementCheckResult>()];
     const check = vi.fn()
       .mockImplementationOnce(() => checks[0].promise)
       .mockImplementationOnce(() => checks[1].promise);
     const { controller, commits } = nativeController(check);
 
     const first = controller.refresh();
-    checks[0].resolve(true);
+    checks[0].resolve({ status: 'active' });
     await first;
 
     const second = controller.refresh();
@@ -230,7 +235,7 @@ describe('configured-native entitlement freshness', () => {
       loading: true,
     });
 
-    checks[1].resolve(false);
+    checks[1].resolve({ status: 'inactive' });
     await second;
 
     expect(controller.getSnapshot()).toMatchObject({
@@ -240,25 +245,25 @@ describe('configured-native entitlement freshness', () => {
     expect(commits).toEqual([true, false]);
   });
 
-  it('fails closed on errors instead of retaining cached Plus', async () => {
-    const failure = new Error('store unavailable');
-    const { controller, commits, warnings } = nativeController(
-      () => Promise.reject(failure),
-    );
+  it('bevarer siste kjente tilgang når butikken er offline', async () => {
+    const { controller, commits, warnings } = nativeController(() => Promise.resolve({
+      status: 'unavailable',
+      errorCode: 'store_unavailable',
+    }));
 
     await controller.refresh();
 
     expect(controller.getSnapshot()).toMatchObject({
-      isPremium: false,
+      isPremium: true,
       loading: false,
     });
-    expect(commits).toEqual([false]);
-    expect(warnings).toEqual([failure]);
+    expect(commits).toEqual([]);
+    expect(warnings).toEqual(['store_unavailable']);
   });
 
   it('ignores a superseded completion so stale Plus cannot reopen paid access', async () => {
-    const staleCheck = deferred<boolean>();
-    const currentCheck = deferred<boolean>();
+    const staleCheck = deferred<EntitlementCheckResult>();
+    const currentCheck = deferred<EntitlementCheckResult>();
     const check = vi.fn()
       .mockImplementationOnce(() => staleCheck.promise)
       .mockImplementationOnce(() => currentCheck.promise);
@@ -268,9 +273,9 @@ describe('configured-native entitlement freshness', () => {
     controller.supersede();
     const current = controller.refresh();
 
-    currentCheck.resolve(false);
+    currentCheck.resolve({ status: 'inactive' });
     await current;
-    staleCheck.resolve(true);
+    staleCheck.resolve({ status: 'active' });
     await stale;
 
     expect(controller.getSnapshot()).toMatchObject({
@@ -283,7 +288,7 @@ describe('configured-native entitlement freshness', () => {
 
 describe('unconfigured web/dev access', () => {
   it('preserves the explicit mock value without running or claiming a native refresh', async () => {
-    const check = vi.fn(() => Promise.resolve(false));
+    const check = vi.fn(() => Promise.resolve<EntitlementCheckResult>({ status: 'inactive' }));
     const commit = vi.fn();
     const controller = createController({
       configuredNative: false,
@@ -313,8 +318,8 @@ describe('module startup/resume integration', () => {
     runtime.subscriptionState.isPremium = true;
     runtime.subscriptionState.setPremium.mockClear();
     runtime.addListener.mockClear();
-    const firstCheck = deferred<boolean>();
-    const secondCheck = deferred<boolean>();
+    const firstCheck = deferred<EntitlementCheckResult>();
+    const secondCheck = deferred<EntitlementCheckResult>();
     runtime.check
       .mockReset()
       .mockImplementationOnce(() => firstCheck.promise)
@@ -346,7 +351,7 @@ describe('module startup/resume integration', () => {
     expect(concurrent).toBe(startup);
     expect(runtime.check).toHaveBeenCalledTimes(1);
 
-    firstCheck.resolve(false);
+    firstCheck.resolve({ status: 'inactive' });
     await startup;
     expect(renderAccess()).toContain(
       '{&quot;isPremium&quot;:false,&quot;loading&quot;:false}',
@@ -362,7 +367,7 @@ describe('module startup/resume integration', () => {
     expect(renderAccess()).toContain(
       '{&quot;isPremium&quot;:false,&quot;loading&quot;:true}',
     );
-    secondCheck.resolve(true);
+    secondCheck.resolve({ status: 'active' });
     await nextResume;
     expect(renderAccess()).toContain(
       '{&quot;isPremium&quot;:true,&quot;loading&quot;:false}',

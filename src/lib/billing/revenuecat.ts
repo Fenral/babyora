@@ -54,15 +54,39 @@ export async function initRevenueCat(userId?: string): Promise<void> {
   }
 }
 
-/** Sjekk om bruker har aktiv Premium-entitlement. */
-export async function checkPremium(): Promise<boolean> {
-  if (!initialized || !Capacitor.isNativePlatform()) return false;
+export type EntitlementCheckResult =
+  | { status: 'active' }
+  | { status: 'inactive' }
+  | { status: 'unavailable'; errorCode: 'not_configured' | 'store_unavailable' };
+
+export type RestoreResult =
+  | { status: 'restored' }
+  | { status: 'nothing-to-restore' }
+  | { status: 'unavailable'; errorCode: 'not_configured' | 'store_unavailable' };
+
+export type SubscriptionManagementResult =
+  | { status: 'ready'; url: string }
+  | { status: 'unavailable'; errorCode: 'not_configured' | 'store_unavailable' | 'no_active_subscription' | 'invalid_management_url' };
+
+function unavailableStoreReason(): 'not_configured' | 'store_unavailable' {
+  return !Capacitor.isNativePlatform() || !isRevenueCatConfigured()
+    ? 'not_configured'
+    : 'store_unavailable';
+}
+
+/** Sjekk om bruker har aktiv Premium-entitlement uten å blande offline med utløp. */
+export async function checkPremium(): Promise<EntitlementCheckResult> {
+  if (!initialized || !Capacitor.isNativePlatform()) {
+    return { status: 'unavailable', errorCode: unavailableStoreReason() };
+  }
   try {
     const { customerInfo } = await Purchases.getCustomerInfo();
-    return Boolean(customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]);
+    return customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]
+      ? { status: 'active' }
+      : { status: 'inactive' };
   } catch {
     console.error('[Babyora] checkPremium feilet');
-    return false;
+    return { status: 'unavailable', errorCode: 'store_unavailable' };
   }
 }
 
@@ -304,14 +328,52 @@ export function purchasePlan(plan: PlanKey): Promise<PurchaseResult> {
   });
 }
 
-/** Restore-funksjon — kalles fra paywall hvis bruker har kjøpt før. */
-export async function restorePurchases(): Promise<boolean> {
-  if (!initialized || !Capacitor.isNativePlatform()) return false;
+/** Restore-funksjon med eget offline-utfall, så tom restore ikke kan feilrapporteres. */
+export async function restorePurchases(): Promise<RestoreResult> {
+  if (!initialized || !Capacitor.isNativePlatform()) {
+    return { status: 'unavailable', errorCode: unavailableStoreReason() };
+  }
   try {
     const { customerInfo } = await Purchases.restorePurchases();
-    return Boolean(customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]);
+    return customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]
+      ? { status: 'restored' }
+      : { status: 'nothing-to-restore' };
   } catch {
     console.error('[Babyora] restorePurchases feilet');
-    return false;
+    return { status: 'unavailable', errorCode: 'store_unavailable' };
+  }
+}
+
+const MANAGEMENT_HOSTS = new Set(['apps.apple.com', 'play.google.com']);
+
+function verifiedManagementUrl(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && MANAGEMENT_HOSTS.has(url.hostname)
+      ? url.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Henter butikkens egen administrasjonsdestinasjon fra CustomerInfo. */
+export async function getSubscriptionManagementUrl(): Promise<SubscriptionManagementResult> {
+  if (!initialized || !Capacitor.isNativePlatform()) {
+    return { status: 'unavailable', errorCode: unavailableStoreReason() };
+  }
+  try {
+    const { customerInfo } = await Purchases.getCustomerInfo();
+    if (!customerInfo.managementURL) {
+      return { status: 'unavailable', errorCode: 'no_active_subscription' };
+    }
+    const url = verifiedManagementUrl(customerInfo.managementURL);
+    return url
+      ? { status: 'ready', url }
+      : { status: 'unavailable', errorCode: 'invalid_management_url' };
+  } catch {
+    console.error('[Babyora] getSubscriptionManagementUrl feilet');
+    return { status: 'unavailable', errorCode: 'store_unavailable' };
   }
 }

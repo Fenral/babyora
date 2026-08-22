@@ -1025,13 +1025,17 @@ export function PaywallDialog({
         return;
       }
       const restored = await restorePurchases();
-      if (restored) {
+      if (restored.status === 'restored') {
         setPremium(true);
         setStatusMessage(PAYWALL_COPY.statusActivated);
         void notifySuccess();
         scheduleAutoClose();
-      } else {
+      } else if (restored.status === 'nothing-to-restore') {
         setStatusMessage(PAYWALL_COPY.statusNoRestore);
+      } else {
+        setStatusMessage('');
+        setErrorMessage(PAYWALL_COPY.errorRestoreException);
+        void notifyError();
       }
     } catch {
       console.error('[Babyora] PaywallDialog restore feilet');

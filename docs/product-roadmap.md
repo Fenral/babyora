@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 23/56 tasks closed — 22 complete, 1 waived
+> **Roadmap status:** 24/56 tasks closed — 23 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -155,7 +155,7 @@
   Files: `src/components/PaywallDialog.tsx`, `src/components/PaywallDialog.test.tsx`
   Notes: Show localized live prices, renewal/cancellation copy, loading, missing-offering, error, and success states; anchor prices are never purchasable. Verify: tests cover two live packages and an unavailable offering.
 
-- [ ] **TASK-025** — Implement restore, expiry, refund, and manage-subscription behavior.
+- [x] **TASK-025** — Implement restore, expiry, refund, and manage-subscription behavior.
   Files: `src/state/subscription.ts`, `src/screens/FamilieScreen.tsx`, `src/state/subscription.test.ts`
   Notes: Refresh customer info at safe lifecycle points, relock on inactive entitlement, preserve local data, and expose restore/manage actions. Verify: active, expired, refunded, nothing-to-restore, and offline cases pass.
 

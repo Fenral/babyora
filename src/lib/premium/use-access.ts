@@ -7,6 +7,11 @@
  * cachet Plus-verdi kan derfor aldri åpne betalt innhold før en fersk
  * butikkrespons er autoritativ. Parallelle kall deler samme promise.
  *
+ * En autoritativ inaktiv respons låser Pluss igjen. En utilgjengelig butikk
+ * bevarer derimot siste kjente entitlement etter at refreshen er ferdig;
+ * offline er ikke det samme som utløpt/refundert. Under selve oppslaget er
+ * betalt tilgang fortsatt nøytral for å unngå et kort cache-flash.
+ *
  * På web/dev (ikke native eller RevenueCat ikke konfigurert) er synken en
  * eksplisitt ready-dev no-op. subscription-store beholder mock-verdien slik
  * at utviklere kan teste Premium-UI uten et ekte RevenueCat-oppsett.
@@ -23,7 +28,11 @@
 import { useSyncExternalStore } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
-import { checkPremium, isRevenueCatConfigured } from '../billing/revenuecat';
+import {
+  checkPremium,
+  isRevenueCatConfigured,
+  type EntitlementCheckResult,
+} from '../billing/revenuecat';
 import { useSubscription } from '../../state/subscription-store';
 
 type AccessSnapshot = {
@@ -34,7 +43,7 @@ type AccessSnapshot = {
 
 type ControllerDependencies = {
   configuredNative: boolean;
-  check: () => Promise<boolean>;
+  check: () => Promise<EntitlementCheckResult>;
   commit: (isPremium: boolean) => void;
   readDevPremium: () => boolean;
   warn?: (message: string, error: unknown) => void;
@@ -94,7 +103,7 @@ export function createEntitlementFreshnessController(
     const refreshGeneration = ++generation;
     publishRefreshing();
 
-    let checkResult: Promise<boolean>;
+    let checkResult: Promise<EntitlementCheckResult>;
     try {
       checkResult = dependencies.check();
     } catch (error) {
@@ -103,8 +112,21 @@ export function createEntitlementFreshnessController(
 
     const refreshPromise = checkResult
       .then(
-        (isPremium) => {
+        (result) => {
           if (refreshGeneration !== generation) return;
+          if (result.status === 'unavailable') {
+            publish({
+              isPremium: dependencies.readDevPremium(),
+              loading: false,
+              source: 'configured-native',
+            });
+            dependencies.warn?.(
+              '[Babyora] syncPremiumEntitlement utilgjengelig',
+              result.errorCode,
+            );
+            return;
+          }
+          const isPremium = result.status === 'active';
           dependencies.commit(isPremium);
           publish({
             isPremium,
@@ -114,9 +136,8 @@ export function createEntitlementFreshnessController(
         },
         (error: unknown) => {
           if (refreshGeneration !== generation) return;
-          dependencies.commit(false);
           publish({
-            isPremium: false,
+            isPremium: dependencies.readDevPremium(),
             loading: false,
             source: 'configured-native',
           });
@@ -164,9 +185,10 @@ const entitlementFreshness = createEntitlementFreshnessController({
 /**
  * Kombinerer freshness-livssyklusen med den eksisterende store-kontrakten.
  *
- * Før og under en konfigurert native refresh er cache alltid blokkert.
- * Etter at refresh har skrevet sin ferske verdi, kan senere store-endringer
- * (blant annet vellykket kjøp/gjenoppretting) slå gjennom umiddelbart.
+ * Før og under en konfigurert native refresh er cache alltid blokkert. En
+ * aktiv/inaktiv respons skriver den autoritative verdien; unavailable lar
+ * siste kjente verdi stå. Senere store-endringer (blant annet vellykket
+ * kjøp/gjenoppretting) slår gjennom umiddelbart.
  */
 export function resolveEffectiveAccess(
   freshness: AccessSnapshot,

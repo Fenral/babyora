@@ -1,7 +1,26 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phases 0 and 1 are closed. Phase 2 is active on `codex/phase-2/subscription-and-observability`. TASK-021 waits for owner-authenticated sandbox evidence; owner authorized independent local work, and TASK-022–024 are complete.
+**Phase:** Product roadmap Phases 0 and 1 are closed. Phase 2 is active on `codex/phase-2/subscription-and-observability`. TASK-021 waits for owner-authenticated sandbox evidence; owner authorized independent local work, and TASK-022–025 are complete.
+
+## 2026-08-22: TASK-025 complete subscription lifecycle
+
+- Entitlement checks now distinguish active, inactive, and unavailable store
+  responses. Authoritative expiry/refund relocks Pluss on startup or app
+  resume; offline no longer masquerades as expiry and preserves the last-known
+  entitlement after the refresh settles.
+- Restore distinguishes restored, nothing-to-restore, and unavailable. The
+  paywall activates only a restored entitlement and gives separate calm empty
+  and recoverable offline feedback without raw SDK payloads.
+- The Family settings card is disabled while status refreshes. Active users
+  open RevenueCat's verified Apple/Google management URL, with a fixed
+  platform URL as the offline fallback; inactive users retain the paywall
+  restore route. Entitlement loss does not clear local recommendation state.
+- Verification passed 75/75 focused tests, full lint/typecheck/build, 217/217
+  test files with 3,338 passing and 1 todo, and 4/4 browser purchase scenarios.
+  Record: `docs/evidence/task-025-verification.md`. **Next local task:**
+  TASK-026, which needs owner console evidence; TASK-027 can proceed locally.
+
 
 ## 2026-08-22: TASK-024 complete truthful store offers
 
