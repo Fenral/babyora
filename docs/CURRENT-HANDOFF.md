@@ -1,7 +1,26 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-014 are closed. TASK-006 was waived by owner, not passed. TASK-015 is next.
+**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-015 are closed. TASK-006 was waived by owner, not passed. TASK-016 is next.
+
+## 2026-08-22: TASK-015 deterministic canonical engine
+
+- Hjem, Juster, and Uke now calculate through one pure, versioned facade.
+  It deliberately retains the contained legacy safety pipeline while Motor 2.0
+  remains externally unreviewed and display-disabled.
+- Sixteen named temperature fixtures freeze both sides of all eight band
+  thresholds. Seven activity/context fixtures cover stroller awake/sleeping,
+  carrier outside/under jacket, outdoor play, indoor sleep, and car seat.
+- Every fixture is byte-identical across 25 repeated runs and leaves input
+  unchanged. Source gates prevent the three production screens from importing
+  the underlying engine directly.
+- Verification passed: 27 direct boundary tests, typecheck, lint, 214/214 test
+  files with 3,286 passing tests and 1 todo, main+bare build, and E2E 2/2.
+  Record: `docs/evidence/task-015-verification.md`.
+- `FR-005` remains Partial only because screens still collapse engine errors to
+  `null` instead of a visible bounded recovery state. **Next:** TASK-016
+  versions the safety-rule register, sources, non-override policy, and country
+  review status.
 
 ## 2026-08-22: TASK-014 explicit activity input
 

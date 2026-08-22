@@ -83,7 +83,7 @@ import {
 } from '../lib/haptics.js';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
-import { recommend } from '../lib/wool-layers/recommend';
+import { recommendCanonical } from '../lib/clothing-engine-v2/canonical-engine';
 import { feelsLikeC as computeFeelsLikeC } from '../lib/met-no/feels-like';
 import type { Activity } from '../lib/wool-layers/types';
 import type { GarmentId } from '../data/garment-illustrations';
@@ -503,7 +503,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
   // (b) data-temp-canvashintet. Vises ALDRI direkte — se P10/JOB4 filhode.
   const liveRecommendation = useMemo(() => {
     try {
-      return recommend({
+      return recommendCanonical({
         weather: {
           tempC,
           // Sol-review P0-2 (2026-08-05): samme værkontrakt som Hjem — føles-som
@@ -655,7 +655,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
   const committedRecommendation = useMemo(() => {
     if (!committed || !committedActivityOption) return null;
     try {
-      return recommend({
+      return recommendCanonical({
         weather: {
           tempC: committed.tempC,
           // P0-2: normalisert kontrakt — se liveRecommendation over.

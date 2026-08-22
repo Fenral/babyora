@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 14/56 tasks closed — 13 complete, 1 waived
+> **Roadmap status:** 15/56 tasks closed — 14 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -101,7 +101,7 @@
   Files: `src/lib/clothing-engine-v2/types.ts`, `src/lib/clothing-engine-v2/input.test.ts`
   Notes: Support stroller, carrier, outdoor play, and indoor sleep plus car-seat context where applicable; reject impossible combinations. Verify: every activity has valid fixtures and invalid-context tests.
 
-- [ ] **TASK-015** — Prove deterministic engine behavior at temperature and activity boundaries.
+- [x] **TASK-015** — Prove deterministic engine behavior at temperature and activity boundaries.
   Files: `src/lib/clothing-engine-v2/`, `src/lib/clothing-engine-v2/boundary.test.ts`
   Notes: Route UI-facing calls through one canonical pure engine and freeze boundary expectations with named fixtures. Verify: repeated runs produce byte-equivalent canonical results for the same input.
 

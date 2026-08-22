@@ -55,7 +55,7 @@ import { useChildren } from '../state/children-store';
 import { useWeather } from '../hooks/useWeather';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
-import { recommend } from '../lib/wool-layers/recommend';
+import { recommendCanonical } from '../lib/clothing-engine-v2/canonical-engine';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
 import { DISCLAIMER_SHORT } from '../lib/copy/disclaimer';
 import { verifiedAvatarAsset } from '../lib/recommendation/verified-avatar';
@@ -462,7 +462,7 @@ export function HjemScreen({
   const recommendation = useMemo<Recommendation | null>(() => {
     if (!engineInput) return null;
     try {
-      return recommend(engineInput);
+      return recommendCanonical(engineInput);
     } catch {
       return null;
     }

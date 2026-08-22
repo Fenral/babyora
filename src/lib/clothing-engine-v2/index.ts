@@ -10,6 +10,10 @@ export { ageStageFor } from './age.js';
 export { SITUATION_PROFILES, isSituationValidForStage } from './situations.js';
 export { recommendV2 } from './recommend.js';
 export { normalizeActivityInputV2, recommendActivityV2 } from './activity-input.js';
+export {
+  CANONICAL_ENGINE_VERSION,
+  recommendCanonical,
+} from './canonical-engine.js';
 export { toLegacyRecommendation } from './legacy-adapter.js';
 export { ENGINE_V2_FLAGS, selectEngine, type EngineV2Flags } from './feature-flags.js';
 export { compareShadow, selectVisibleResult, type ShadowComparison, type ShadowStatus } from './shadow-compare.js';

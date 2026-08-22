@@ -57,7 +57,7 @@ import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
 import { useAccess } from '../lib/premium/use-access';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
-import { recommend } from '../lib/wool-layers/recommend';
+import { recommendCanonical } from '../lib/clothing-engine-v2/canonical-engine';
 import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
 import {
   getConditionLabel,
@@ -308,7 +308,7 @@ function phaseFromHourly(
     ...(activity === 'vogn' ? { vognMode } : {}),
   };
   return Object.freeze({
-    recommendation: recommend(engineInput),
+    recommendation: recommendCanonical(engineInput),
     engineInput,
     weather: Object.freeze({
       atIso: point.time.toISOString(),
@@ -340,7 +340,7 @@ function phaseFromDay(
     ...(activity === 'vogn' ? { vognMode } : {}),
   };
   return Object.freeze({
-    recommendation: recommend(engineInput),
+    recommendation: recommendCanonical(engineInput),
     engineInput,
     weather: Object.freeze({
       atIso: new Date(
