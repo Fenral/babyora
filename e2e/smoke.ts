@@ -157,6 +157,33 @@ async function verifyRootNavigation(page: Page): Promise<void> {
   }
 }
 
+function toLocalIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+async function verifyAddChildAgeBoundary(page: Page): Promise<void> {
+  const navigation = page.getByRole('navigation', { name: 'Hovednavigasjon' });
+  await navigation.getByRole('button', { name: 'Familie', exact: true }).click();
+  await page.getByRole('button', { name: /Legg til nytt barn/ }).click();
+
+  const dialog = page.getByRole('dialog', { name: 'Legg til nytt barn' });
+  const unsupported = new Date();
+  unsupported.setFullYear(unsupported.getFullYear() - 3);
+  await dialog.getByLabel('Fødselsdato').fill(toLocalIsoDate(unsupported));
+  await dialog.getByLabel('Sted').click();
+  await dialog.getByText(/kan foreløpig gi råd for barn til og med 24 måneder/).waitFor();
+
+  if (await dialog.getByRole('button', { name: 'Lagre nytt barn' }).isEnabled()) {
+    fail('familie: barn over 24 måneder åpnet Lagre nytt barn');
+  }
+
+  await dialog.getByRole('button', { name: /Avbryt/ }).click();
+  await navigation.getByRole('button', { name: 'Hjem', exact: true }).click();
+}
+
 async function main(): Promise<void> {
   let server: ChildProcess | null = null;
   let browser: Browser | null = null;
@@ -190,6 +217,30 @@ async function main(): Promise<void> {
       await page.locator('#ob-name-input').fill('Test');
       await page.getByRole('button', { name: /Fortsett/ }).click();
       await page.locator('.ob-baby-hero.compact .ob-baby-poster').waitFor({ state: 'visible' });
+
+      const future = new Date();
+      future.setDate(future.getDate() + 1);
+      await page.locator('#ob-birth-date').fill(toLocalIsoDate(future));
+      await page.getByText('Fødselsdatoen kan ikke være i fremtiden.').waitFor();
+      if (await page.getByRole('button', { name: /Fortsett/ }).isEnabled()) {
+        fail('onboarding: fremtidig fødselsdato åpnet Fortsett');
+      }
+
+      const unsupported = new Date();
+      unsupported.setFullYear(unsupported.getFullYear() - 3);
+      await page.locator('#ob-birth-date').fill(toLocalIsoDate(unsupported));
+      await page.getByText(/kan foreløpig gi råd for barn til og med 24 måneder/).waitFor();
+      if (await page.getByRole('button', { name: /Fortsett/ }).isEnabled()) {
+        fail('onboarding: barn over 24 måneder åpnet Fortsett');
+      }
+
+      const supported = new Date();
+      supported.setFullYear(supported.getFullYear() - 1);
+      await page.locator('#ob-birth-date').fill(toLocalIsoDate(supported));
+      if (!(await page.getByRole('button', { name: /Fortsett/ }).isEnabled())) {
+        fail('onboarding: gyldig fødselsdato åpnet ikke Fortsett');
+      }
+
       await page.getByRole('button', { name: 'Tilbake' }).click();
       await page.getByRole('heading', { name: 'Hvem kler vi på?' }).waitFor();
     });
@@ -200,7 +251,10 @@ async function main(): Promise<void> {
       `${BASE}/?seed=demo`,
       'text=Hjem',
       'app-skall og rotnavigasjon (demo) rendrer',
-      verifyRootNavigation,
+      async (page) => {
+        await verifyRootNavigation(page);
+        await verifyAddChildAgeBoundary(page);
+      },
     );
 
     console.log('SMOKE PASS: 2/2 scenarioer grønne');

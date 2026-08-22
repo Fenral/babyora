@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 10/56 tasks closed — 9 complete, 1 waived
+> **Roadmap status:** 11/56 tasks closed — 10 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -85,8 +85,8 @@
 
 > Read the listed references and inspect existing implementations before editing. Work on branch `phase-1/core-recommendation`. Reuse verified engine and weather code, replace UI only where the provisional design requires it, and never weaken a safety rule to make a test pass. Complete and verify one roadmap task per session.
 
-- [ ] **TASK-011** — Harden the single local child profile contract for ages 0–24 months.
-  Files: `src/state/children.tsx`, `src/state/children.test.tsx`
+- [x] **TASK-011** — Harden the single local child profile contract for ages 0–24 months.
+  Files: `src/state/child-profile.ts`, `src/state/children-provider.tsx`, `src/state/children-store.tsx`, `src/state/children.test.tsx`, `src/state/__tests__/child-profile.test.ts`, `src/screens/OnboardingScreen.tsx`, `src/screens/InnstillingerScreen.tsx`, `e2e/smoke.ts`, `docs/evidence/task-011-verification.md`
   Notes: Validate date of birth, migrate known stored shapes, recover from corrupt storage, and reject unsupported ages without deleting data. Verify: tests cover valid, future, corrupt, migrated, and over-age profiles.
 
 - [ ] **TASK-012** — Harden manual home location and session-only automatic location.

@@ -43,6 +43,7 @@ import {
   type ReactElement,
 } from 'react';
 import { useChildren } from '../state/children-store';
+import { validateChildDob } from '../state/child-profile';
 import { useWeather } from '../hooks/useWeather';
 import { useHapticSystem } from '../lib/haptics/system';
 import { searchCities } from '../data/no-cities';
@@ -106,26 +107,6 @@ function pad2(n: number): string {
 
 function toISODate(d: number, m: number, y: number): string {
   return `${y}-${pad2(m)}-${pad2(d)}`;
-}
-
-function isValidDate(d: number, m: number, y: number): boolean {
-  if (!Number.isFinite(d) || !Number.isFinite(m) || !Number.isFinite(y)) return false;
-  if (y < 2018 || y > new Date().getFullYear() + 1) return false;
-  if (m < 1 || m > 12) return false;
-  const last = new Date(y, m, 0).getDate();
-  if (d < 1 || d > last) return false;
-  return true;
-}
-
-function ageInMonths(d: number, m: number, y: number): number | null {
-  if (!isValidDate(d, m, y)) return null;
-  const dob = new Date(y, m - 1, d);
-  const now = new Date();
-  const months =
-    (now.getFullYear() - dob.getFullYear()) * 12 +
-    (now.getMonth() - dob.getMonth()) -
-    (now.getDate() < dob.getDate() ? 1 : 0);
-  return Math.max(0, months);
 }
 
 function formatAge(months: number | null): string {
@@ -239,6 +220,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   const [step, setStep] = useState<Step>(1);
 
   const [name, setName] = useState<string>('');
+  const [profileError, setProfileError] = useState('');
 
   const today = useMemo(() => new Date(), []);
   // Ingen forhåndsvalgt dato. iOS/Android får bruke sin egen, kjente datovelger.
@@ -266,9 +248,12 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   const dNum = parseInt(day, 10);
   const mNum = parseInt(month, 10);
   const yNum = parseInt(year, 10);
-  const ageM = ageInMonths(dNum, mNum, yNum);
-  const dobIsValid = ageM !== null;
-  const dobISO = dobIsValid ? toISODate(dNum, mNum, yNum) : '';
+  const dobISO = day && month && year ? toISODate(dNum, mNum, yNum) : '';
+  const dobValidation = validateChildDob(dobISO, today);
+  const dateIsValid = dobValidation.status !== 'invalid';
+  const dobIsValid = dobValidation.status === 'supported';
+  const dobIsUnsupported = dobValidation.status === 'unsupported-age';
+  const ageM = 'ageMonths' in dobValidation ? dobValidation.ageMonths : null;
   const todayISO = toISODate(today.getDate(), today.getMonth() + 1, today.getFullYear());
   const earliestDob = useMemo(() => {
     const min = new Date(today.getFullYear() - 5, today.getMonth(), today.getDate());
@@ -336,6 +321,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
     setDay(d ?? '');
     setMonth(m ?? '');
     setYear(y ?? '');
+    setProfileError('');
     fire('selection').catch(() => {});
   }, [fire]);
 
@@ -396,17 +382,35 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
   const handleCompleteOnboarding = useCallback(() => {
     if (!nameOk || !dobIsValid || !locationConfirmed) return;
-    completeOnboarding({
+    const completed = completeOnboarding({
       name: nameTrim,
-      dob: dobISO,
+      dob: toISODate(parseInt(day, 10), parseInt(month, 10), parseInt(year, 10)),
       city: location.city || DEFAULT_LOCATION.city,
       lat: location.lat,
       lon: location.lon,
       color: AVATAR_COLOR_DEFAULT,
     });
+    if (!completed) {
+      setProfileError('Profilen kunne ikke lagres. Kontroller navn, fødselsdato og sted.');
+      return;
+    }
+    setProfileError('');
     fire('success').catch(() => {});
     setStep(5); // velkomst-hero
-  }, [nameOk, dobIsValid, locationConfirmed, nameTrim, dobISO, location, completeOnboarding, fire]);
+  }, [
+    completeOnboarding,
+    day,
+    dobIsValid,
+    fire,
+    location.city,
+    location.lat,
+    location.lon,
+    locationConfirmed,
+    month,
+    nameOk,
+    nameTrim,
+    year,
+  ]);
 
   // R7 Task 7: velkomst-steget (5) tar brukeren rett inn i appen — første
   // ekte anbefaling vises FØR noen paywall. Plus introduseres kontekstuelt
@@ -531,9 +535,13 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                         autoCapitalize="words"
                         placeholder="F.eks. Iver"
                         value={name}
+                        maxLength={80}
                         // §11: feltet autofokuseres IKKE (tastaturet tvinges
                         // ikke opp) — ingen autoFocus-prop her, med vilje.
-                        onChange={(e) => setName(e.target.value)}
+                        onChange={(e) => {
+                          setName(e.target.value);
+                          setProfileError('');
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') goNext();
                         }}
@@ -577,12 +585,12 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                 <p>Alder påvirker hvor varmt barnet bør kles.</p>
               </div>
 
-              <label className={`ob-date-picker${dobIsValid ? ' selected' : ''}`} htmlFor="ob-birth-date">
+              <label className={`ob-date-picker${dateIsValid ? ' selected' : ''}`} htmlFor="ob-birth-date">
                 <span className="ob-date-icon" aria-hidden="true"><CalendarIcon /></span>
                 <span className="ob-date-copy">
                   <span className="ob-date-label">Fødselsdato</span>
                   <span className="ob-date-value">
-                    {dobIsValid ? formatDOBLong(dNum, mNum, yNum) : 'Velg dato'}
+                    {dateIsValid ? formatDOBLong(dNum, mNum, yNum) : 'Velg dato'}
                   </span>
                 </span>
                 <ChevronRight />
@@ -602,6 +610,10 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                   <>
                     {nameTrim || 'Babyen'} er <strong>{formatAge(ageM)}</strong> gammel
                   </>
+                ) : dobIsUnsupported ? (
+                  <>Snudly kan foreløpig gi råd for barn til og med 24 måneder. Velg en annen dato for å fortsette.</>
+                ) : dobValidation.status === 'future' ? (
+                  <>Fødselsdatoen kan ikke være i fremtiden.</>
                 ) : (
                   <>Den vanlige datovelgeren på telefonen åpnes.</>
                 )}
@@ -854,15 +866,18 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
           )}
 
           {step === 4 && (
-            <button
-              className="ob-btn-primary giant"
-              type="button"
-              onClick={handleCompleteOnboarding}
-              disabled={!nameOk || !dobIsValid || !locationConfirmed}
-              aria-disabled={!nameOk || !dobIsValid || !locationConfirmed}
-            >
-              Lag første antrekk <ChevronRight />
-            </button>
+            <>
+              {profileError ? <p className="ob-hint ob-hint-center" role="alert">{profileError}</p> : null}
+              <button
+                className="ob-btn-primary giant"
+                type="button"
+                onClick={handleCompleteOnboarding}
+                disabled={!nameOk || !dobIsValid || !locationConfirmed}
+                aria-disabled={!nameOk || !dobIsValid || !locationConfirmed}
+              >
+                Lag første antrekk <ChevronRight />
+              </button>
+            </>
           )}
 
           {step === 5 && (

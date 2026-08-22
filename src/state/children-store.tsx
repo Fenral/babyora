@@ -49,10 +49,10 @@ export type ChildrenStore = {
   active: Child;
   needsOnboarding: boolean;
   setActiveId: (id: string) => void;
-  addChild: (child: Omit<Child, 'id'>) => void;
-  updateChild: (id: string, patch: Partial<Omit<Child, 'id'>>) => void;
+  addChild: (child: Omit<Child, 'id'>) => boolean;
+  updateChild: (id: string, patch: Partial<Omit<Child, 'id'>>) => boolean;
   removeChild: (id: string) => void;
-  completeOnboarding: (firstChild: Omit<Child, 'id'>) => void;
+  completeOnboarding: (firstChild: Omit<Child, 'id'>) => boolean;
   resetAll: () => void;
 };
 
@@ -137,10 +137,12 @@ export function saveToStorage(children: Child[]): void {
 }
 
 /** @internal — kun for children-provider.tsx */
-export function loadActiveId(fallback: string): string {
+export function loadActiveId(fallback: string, validIds?: readonly string[]): string {
   if (typeof window === 'undefined') return fallback;
   try {
-    return localStorage.getItem(ACTIVE_KEY) || fallback;
+    const stored = localStorage.getItem(ACTIVE_KEY);
+    if (!stored) return fallback;
+    return validIds && !validIds.includes(stored) ? fallback : stored;
   } catch {
     return fallback;
   }

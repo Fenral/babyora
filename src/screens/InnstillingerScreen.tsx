@@ -40,6 +40,7 @@ import {
 import type { FamilieToolTarget, TabKey } from '../types/nav';
 import { Capacitor } from '@capacitor/core';
 import { useChildren } from '../state/children-store';
+import { validateChildDob } from '../state/child-profile';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings, setNativeSetting } from '../hooks/useNativeSettings';
 import { useTheme, type ThemeMode } from '../state/theme-store';
@@ -1364,14 +1365,13 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
 
   const handleAddChildSubmit = useCallback(
     (payload: { name: string; dob: string; city: string }) => {
-      void fire('success');
       // Behold default-koordinater fra aktiv barn (best-effort) hvis tilgjengelig,
       // ellers fall tilbake til Trondheim (matcher OnboardingScreen DEFAULT_LOCATION).
       const lat = !needsOnboarding && active.lat ? active.lat : 63.4305;
       const lon = !needsOnboarding && active.lon ? active.lon : 10.3951;
       const AVATAR_COLORS_PICK = ['#C25450', '#4F8A6A', '#2E7CC2', '#D87A2E', '#8B5A8C', '#5B6470'];
       const color = AVATAR_COLORS_PICK[allChildren.length % AVATAR_COLORS_PICK.length]!;
-      addChild({
+      const added = addChild({
         name: payload.name,
         dob: payload.dob,
         city: payload.city,
@@ -1379,6 +1379,11 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
         lon,
         color,
       });
+      if (!added) {
+        showToast('Profilen kunne ikke lagres. Kontroller fødselsdato og sted.');
+        return;
+      }
+      void fire('success');
       setAddChildOpen(false);
       showToast(`${payload.name} er lagt til.`);
     },
@@ -4629,15 +4634,8 @@ function AddChildDialog({
   const trimmedName = name.trim();
   const trimmedCity = city.trim();
 
-  // Valider dato (må være ISO YYYY-MM-DD og ikke i fremtiden, ikke før 2018)
-  const dobIsValid = useMemo(() => {
-    if (!dob) return false;
-    const d = new Date(dob);
-    if (Number.isNaN(d.getTime())) return false;
-    const now = new Date();
-    const earliest = new Date('2018-01-01');
-    return d >= earliest && d <= now;
-  }, [dob]);
+  const dobValidation = useMemo(() => validateChildDob(dob), [dob]);
+  const dobIsValid = dobValidation.status === 'supported';
 
   const nameOk = trimmedName.length > 0;
   const cityOk = trimmedCity.length > 0;
@@ -4911,7 +4909,11 @@ function AddChildDialog({
             />
             {touched && !dobIsValid ? (
               <p id="add-child-dob-err" style={errorStyle}>
-                Velg en gyldig fødselsdato (etter 1. januar 2018).
+                {dobValidation.status === 'unsupported-age'
+                  ? 'Snudly kan foreløpig gi råd for barn til og med 24 måneder.'
+                  : dobValidation.status === 'future'
+                    ? 'Fødselsdatoen kan ikke være i fremtiden.'
+                    : 'Velg en gyldig fødselsdato.'}
               </p>
             ) : null}
           </div>

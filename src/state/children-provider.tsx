@@ -5,7 +5,8 @@
  * eksporterer ikke-komponenter (react-refresh/only-export-components).
  * All logikk/state-API er uendret; kun filplassering. Montert i src/main.tsx.
  */
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { prepareChildForPersistence, prepareChildUpdate } from './child-profile';
 import {
   ACTIVE_KEY,
   AVATAR_COLORS,
@@ -27,9 +28,10 @@ export function ChildrenProvider({ children }: { children: ReactNode }) {
     if (isDemoMode()) return DEMO_CHILDREN;
     return loadFromStorage();
   });
+  const listRef = useRef(list);
   const [activeId, setActiveIdState] = useState<string>(() => {
     const initial = list[0]?.id ?? '';
-    return loadActiveId(initial);
+    return loadActiveId(initial, list.map(({ id }) => id));
   });
 
   // Persist endringer i list
@@ -39,8 +41,8 @@ export function ChildrenProvider({ children }: { children: ReactNode }) {
 
   // Persist activeId
   useEffect(() => {
-    if (activeId) saveActiveId(activeId);
-  }, [activeId]);
+    if (activeId && list.some((child) => child.id === activeId)) saveActiveId(activeId);
+  }, [activeId, list]);
 
   const needsOnboarding = list.length === 0;
 
@@ -50,39 +52,53 @@ export function ChildrenProvider({ children }: { children: ReactNode }) {
   );
 
   const setActiveId = useCallback((id: string) => {
-    setActiveIdState(id);
+    if (listRef.current.some((child) => child.id === id)) setActiveIdState(id);
   }, []);
 
   const addChild = useCallback((child: Omit<Child, 'id'>) => {
     const id = `child-${Date.now()}`;
-    setList((prev) => [...prev, { ...child, id }]);
+    const prepared = prepareChildForPersistence({ ...child, id });
+    if (!prepared) return false;
+    const next = [...listRef.current, prepared];
+    listRef.current = next;
+    setList(next);
+    return true;
   }, []);
 
   const updateChild = useCallback(
     (id: string, patch: Partial<Omit<Child, 'id'>>) => {
-      setList((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+      const current = listRef.current.find((child) => child.id === id);
+      if (!current) return false;
+      const prepared = prepareChildUpdate(current, patch);
+      if (!prepared) return false;
+      const next = listRef.current.map((child) => (child.id === id ? prepared : child));
+      listRef.current = next;
+      setList(next);
+      return true;
     },
     [],
   );
 
   const removeChild = useCallback((id: string) => {
-    setList((prev) => {
-      const next = prev.filter((c) => c.id !== id);
-      return next; // Onboarding trigges automatisk hvis next.length === 0
-    });
-    setActiveIdState((current) => (current === id ? list[0]?.id ?? '' : current));
-  }, [list]);
+    const next = listRef.current.filter((child) => child.id !== id);
+    listRef.current = next;
+    setList(next);
+    setActiveIdState((current) => (current === id ? next[0]?.id ?? '' : current));
+  }, []);
 
   const completeOnboarding = useCallback((firstChild: Omit<Child, 'id'>) => {
     const id = `child-${Date.now()}`;
-    const child: Child = {
+    const child = prepareChildForPersistence({
       ...firstChild,
       id,
       color: firstChild.color || AVATAR_COLORS[0]!,
-    };
+    });
+    if (!child) return false;
+    listRef.current = [child];
     setList([child]);
     setActiveIdState(id);
     // Trial-start markeres i useAccess-hook ved hasAccess-første-sjekk
+    return true;
   }, []);
 
   const resetAll = useCallback(() => {
@@ -93,6 +109,7 @@ export function ChildrenProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignorer
     }
+    listRef.current = [];
     setList([]);
     setActiveIdState('');
   }, []);

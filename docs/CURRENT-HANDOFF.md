@@ -1,7 +1,24 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is closed on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-010 are closed. TASK-006 was waived by owner, not passed. Phase 1 / TASK-011 is next.
+**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-011 are closed. TASK-006 was waived by owner, not passed. TASK-012 is next.
+
+## 2026-08-22: TASK-011 local child-profile contract
+
+- New profiles and edits now validate required fields and strict ISO birth
+  dates before persistence; ages 0–24 are accepted and future/25+ dates show a
+  plain-language boundary in onboarding and add-child.
+- Hydration remains deliberately tolerant: known material-preference shapes
+  migrate, corrupt entries recover without crashing, and older stored profiles
+  are preserved rather than silently deleted.
+- Provider mutations report rejection and avoid stale-list races. Invalid
+  active IDs fall back safely, and storage failures do not crash the app.
+- Verification passed: 27 focused tests, typecheck, focused lint, full
+  regression suite, main+bare build, and 2/2 E2E scenarios. Record:
+  `docs/evidence/task-011-verification.md`.
+- `FR-001` remains Partial only because existing 25+ profiles are not yet
+  excluded by every recommendation screen. **Next:** TASK-012 closes the
+  automatic-location persistence leak without changing visual design.
 
 ## 2026-08-22: Phase 0 closeout
 
