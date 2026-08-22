@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { displayNameForDbString } from '../../data/garment-display-names.js';
 import type { RegisterOutfitRow } from '../../lib/outfit/outfit-transition-contract.js';
+import type { OutfitBlockedAlternativeV1 } from '../../lib/outfit/alternative-options.js';
 import type { OutfitItemId, OutfitTruthSnapshotV1 } from '../../lib/outfit/outfit-truth.js';
 import { GarmentThumbnail } from './GarmentThumbnail.js';
 
@@ -10,6 +11,7 @@ type Props = Readonly<{
   highlightedId: OutfitItemId | null;
   captionId: string;
   registerOutfitRow?: RegisterOutfitRow;
+  blockedAlternatives: readonly OutfitBlockedAlternativeV1[];
   onActivate: (id: OutfitItemId) => void;
   onFocus: (id: OutfitItemId | null) => void;
   onHover: (id: OutfitItemId | null) => void;
@@ -73,6 +75,13 @@ function Row({ garment, props }: {
           Se alternativ
         </button>
       )}
+      {props.blockedAlternatives
+        .filter((blocked) => blocked.sourceItemId === garment.itemId)
+        .map((blocked) => (
+          <p key={`${blocked.sourceItemId}:${blocked.targetLabel}`} className="outfit-alternative-blocked">
+            {displayNameForDbString(blocked.targetLabel)} kan ikke brukes her fordi sikkerhetsreglene fjerner det fra antrekket.
+          </p>
+        ))}
     </li>
   );
 }

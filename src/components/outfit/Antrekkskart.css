@@ -121,6 +121,7 @@
 .outfit-row__label { flex: 1 1 12rem; min-inline-size: 0; overflow-wrap: anywhere; }
 .outfit-row__detail { color: var(--dw-ink-mid); flex: 1 1 10rem; margin-inline-start: auto; min-inline-size: 0; overflow-wrap: anywhere; text-align: end; }
 .outfit-alternative { min-block-size: 44px; margin-block-start: .25rem; }
+.outfit-alternative-blocked { color: var(--dw-ink-mid); font-size: .875rem; line-height: 1.45; margin: .35rem 0 0; }
 .outfit-active-caption { margin-block: 1rem; min-block-size: 1.5rem; }
 .outfit-map-status { color: var(--dw-ink-mid); }
 /* D2 2026-08-05: sammenligningsdialogen. Denne SKAL være hevet — den er et

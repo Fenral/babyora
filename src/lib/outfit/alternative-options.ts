@@ -9,6 +9,7 @@ import type {
 import {
   finalizeOutfitOccurrenceSwap,
   hasCompleteFinalizedSafetyData,
+  type FinalizeOutfitOccurrenceSwapArgs,
   type FinalizedOutfitSwapRejectionCode,
   type OutfitSwapSourceOccurrenceV1,
 } from './finalized-outfit-swap.js';
@@ -32,6 +33,19 @@ export type OutfitAlternativeOptionV1 = Readonly<{
   }>;
   outcome: OutfitTruthSnapshotV1;
 }>;
+
+export type OutfitBlockedAlternativeV1 = Readonly<{
+  sourceItemId: OutfitItemId;
+  targetLabel: string;
+  reason: 'safety-finalization';
+}>;
+
+export type ConfirmOutfitAlternativeResultV1 =
+  | Readonly<{ kind: 'confirmed'; outcome: OutfitTruthSnapshotV1 }>
+  | Readonly<{
+      kind: 'rejected';
+      reason: 'invalid-option' | 'stale-option' | 'safety-finalization';
+    }>;
 
 export type OutfitAlternativeDiagnosticCode =
   | FinalizedOutfitSwapRejectionCode
@@ -62,6 +76,7 @@ export type OutfitAlternativeOptionsBuildResultV1 =
       kind: 'supported';
       base: OutfitTruthSnapshotV1;
       options: readonly OutfitAlternativeOptionV1[];
+      blockedAlternatives: readonly OutfitBlockedAlternativeV1[];
       diagnostics: readonly OutfitAlternativeDiagnosticV1[];
     }>
   | Readonly<{
@@ -71,12 +86,14 @@ export type OutfitAlternativeOptionsBuildResultV1 =
         { kind: 'unsupported-cardinality' }
       >;
       options: EmptyOptions;
+      blockedAlternatives: EmptyOptions;
       diagnostics: readonly OutfitAlternativeDiagnosticV1[];
     }>
   | Readonly<{
       kind: 'unavailable';
       reason: 'invalid-input';
       options: EmptyOptions;
+      blockedAlternatives: EmptyOptions;
       diagnostics: readonly OutfitAlternativeDiagnosticV1[];
     }>;
 
@@ -87,6 +104,22 @@ const ARG_KEYS = Object.freeze([
   'pose',
 ]);
 const FACTORY_ALTERNATIVE_OPTIONS = new WeakSet<object>();
+const OPTION_CONFIRMATIONS = new WeakMap<object, Readonly<{
+  base: OutfitTruthSnapshotV1;
+  request: FinalizeOutfitOccurrenceSwapArgs;
+}>>();
+
+function hasSameSnapshotIdentity(
+  left: OutfitTruthSnapshotV1,
+  right: OutfitTruthSnapshotV1,
+): boolean {
+  return (
+    left.snapshotId === right.snapshotId
+    && left.recommendationId === right.recommendationId
+    && left.recommendationFingerprint === right.recommendationFingerprint
+    && left.transitionContextId === right.transitionContextId
+  );
+}
 
 function freezeDeep<T>(value: T): T {
   if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {
@@ -201,6 +234,7 @@ function unavailable(
     kind: 'unavailable' as const,
     reason: 'invalid-input' as const,
     options: [] as const,
+    blockedAlternatives: [] as const,
     diagnostics: [
       diagnostic(
         identity,
@@ -431,6 +465,7 @@ function makeOption(
   candidate: CandidateSnapshot,
   targetCatalogGarmentId: string,
   outcome: OutfitTruthSnapshotV1,
+  confirmationRequest: FinalizeOutfitOccurrenceSwapArgs,
 ): OutfitAlternativeOptionV1 {
   const option = freezeDeep({
     optionId: `outfit-alternative-option-v1:${stableHash(
@@ -452,6 +487,18 @@ function makeOption(
     outcome,
   });
   FACTORY_ALTERNATIVE_OPTIONS.add(option);
+  OPTION_CONFIRMATIONS.set(option, freezeDeep({
+    base,
+    request: {
+      input: structuredClone(confirmationRequest.input),
+      finalizedRecommendation: structuredClone(
+        confirmationRequest.finalizedRecommendation,
+      ),
+      baseSnapshot: base,
+      source: { ...confirmationRequest.source },
+      targetLabel: confirmationRequest.targetLabel,
+    },
+  }));
   return option;
 }
 
@@ -511,6 +558,7 @@ function buildOutfitAlternativeOptionsUnchecked(
       kind: 'unsupported-cardinality' as const,
       truth: baseBuild,
       options: [] as const,
+      blockedAlternatives: [] as const,
       diagnostics: [
         diagnostic(
           `unsupported|${transitionContextId}|${baseBuild.orderedGarments
@@ -526,6 +574,7 @@ function buildOutfitAlternativeOptionsUnchecked(
 
   const base = baseBuild.snapshot;
   const options: OutfitAlternativeOptionV1[] = [];
+  const blockedAlternatives: OutfitBlockedAlternativeV1[] = [];
   const diagnostics: OutfitAlternativeDiagnosticV1[] = [];
 
   for (const equipment of base.equipment) {
@@ -606,14 +655,22 @@ function buildOutfitAlternativeOptionsUnchecked(
     }
 
     for (const candidate of candidateData.candidates) {
-      const finalizedSwap = finalizeOutfitOccurrenceSwap({
+      const confirmationRequest = {
         input,
         finalizedRecommendation,
         baseSnapshot: base,
         source: sourceSelector(source),
         targetLabel: candidate.targetLabel,
-      });
+      } as const satisfies FinalizeOutfitOccurrenceSwapArgs;
+      const finalizedSwap = finalizeOutfitOccurrenceSwap(confirmationRequest);
       if (finalizedSwap.kind === 'rejected') {
+        if (finalizedSwap.code === 'target-removed') {
+          blockedAlternatives.push(freezeDeep({
+            sourceItemId: source.itemId,
+            targetLabel: candidate.targetLabel,
+            reason: 'safety-finalization' as const,
+          }));
+        }
         diagnostics.push(
           diagnostic(
             base.snapshotId,
@@ -697,6 +754,7 @@ function buildOutfitAlternativeOptionsUnchecked(
           candidate,
           finalizedSwap.targetCatalogGarmentId,
           outcome,
+          confirmationRequest,
         ),
       );
     }
@@ -706,6 +764,7 @@ function buildOutfitAlternativeOptionsUnchecked(
     kind: 'supported' as const,
     base,
     options,
+    blockedAlternatives,
     diagnostics,
   });
 }
@@ -717,6 +776,45 @@ export function buildOutfitAlternativeOptions(
     return buildOutfitAlternativeOptionsUnchecked(rawArgs);
   } catch {
     return unavailable();
+  }
+}
+
+export function confirmOutfitAlternative(
+  base: OutfitTruthSnapshotV1,
+  option: OutfitAlternativeOptionV1,
+): ConfirmOutfitAlternativeResultV1 {
+  try {
+    if (!isOutfitTruthSnapshot(base) || !isOutfitAlternativeOption(option)) {
+      return Object.freeze({ kind: 'rejected', reason: 'invalid-option' });
+    }
+    const confirmation = OPTION_CONFIRMATIONS.get(option);
+    if (
+      confirmation === undefined
+      || !hasSameSnapshotIdentity(confirmation.base, base)
+    ) {
+      return Object.freeze({ kind: 'rejected', reason: 'stale-option' });
+    }
+    const finalized = finalizeOutfitOccurrenceSwap(confirmation.request);
+    if (finalized.kind === 'rejected') {
+      return Object.freeze({ kind: 'rejected', reason: 'safety-finalization' });
+    }
+    const rebuilt = createOutfitTruthSnapshot({
+      transitionContextId: base.transitionContextId,
+      input: confirmation.request.input,
+      finalizedRecommendation: finalized.recommendation,
+      pose: base.avatar.pose,
+    });
+    if (
+      rebuilt.kind !== 'supported'
+      || rebuilt.snapshot.snapshotId !== option.outcome.snapshotId
+      || rebuilt.snapshot.recommendationFingerprint
+        !== option.outcome.recommendationFingerprint
+    ) {
+      return Object.freeze({ kind: 'rejected', reason: 'safety-finalization' });
+    }
+    return Object.freeze({ kind: 'confirmed', outcome: option.outcome });
+  } catch {
+    return Object.freeze({ kind: 'rejected', reason: 'safety-finalization' });
   }
 }
 

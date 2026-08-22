@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import {
+  confirmOutfitAlternative,
   isOutfitAlternativeOption,
   type OutfitAlternativeOptionV1,
 } from '../lib/outfit/alternative-options.js';
@@ -14,7 +15,8 @@ export type OutfitSelectionDiagnosticCode =
   | 'invalid-options'
   | 'forged-option'
   | 'stale-option'
-  | 'invalid-option-ownership';
+  | 'invalid-option-ownership'
+  | 'safety-revalidation-failed';
 
 export type OutfitSelectionDiagnosticV1 = Readonly<{
   diagnosticId: string;
@@ -292,10 +294,20 @@ export const useOutfitSelectionStore = create<OutfitSelectionStore>()(
         return rejected(diagnostic);
       }
 
+      const confirmation = confirmOutfitAlternative(session.base, option);
+      if (confirmation.kind === 'rejected') {
+        const diagnostic = makeDiagnostic(
+          'safety-revalidation-failed',
+          `${session.base.snapshotId}|${option.optionId}|${confirmation.reason}`,
+        );
+        set({ session: appendDiagnostic(session, diagnostic) });
+        return rejected(diagnostic);
+      }
+
       set({
         session: Object.freeze({
           ...session,
-          current: option.outcome,
+          current: confirmation.outcome,
           selectedOptionId: option.optionId,
           diagnostics: Object.freeze([]),
         }),

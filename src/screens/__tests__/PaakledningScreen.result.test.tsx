@@ -10,6 +10,7 @@ import {
   type PlannedOutfitContext,
 } from '../../lib/planning/planned-outfit-context.js';
 import { recommend } from '../../lib/wool-layers/recommend.js';
+import { ITEM_ALTERNATIVES } from '../../lib/wool-layers/alternatives.js';
 import type { RecommendInput } from '../../lib/wool-layers/types.js';
 import { useOutfitSelectionStore } from '../../state/outfit-selection-store.js';
 import { PaakledningScreen } from '../PaakledningScreen.js';
@@ -170,5 +171,28 @@ describe('PaakledningScreen — complete result states', () => {
     expect(container.textContent).toContain('Gå tilbake og beregn på nytt');
     expect(container.querySelector('.outfit-list')).toBeNull();
     expect(container.textContent).not.toContain('Hvorfor dette antrekket?');
+  });
+
+  it('calmly explains an alternative that final safety removes', () => {
+    const entry = ITEM_ALTERNATIVES.find((candidate) => candidate.itemName === 'langermet body');
+    if (!entry) throw new Error('missing langermet body alternatives');
+    const original = entry.alternatives;
+    entry.alternatives = [{ name: 'lue', pros: ['Varm'], cons: [] }];
+    try {
+      const input: RecommendInput = {
+        weather: { tempC: 20, feelsLikeC: 20, windMs: 0, precipMmH: 0 },
+        child: { ageMonths: 10, canRoll: true },
+        activity: 'soevn',
+      };
+      const { bundle, context } = resultFixture('planned', input);
+      const { container } = renderResult(context, bundle);
+
+      expect(container.textContent).toContain(
+        'Lue kan ikke brukes her fordi sikkerhetsreglene fjerner det fra antrekket.',
+      );
+      expect(container.textContent).not.toContain('Velg lue');
+    } finally {
+      entry.alternatives = original;
+    }
   });
 });

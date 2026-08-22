@@ -123,7 +123,7 @@ function SupportedPanel({
   illustrativeAvatarAsset?: string | null;
 }>) {
   const session = useOutfitSelectionStore((state) => state.session);
-  const { base, options } = outfitBundle;
+  const { base, options, blockedAlternatives } = outfitBundle;
   const avatarSnapshot = useMemo(
     () => resolveSelectedAvatarSnapshot(base, options, session),
     [base, options, session],
@@ -149,6 +149,7 @@ function SupportedPanel({
       <OutfitExperience
         snapshot={base}
         options={options}
+        blockedAlternatives={blockedAlternatives}
         temp={temp}
         registerOutfitRow={registerOutfitRow}
       />

@@ -290,6 +290,7 @@ describe('produceOutfitBundle', () => {
       'presentation',
       'base',
       'options',
+      'blockedAlternatives',
     ]);
     if (first.kind !== 'supported') return;
     expect(isOutfitTruthSnapshot(first.base)).toBe(true);
@@ -672,6 +673,7 @@ describe('produceOutfitBundle', () => {
         'weather',
         'presentation',
         'truth',
+        'blockedAlternatives',
       ]);
       if (result.kind !== 'unsupported-cardinality') return;
       expect(result.truth.reason).toBe(
@@ -845,6 +847,7 @@ describe('produceOutfitBundle', () => {
         },
         base: expectedTruth.snapshot,
         options: [],
+        blockedAlternatives: [],
       });
       if (result.kind !== 'supported') return;
       expect(result.options).toEqual([]);

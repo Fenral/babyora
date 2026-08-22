@@ -10,6 +10,7 @@ import type {
 } from '../../wool-layers/types.js';
 import {
   buildOutfitAlternativeOptions,
+  confirmOutfitAlternative,
 } from '../alternative-options.js';
 import {
   finalizeOutfitOccurrenceSwap,
@@ -424,6 +425,50 @@ describe('finalized occurrence swap adapter', () => {
       });
     },
   );
+});
+
+describe('substitution confirmation boundary', () => {
+  it('reruns the owned option through finalization and preserves canonical order at confirmation', () => {
+    const input = makeInput();
+    const built = buildOutfitAlternativeOptions(buildArgs(input));
+    expect(built.kind).toBe('supported');
+    if (built.kind !== 'supported') return;
+    const option = built.options[0];
+    expect(option).toBeDefined();
+
+    const confirmed = confirmOutfitAlternative(built.base, option!);
+
+    expect(confirmed).toEqual({ kind: 'confirmed', outcome: option!.outcome });
+    if (confirmed.kind !== 'confirmed') return;
+    expect(confirmed.outcome.garments.map((garment) => garment.order)).toEqual(
+      confirmed.outcome.garments.map((_, index) => index + 1),
+    );
+  });
+
+  it('reports a safety-removed candidate as blocked instead of silently omitting it', () => {
+    const input = makeInput({
+      activity: 'soevn',
+      weather: { feelsLikeC: 20, tempC: 20, windMs: 0, precipMmH: 0 },
+    });
+    const result = withCatalogAlternatives(
+      'langermet body',
+      [{ name: 'lue', pros: ['Varm'], cons: [] }],
+      () => buildOutfitAlternativeOptions(buildArgs(input)),
+    );
+    expect(result.kind).toBe('supported');
+    if (result.kind !== 'supported') return;
+
+    expect(result.options.some((option) => option.targetLabel === 'lue')).toBe(false);
+    expect(result.blockedAlternatives).toEqual([
+      expect.objectContaining({
+        sourceItemId: result.base.garments.find(
+          (garment) => garment.sourceLabel === 'langermet body',
+        )?.itemId,
+        targetLabel: 'lue',
+        reason: 'safety-finalization',
+      }),
+    ]);
+  });
 });
 
 describe('engine-backed alternative options', () => {

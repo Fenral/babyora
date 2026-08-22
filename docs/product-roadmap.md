@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 18/56 tasks closed — 17 complete, 1 waived
+> **Roadmap status:** 19/56 tasks closed — 18 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -117,8 +117,8 @@
   Files: `src/screens/PaakledningScreen.tsx`, `src/screens/__tests__/PaakledningScreen.result.test.tsx`, `src/lib/outfit/outfit-bundle-producer.ts`, `docs/evidence/task-018-verification.md`
   Notes: Show layers, short reason, weather time, safety notices, and text fallbacks; never present a partial result as complete. Verify: populated, stale, missing-image, and engine-error states pass.
 
-- [ ] **TASK-019** — Re-run safety finalization after every garment substitution.
-  Files: `src/lib/clothing-engine-v2/substitution.ts`, `src/lib/clothing-engine-v2/substitution.test.ts`, `src/screens/PaakledningScreen.tsx`
+- [x] **TASK-019** — Re-run safety finalization after every garment substitution.
+  Files: `src/lib/outfit/alternative-options.ts`, `src/lib/outfit/outfit-bundle-producer.ts`, `src/state/outfit-selection-store.ts`, `src/components/outfit/OutfitGarmentList.tsx`, `src/screens/__tests__/PaakledningScreen.result.test.tsx`, `docs/evidence/task-019-verification.md`
   Notes: Reject unsafe alternatives, preserve canonical order, and explain why a blocked preference lost to safety. Verify: hard-rule substitution fixtures cannot be bypassed through UI state.
 
 - [ ] **TASK-020** — Verify the complete core magic moment end to end.

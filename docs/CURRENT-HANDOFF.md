@@ -1,7 +1,24 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-018 are closed. TASK-006 was waived by owner, not passed. TASK-019 is next.
+**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-019 are closed. TASK-006 was waived by owner, not passed. TASK-020 is next.
+
+## 2026-08-22: TASK-019 safety-finalized garment substitution
+
+- Every factory-owned substitution is safety-finalized when generated and then
+  finalized again from a private frozen request when the parent confirms it.
+- The confirmation boundary accepts only the matching canonical base identity
+  and exact registered option. Forged, stale, cross-session, or changed results
+  fail closed before the selected outfit changes.
+- Alternatives removed by a hard safety rule are not shown as actions. The
+  affected garment row names the blocked preference and explains that the
+  safety rules removed it. Canonical garment order remains unchanged.
+- Verification passed: 116 focused tests, typecheck, focused and full lint,
+  217/217 test files with 3,313 passing and 1 todo, main+bare build, and E2E
+  2/2. Record: `docs/evidence/task-019-verification.md`. `FR-008` remains
+  Partial only because the supported `KlePaaOverlay` route still lacks a
+  user-facing undo/reset action. **Next:** TASK-020 verifies the complete core
+  magic moment end to end.
 
 ## 2026-08-22: TASK-018 complete numbered outfit result
 

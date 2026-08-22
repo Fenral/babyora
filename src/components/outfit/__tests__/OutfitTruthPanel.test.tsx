@@ -563,7 +563,7 @@ describe('OutfitTruthPanel', () => {
       expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-avatar-snapshot="${bundle.base.snapshotId}"`);
 
       expect(useOutfitSelectionStore.getState().open(bundle.base, bundle.options).ok).toBe(true);
-      expect(useOutfitSelectionStore.getState().select(option).ok).toBe(true);
+      expect(useOutfitSelectionStore.getState().select(option)).toEqual({ ok: true });
       expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-avatar-snapshot="${option.outcome.snapshotId}"`);
 
       expect(useOutfitSelectionStore.getState().reset().ok).toBe(true);

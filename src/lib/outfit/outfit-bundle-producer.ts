@@ -8,6 +8,7 @@ import {
 import {
   buildOutfitAlternativeOptions,
   isOutfitAlternativeOption,
+  type OutfitBlockedAlternativeV1,
   type OutfitAlternativeOptionV1,
 } from './alternative-options.js';
 import { hasCompleteFinalizedSafetyData } from './finalized-outfit-swap.js';
@@ -81,6 +82,7 @@ export type OutfitBundleProducerResult =
       presentation: OutfitBundlePresentationV1;
       base: OutfitTruthSnapshotV1;
       options: readonly OutfitAlternativeOptionV1[];
+      blockedAlternatives: readonly OutfitBlockedAlternativeV1[];
     }>
   | Readonly<{
       kind: 'unsupported-cardinality';
@@ -89,6 +91,7 @@ export type OutfitBundleProducerResult =
       weather: OutfitBundleWeatherV1;
       presentation: OutfitBundlePresentationV1;
       truth: UnsupportedOutfitTruth;
+      blockedAlternatives: readonly [];
     }>
   | Readonly<{
       kind: 'unavailable';
@@ -392,6 +395,7 @@ function produceOutfitBundleUnchecked(
       weather,
       presentation,
       truth,
+      blockedAlternatives: [] as const,
     });
   }
   const base = truth.snapshot;
@@ -416,6 +420,7 @@ function produceOutfitBundleUnchecked(
       presentation,
       base,
       options: [] as const,
+      blockedAlternatives: [] as const,
     });
   }
 
@@ -446,6 +451,7 @@ function produceOutfitBundleUnchecked(
     presentation,
     base,
     options: alternativeBuild.options,
+    blockedAlternatives: alternativeBuild.blockedAlternatives,
   });
 }
 
