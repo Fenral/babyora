@@ -5,7 +5,7 @@
  * UI viser bare gyldige valg; ugyldig kombinasjon avvises i validering.
  */
 
-import type { AgeStage, Situation, SituationProfile } from './types.js';
+import type { Activity, AgeStage, Situation, SituationProfile } from './types.js';
 
 const ALL_STAGES: readonly AgeStage[] = ['newborn', 'mobile_baby', 'young_toddler'];
 
@@ -16,6 +16,10 @@ function profile(p: SituationProfile): Readonly<SituationProfile> {
 export const SITUATION_PROFILES: Readonly<Record<Situation, Readonly<SituationProfile>>> = Object.freeze({
   stroller_awake: profile({
     id: 'stroller_awake', intensity: 'resting',
+    validAgeStages: [...ALL_STAGES], exposureKind: 'outdoor',
+  }),
+  stroller_sleeping: profile({
+    id: 'stroller_sleeping', intensity: 'resting',
     validAgeStages: [...ALL_STAGES], exposureKind: 'outdoor',
   }),
   carrier: profile({
@@ -44,6 +48,21 @@ export const SITUATION_PROFILES: Readonly<Record<Situation, Readonly<SituationPr
     validAgeStages: [...ALL_STAGES], exposureKind: 'indoor',
   }),
 });
+
+const SITUATION_TO_ACTIVITY: Readonly<Record<Situation, Activity>> = Object.freeze({
+  stroller_awake: 'vogn',
+  stroller_sleeping: 'vogn',
+  carrier: 'baeresele',
+  awake_low_mobility: 'utelek',
+  active_play: 'utelek',
+  calm_outdoors: 'utelek',
+  mixed_day: 'utelek',
+  indoor_sleep: 'soevn',
+});
+
+export function activityForSituation(situation: Situation): Activity | null {
+  return SITUATION_TO_ACTIVITY[situation] ?? null;
+}
 
 export function isSituationValidForStage(situation: Situation, stage: AgeStage): boolean {
   const p = SITUATION_PROFILES[situation] as SituationProfile | undefined;

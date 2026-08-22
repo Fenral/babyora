@@ -37,6 +37,7 @@ export function recommendV2(input: RecommendInputV2): RecommendationV2 {
   const explanations = buildExplanations(codes);
 
   const fingerprint = fingerprintV2({
+    activity: validated.activity,
     ageStage: intent.ageStage,
     situation: intent.situation,
     tempBand: intent.tempBand,
@@ -57,6 +58,7 @@ export function recommendV2(input: RecommendInputV2): RecommendationV2 {
 
   return {
     schemaVersion: 2,
+    activity: validated.activity,
     ageStage: intent.ageStage,
     situation: intent.situation,
     tempBand: intent.tempBand,

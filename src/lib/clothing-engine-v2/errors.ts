@@ -7,6 +7,7 @@ export type EngineV2ErrorCode =
   | 'invalid_number'
   | 'unsupported_age'
   | 'invalid_situation_for_age'
+  | 'invalid_activity_context'
   | 'invalid_material_preference'
   | 'unresolved_material_constraint';
 

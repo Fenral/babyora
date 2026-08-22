@@ -91,7 +91,7 @@ export function calculateThermalIntent(input: ValidatedRecommendInputV2): Therma
 
   // Utstyr (aldri klær på barnet — invariant 5). Legacy-terskler.
   const equipment: EquipmentNeed[] = [];
-  if (outdoor && input.situation === 'stroller_awake') {
+  if (outdoor && input.activity === 'vogn') {
     if (input.weather.precipMmH >= 0.5) equipment.push('stroller_rain_cover');
     if (input.weather.feelsLikeC < 5) equipment.push('stroller_warm_pouch');
   }

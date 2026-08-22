@@ -14,7 +14,7 @@ describe('Motor 2.0 analytics-kontrakter', () => {
       type: 'engine_v2_shadow_compared';
       same_fingerprint: boolean;
       age_stage: 'newborn' | 'mobile_baby' | 'young_toddler';
-      situation: 'stroller_awake' | 'carrier' | 'awake_low_mobility' | 'active_play' | 'calm_outdoors' | 'mixed_day' | 'indoor_sleep';
+      situation: 'stroller_awake' | 'stroller_sleeping' | 'carrier' | 'awake_low_mobility' | 'active_play' | 'calm_outdoors' | 'mixed_day' | 'indoor_sleep';
       temp_band: 'tropisk' | 'varm' | 'mild' | 'kjolig' | 'kald' | 'frost' | 'streng_frost' | 'ekstrem' | 'ekstrem_varme';
     }>();
   });

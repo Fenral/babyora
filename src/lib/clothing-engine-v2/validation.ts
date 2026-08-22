@@ -6,7 +6,7 @@
 
 import { EngineV2Error } from './errors.js';
 import { ageStageFor } from './age.js';
-import { isSituationValidForStage } from './situations.js';
+import { activityForSituation, isSituationValidForStage } from './situations.js';
 import type {
   MaterialPreference,
   RecommendInputV2,
@@ -52,6 +52,13 @@ export function validateRecommendInputV2(input: RecommendInputV2): ValidatedReco
       `Situasjonen «${situation}» er ikke gyldig for aldersstadiet ${stage}`,
     );
   }
+  const activity = activityForSituation(situation);
+  if (activity === null || (input.activity !== undefined && input.activity !== activity)) {
+    throw new EngineV2Error(
+      'invalid_activity_context',
+      `Aktiviteten «${String(input.activity)}» passer ikke med situasjonen «${situation}»`,
+    );
+  }
 
   // Materialpreferanse — eksplisitt ugyldig verdi er en utviklingsfeil (spec §17).
   if (materialPreference !== undefined && !MATERIAL_PREFERENCES.includes(materialPreference)) {
@@ -68,6 +75,7 @@ export function validateRecommendInputV2(input: RecommendInputV2): ValidatedReco
 
   return {
     ...input,
+    activity,
     materialPreference: materialPreference ?? 'best_for_conditions',
   };
 }

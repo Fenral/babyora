@@ -78,6 +78,7 @@ Grensene er produktgrenser, ikke påstander om individuell utvikling. Motoren br
 ```ts
 export type Situation =
   | 'stroller_awake'
+  | 'stroller_sleeping'
   | 'carrier'
   | 'awake_low_mobility'
   | 'active_play'
@@ -99,7 +100,7 @@ Tilgjengelighet:
 
 | Situasjon | 0–5 | 6–11 | 12–24 |
 |---|:---:|:---:|:---:|
-| Vogn | Ja | Ja | Ja |
+| Vogn, våken eller sovende | Ja | Ja | Ja |
 | Bæresele | Ja | Ja | Etter eksplisitt valg |
 | Våken, lite bevegelse | Ja | Ja | Nei |
 | Aktiv lek | Nei | Ja | Ja |
@@ -108,6 +109,12 @@ Tilgjengelighet:
 | Søvn inne | Ja | Ja | Ja |
 
 UI skal bare vise gyldige valg. Direkte eller migrert input med ugyldig kombinasjon gir `invalid_situation_for_age`; motoren skal ikke gjette.
+
+Den offentlige inngangen bruker de fire PRD-aktivitetene `vogn`,
+`baeresele`, `utelek` og `soevn`. `vognMode` velger våken/sovende
+vognsituasjon, `innerJakke` gjelder bare bæresele, og bilstolkontekst gjelder
+bare våken vogn. Umulige krysskombinasjoner avvises som
+`invalid_activity_context` før beregning.
 
 `indoor_sleep` er gyldig for alle tre v1-stadier, men søvn/TOG presenteres som et separat verktøy med egne sikkerhets- og copyporter.
 

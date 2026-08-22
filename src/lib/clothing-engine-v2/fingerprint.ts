@@ -11,9 +11,10 @@
  * ikke kryptografi.
  */
 
-import type { AgeStage, EquipmentNeed, Situation, TempBand, WarmthLevel } from './types.js';
+import type { Activity, AgeStage, EquipmentNeed, Situation, TempBand, WarmthLevel } from './types.js';
 
 export type FingerprintInputV2 = {
+  activity: Activity;
   ageStage: AgeStage;
   situation: Situation;
   tempBand: TempBand;
@@ -44,6 +45,7 @@ function fnv1a(text: string, seed: number): number {
 export function fingerprintV2(input: FingerprintInputV2): string {
   const canonical = JSON.stringify({
     v: 2,
+    x: input.activity,
     a: input.ageStage,
     s: input.situation,
     t: input.tempBand,

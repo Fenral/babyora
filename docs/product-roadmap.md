@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 13/56 tasks closed — 12 complete, 1 waived
+> **Roadmap status:** 14/56 tasks closed — 13 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -97,7 +97,7 @@
   Files: `api/forecast.ts`, `api/__tests__/forecast.test.ts`, `src/lib/met-no/`
   Notes: Validate coordinates/payloads, preserve compliant identification, implement bounded retry and cache scope, and return typed safe errors. Verify: tests cover invalid coordinates, timeout, 429, malformed upstream data, fixed cache, and memory-only no-store.
 
-- [ ] **TASK-014** — Make recommendation inputs explicit and activity-complete.
+- [x] **TASK-014** — Make recommendation inputs explicit and activity-complete.
   Files: `src/lib/clothing-engine-v2/types.ts`, `src/lib/clothing-engine-v2/input.test.ts`
   Notes: Support stroller, carrier, outdoor play, and indoor sleep plus car-seat context where applicable; reject impossible combinations. Verify: every activity has valid fixtures and invalid-context tests.
 

@@ -122,6 +122,7 @@ describe('Motor 2.0 aldersstadier', () => {
 describe('Motor 2.0 situasjonsmatrise', () => {
   const MATRIX: Array<[Situation, Record<AgeStage, boolean>]> = [
     ['stroller_awake',     { newborn: true,  mobile_baby: true,  young_toddler: true }],
+    ['stroller_sleeping',  { newborn: true,  mobile_baby: true,  young_toddler: true }],
     ['carrier',            { newborn: true,  mobile_baby: true,  young_toddler: true }],
     ['awake_low_mobility', { newborn: true,  mobile_baby: true,  young_toddler: false }],
     ['active_play',        { newborn: false, mobile_baby: true,  young_toddler: true }],

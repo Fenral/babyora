@@ -15,24 +15,18 @@ import { compareShadow } from './shadow-compare.js';
 import { EngineV2Error } from './errors.js';
 import { GOLD_SCENARIOS } from './__tests__/gold-scenarios.js';
 import { recommend } from '../wool-layers/recommend.js';
-import type { RecommendInputV2, Situation } from './types.js';
+import { activityForSituation } from './situations.js';
+import type { RecommendInputV2 } from './types.js';
 import type { RecommendInput } from '../wool-layers/types.js';
 
-const SITUATION_TO_ACTIVITY: Record<Situation, RecommendInput['activity']> = {
-  stroller_awake: 'vogn',
-  carrier: 'baeresele',
-  awake_low_mobility: 'utelek',
-  active_play: 'utelek',
-  calm_outdoors: 'utelek',
-  mixed_day: 'utelek',
-  indoor_sleep: 'soevn',
-};
-
 function toLegacyInput(input: RecommendInputV2): RecommendInput {
+  const activity = activityForSituation(input.situation);
+  if (activity === null) throw new EngineV2Error('invalid_activity_context', 'Ukjent situasjon');
   return {
     weather: input.weather,
     child: { ageMonths: input.ageMonths },
-    activity: SITUATION_TO_ACTIVITY[input.situation],
+    activity,
+    ...(input.situation === 'stroller_sleeping' ? { vognMode: 'sleeping' as const } : {}),
     ...(input.exposureMin !== undefined ? { exposureMin: input.exposureMin } : {}),
     ...(input.carrierUnderParentJacket !== undefined ? { innerJakke: input.carrierUnderParentJacket } : {}),
     ...(input.carSeat !== undefined ? { context: { bilstol: input.carSeat } } : {}),

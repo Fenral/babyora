@@ -15,17 +15,7 @@
  */
 
 import type { Layer, LayerCategory, Recommendation } from '../wool-layers/types.js';
-import type { RecommendationV2, ResolvedGarment, Situation } from './types.js';
-
-const SITUATION_TO_ACTIVITY: Record<Situation, Recommendation['activity']> = {
-  stroller_awake: 'vogn',
-  carrier: 'baeresele',
-  awake_low_mobility: 'utelek',
-  active_play: 'utelek',
-  calm_outdoors: 'utelek',
-  mixed_day: 'utelek',
-  indoor_sleep: 'soevn',
-};
+import type { RecommendationV2, ResolvedGarment } from './types.js';
 
 const ACTIVITY_LABEL: Record<Recommendation['activity'], string> = {
   vogn: 'Vogn', baeresele: 'Bæresele', utelek: 'Utelek', soevn: 'Søvn',
@@ -61,7 +51,7 @@ export function toLegacyRecommendation(
     .map((category) => ({ category, items: byCategory.get(category)! }))
     .filter((l) => l.items.length > 0);
 
-  const activity = SITUATION_TO_ACTIVITY[v2.situation];
+  const activity = v2.activity;
   const itemSummary = layers.map((l) => l.items.join(', ')).join(' • ');
   const tempPart = opts?.feelsLikeC !== undefined
     ? ` (${opts.feelsLikeC.toFixed(0)} °C føles)`

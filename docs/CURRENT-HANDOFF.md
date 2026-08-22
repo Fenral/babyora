@@ -1,7 +1,25 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-013 are closed. TASK-006 was waived by owner, not passed. TASK-014 is next.
+**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-014 are closed. TASK-006 was waived by owner, not passed. TASK-015 is next.
+
+## 2026-08-22: TASK-014 explicit activity input
+
+- Motor 2.0 now accepts one discriminated public contract for stroller,
+  carrier, outdoor play, and indoor sleep while preserving precise internal
+  situations.
+- Awake/sleeping stroller mode, carrier-under-jacket, and awake-stroller car
+  seat context normalize explicitly. Impossible cross-activity fields fail at
+  TypeScript and runtime boundaries.
+- Stroller sleep stays outdoor and receives stroller weather/equipment logic;
+  indoor sleep ignores wind/rain. Activity now appears in every V2 result and
+  semantic fingerprint.
+- Verification passed: 24 direct input tests, 275 focused tests, typecheck,
+  lint, 213/213 test files with 3,259 passing tests and 1 todo, main+bare build,
+  and E2E 2/2. Record: `docs/evidence/task-014-verification.md`.
+- `FR-004` remains Conflicting until TASK-017 exposes all four choices in the
+  production Home flow. **Next:** TASK-015 proves deterministic behavior at
+  temperature and activity boundaries and selects the canonical engine path.
 
 ## 2026-08-22: TASK-013 MET forecast proxy contract
 

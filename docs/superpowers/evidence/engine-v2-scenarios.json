@@ -69,7 +69,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "COTTON_ONLY_WARM_DRY"
       ],
-      "fingerprint": "v2-645324ca544e8490",
+      "fingerprint": "v2-34334d4a7cd65068",
       "legacyForskjell": {
         "status": "needs_review",
         "grunner": [
@@ -183,7 +183,7 @@
         "RESTING_CHILD_MORE_INSULATION",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-b763c509e4a6fa6f",
+      "fingerprint": "v2-18b4668976168337",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -306,7 +306,7 @@
         "WIND_REQUIRES_SHELL",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-c6857433883afc71",
+      "fingerprint": "v2-ef58c5b39ae13369",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -409,7 +409,7 @@
         "RESTING_CHILD_MORE_INSULATION",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-862c212537eb86eb",
+      "fingerprint": "v2-aca99111604a6b3f",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -513,7 +513,7 @@
         "RESTING_CHILD_MORE_INSULATION",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-083a4c517fe303f3",
+      "fingerprint": "v2-71eb25b5c7a550af",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -609,7 +609,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "COTTON_ONLY_WARM_DRY"
       ],
-      "fingerprint": "v2-d732672ce5835822",
+      "fingerprint": "v2-779869c25560921c",
       "legacyForskjell": {
         "status": "needs_review",
         "grunner": [
@@ -702,7 +702,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "WICKING_SYNTHETIC_FOR_ACTIVITY"
       ],
-      "fingerprint": "v2-a156113f87b95341",
+      "fingerprint": "v2-a75b4921f8baf3ef",
       "legacyForskjell": {
         "status": "expected_improvement",
         "grunner": [
@@ -823,7 +823,7 @@
         "RAIN_REQUIRES_SHELL",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-2120a3aedd73af8c",
+      "fingerprint": "v2-13df242ed33b2e54",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -938,7 +938,7 @@
         "RESTING_CHILD_MORE_INSULATION",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-94a661d7d88f6035",
+      "fingerprint": "v2-a765f757482342ed",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -1047,7 +1047,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "WICKING_SYNTHETIC_FOR_ACTIVITY"
       ],
-      "fingerprint": "v2-884d5f0c18015a32",
+      "fingerprint": "v2-b4973f124e6b521c",
       "legacyForskjell": {
         "status": "needs_review",
         "grunner": [
@@ -1151,7 +1151,7 @@
       "forklaringer": [
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-cdb914b5b5548ee7",
+      "fingerprint": "v2-88a181c7749157a5",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -1253,7 +1253,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "WICKING_SYNTHETIC_FOR_ACTIVITY"
       ],
-      "fingerprint": "v2-989576a43bd3cf06",
+      "fingerprint": "v2-e2c1a8e60f6da474",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -1358,7 +1358,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "WICKING_SYNTHETIC_FOR_ACTIVITY"
       ],
-      "fingerprint": "v2-5bec52d64064888c",
+      "fingerprint": "v2-dd592aec38a88d06",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -1468,7 +1468,7 @@
         "RESTING_CHILD_MORE_INSULATION",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-97440790371e6216",
+      "fingerprint": "v2-1d9efc7635a25b00",
       "legacyForskjell": {
         "status": "expected_improvement",
         "grunner": [
@@ -1582,7 +1582,7 @@
         "RAIN_REQUIRES_SHELL",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-913313d5c91e3197",
+      "fingerprint": "v2-58323e77bd1b3925",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -1695,7 +1695,7 @@
         "RESTING_CHILD_MORE_INSULATION",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-94a661d7d88f6035",
+      "fingerprint": "v2-a765f757482342ed",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -1803,7 +1803,7 @@
         "RESTING_CHILD_MORE_INSULATION",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-013839a9648cb43f",
+      "fingerprint": "v2-2dab6ddfe67cfa19",
       "legacyForskjell": {
         "status": "expected_improvement",
         "grunner": [
@@ -1916,7 +1916,7 @@
         "RESTING_CHILD_MORE_INSULATION",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-e86bba5be0265c11",
+      "fingerprint": "v2-014c82b14b704b0b",
       "legacyForskjell": {
         "status": "expected_improvement",
         "grunner": [
@@ -2024,7 +2024,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "WICKING_SYNTHETIC_FOR_ACTIVITY"
       ],
-      "fingerprint": "v2-884d5f0c18015a32",
+      "fingerprint": "v2-b4973f124e6b521c",
       "legacyForskjell": {
         "status": "needs_review",
         "grunner": [
@@ -2132,7 +2132,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "WICKING_SYNTHETIC_FOR_ACTIVITY"
       ],
-      "fingerprint": "v2-0c3bb0905bf4263a",
+      "fingerprint": "v2-4bd1d21a3e2abf80",
       "legacyForskjell": {
         "status": "needs_review",
         "grunner": [
@@ -2236,7 +2236,7 @@
       "forklaringer": [
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-cdb914b5b5548ee7",
+      "fingerprint": "v2-88a181c7749157a5",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -2372,7 +2372,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "WOOL_AVOIDED"
       ],
-      "fingerprint": "v2-75e1e5cb452313e5",
+      "fingerprint": "v2-4efb1e4bfa8e976d",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -2491,7 +2491,7 @@
         "WICKING_SYNTHETIC_FOR_ACTIVITY",
         "WOOL_AVOIDED"
       ],
-      "fingerprint": "v2-8f1bdc449529bd0e",
+      "fingerprint": "v2-00bce4ee3bc7d8f4",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -2606,7 +2606,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "WOOL_PREFERENCE_APPLIED"
       ],
-      "fingerprint": "v2-a9eb84c3c4d5ca41",
+      "fingerprint": "v2-0b3c26438f0cbae9",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -2722,7 +2722,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "WOOL_PREFERENCE_APPLIED"
       ],
-      "fingerprint": "v2-913313d5c91e3197",
+      "fingerprint": "v2-58323e77bd1b3925",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -2830,7 +2830,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "WICKING_SYNTHETIC_FOR_ACTIVITY"
       ],
-      "fingerprint": "v2-5bec52d64064888c",
+      "fingerprint": "v2-dd592aec38a88d06",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -2923,7 +2923,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "COTTON_ONLY_WARM_DRY"
       ],
-      "fingerprint": "v2-ec8f53710e0a12bf",
+      "fingerprint": "v2-0fa4b21fd82034e1",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -3038,7 +3038,7 @@
         "RESTING_CHILD_MORE_INSULATION",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-de71fe27423cdc75",
+      "fingerprint": "v2-9a9176a765815f2d",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -3156,7 +3156,7 @@
         "CALIBRATION_WARMER",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-adedc9a6c0d8028c",
+      "fingerprint": "v2-0f3e6b268b108634",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -3271,7 +3271,7 @@
         "CALIBRATION_COOLER",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-eef8d0f68c742adc",
+      "fingerprint": "v2-f6c0767656dc7134",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -3368,7 +3368,7 @@
         "AGE_APPROPRIATE_GARMENT_FORM",
         "COTTON_ONLY_WARM_DRY"
       ],
-      "fingerprint": "v2-2e4e8f387218547e",
+      "fingerprint": "v2-81740bb8a8ccd926",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -3488,7 +3488,7 @@
         "RESTING_CHILD_MORE_INSULATION",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-0461e81ac3a151fc",
+      "fingerprint": "v2-c081609aafc3bd84",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -3599,7 +3599,7 @@
         "WICKING_SYNTHETIC_FOR_ACTIVITY",
         "WOOL_AVOIDED"
       ],
-      "fingerprint": "v2-7de62224791ba49e",
+      "fingerprint": "v2-af1e737ee6b93534",
       "legacyForskjell": {
         "status": "equivalent",
         "grunner": [],
@@ -3748,7 +3748,7 @@
         "WIND_REQUIRES_SHELL",
         "AGE_APPROPRIATE_GARMENT_FORM"
       ],
-      "fingerprint": "v2-460d0e683fb9203e",
+      "fingerprint": "v2-ecd53be83030d876",
       "legacyForskjell": {
         "status": "needs_review",
         "grunner": [

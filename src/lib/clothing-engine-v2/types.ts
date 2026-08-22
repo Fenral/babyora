@@ -8,7 +8,7 @@
  * (WeatherInput, TempBand, SafetyFlag, Severity) — engine-2-plan Task 1.
  */
 
-import type { TempBand, WeatherInput } from '../wool-layers/types.js';
+import type { Activity, TempBand, WeatherInput } from '../wool-layers/types.js';
 import type { SafetyFlag, Severity } from '../wool-layers/safety.js';
 
 // ─── §6 Aldersmodell ─────────────────────────────────────────────────────────
@@ -22,6 +22,7 @@ export type AgeStage =
 
 export type Situation =
   | 'stroller_awake'
+  | 'stroller_sleeping'
   | 'carrier'
   | 'awake_low_mobility'
   | 'active_play'
@@ -159,6 +160,7 @@ export type ResolvedEquipment = {
 
 export type RecommendationV2 = {
   schemaVersion: 2;
+  activity: Activity;
   ageStage: AgeStage;
   situation: Situation;
   tempBand: TempBand;
@@ -178,6 +180,9 @@ export type RecommendInputV2 = {
   /** Alder i måneder, heltall 0–24. 25+ avvises med unsupported_age (spec §1). */
   ageMonths: number;
   situation: Situation;
+  /** Offentlig aktivitet. Eldre situasjons-fixtures kan utelate feltet;
+   *  valideringen avleder og låser samme verdi fra `situation`. */
+  activity?: Activity;
   /** Default best_for_conditions når utelatt (normaliseres i validering). */
   materialPreference?: MaterialPreference;
   /** Per-barn-kalibrering, anvendes på ThermalIntent FØR plaggvalg (spec §11). */
@@ -195,8 +200,49 @@ export type RecommendInputV2 = {
 
 /** Validert og normalisert input — materialpreferansen er alltid satt. */
 export type ValidatedRecommendInputV2 = RecommendInputV2 & {
+  activity: Activity;
   materialPreference: MaterialPreference;
 };
 
+type ActivityInputBaseV2 = {
+  weather: WeatherInput;
+  ageMonths: number;
+  materialPreference?: MaterialPreference;
+  childCalibration?: -1 | 0 | 1;
+  canRoll?: boolean;
+  exposureMin?: number;
+};
+
+/**
+ * Offentlig, PRD-formet inngang til Motor 2.0. Den diskriminerte unionen gjør
+ * aktivitets-spesifikke felt synlige og umulige kombinasjoner til typefeil.
+ */
+export type ActivityRecommendInputV2 = ActivityInputBaseV2 & (
+  | {
+    activity: 'vogn';
+    vognMode?: 'awake' | 'sleeping';
+    context?: { bilstol?: boolean };
+    innerJakke?: never;
+  }
+  | {
+    activity: 'baeresele';
+    innerJakke?: boolean;
+    vognMode?: never;
+    context?: never;
+  }
+  | {
+    activity: 'utelek';
+    innerJakke?: never;
+    vognMode?: never;
+    context?: never;
+  }
+  | {
+    activity: 'soevn';
+    innerJakke?: never;
+    vognMode?: never;
+    context?: never;
+  }
+);
+
 // Re-eksport av delte typer så V2-konsumenter slipper å importere fra legacy.
-export type { TempBand, WeatherInput, SafetyFlag, Severity };
+export type { Activity, TempBand, WeatherInput, SafetyFlag, Severity };

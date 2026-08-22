@@ -20,12 +20,14 @@ export type SituationChoices = {
   secondary: Situation[];
 };
 
-/** Sekundær = gyldig for stadiet, ikke primær, aldri indoor_sleep (eget verktøy). */
+/** Sekundær = gyldig for stadiet og ikke primær. Søvn velges som underkontekst
+ *  i den offentlige aktivitetsinngangen, ikke som en ekstra situasjonsbrikke. */
 export function situationChoicesFor(ageMonths: number): SituationChoices {
   const stage = ageStageFor(ageMonths);
   const primary = PRIMARY[stage];
   const secondary = (Object.values(SITUATION_PROFILES))
     .filter((p) => p.id !== 'indoor_sleep'
+      && p.id !== 'stroller_sleeping'
       && p.validAgeStages.includes(stage)
       && !primary.includes(p.id))
     .map((p) => p.id);

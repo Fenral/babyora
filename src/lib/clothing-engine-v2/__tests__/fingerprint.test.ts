@@ -25,6 +25,7 @@ const ALL_CODES: ExplanationCode[] = [
 
 function fpInput(partial?: Partial<FingerprintInputV2>): FingerprintInputV2 {
   return {
+    activity: 'vogn',
     ageStage: 'young_toddler',
     situation: 'stroller_awake',
     tempBand: 'frost',
