@@ -214,3 +214,20 @@
   line-height: 1.55;
   color: var(--dw-ink-mid);
 }
+
+.pkl-result-recovery {
+  min-height: var(--dw-size-touch);
+  margin-top: var(--dw-space-16);
+  padding: var(--dw-space-12) var(--dw-space-18);
+  border: 0;
+  border-radius: var(--dw-r-control);
+  background: var(--dw-accent);
+  color: var(--dw-ink-on-accent);
+  font: inherit;
+  font-weight: 700;
+}
+
+.pkl-result-recovery:focus-visible {
+  outline: 2px solid var(--dw-accent);
+  outline-offset: 3px;
+}

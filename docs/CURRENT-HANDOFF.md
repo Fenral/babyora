@@ -1,7 +1,26 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-017 are closed. TASK-006 was waived by owner, not passed. TASK-018 is next.
+**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-018 are closed. TASK-006 was waived by owner, not passed. TASK-019 is next.
+
+## 2026-08-22: TASK-018 complete numbered outfit result
+
+- The result keeps one inner-to-outer numbered garment list with category and
+  body-role text. Garment images remain optional; failed images fall back
+  without removing or reordering any text row.
+- The result now labels its exact weather time and gives one short largest
+  weather driver instead of an unranked list of conditions.
+- The trusted outfit bundle carries a frozen presentation projection from the
+  finalized recommendation. Visible safety notices render; flags explicitly
+  hidden from sheets remain hidden.
+- Current results older than one hour are labeled as previously calculated and
+  show a stale status. An unavailable bundle shows one bounded recovery and no
+  garment list, rationale, or partial result.
+- Verification passed: 101 focused tests, typecheck, full lint, 217/217 test
+  files with 3,310 passing and 1 todo, main+bare build, and E2E 2/2. Record:
+  `docs/evidence/task-018-verification.md`. `FR-007` is now Verified.
+  **Next:** TASK-019 safety-finalizes every garment substitution and explains
+  blocked alternatives.
 
 ## 2026-08-22: TASK-017 fast Home input-to-answer interaction
 

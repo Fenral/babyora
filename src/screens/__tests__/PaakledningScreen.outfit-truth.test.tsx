@@ -39,8 +39,8 @@ function supportedBundle(
     context: { bilstol: false },
     childCalibration: 0,
   };
-  const finalizedRecommendation = recommend(input);
   const plannedForIso = '2026-02-12T11:00:00.000Z';
+  const finalizedRecommendation = recommend(input);
   const garments = finalizedRecommendation.layers
     .filter((layer) => layer.category !== 'utstyr')
     .flatMap((layer) => layer.items);
@@ -104,6 +104,7 @@ function supportedBundle(
 afterEach(() => {
   vi.doUnmock('../../lib/outfit/feature-flags.js');
   vi.doUnmock('../../components/outfit/OutfitTruthPanel.js');
+  vi.useRealTimers();
   vi.resetModules();
 });
 
@@ -182,6 +183,8 @@ describe('PaakledningScreen outfit truth integration', () => {
   });
 
   it('keeps the exact current and planned context shell around one enabled panel', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-02-12T11:30:00.000Z'));
     const current = supportedBundle('current');
     const planned = supportedBundle('planned');
     vi.doMock('../../lib/outfit/feature-flags.js', () => ({
@@ -209,9 +212,9 @@ describe('PaakledningScreen outfit truth integration', () => {
       expect(html).toContain('5°');
       expect(html).toContain('føles som');
       expect(html).toContain('4°');
+      expect(html).toContain('Værgrunnlag:');
       expect(html).toContain('Hvorfor dette antrekket?');
-      expect(html).toContain('vind på 1 m/s');
-      expect(html).toContain('nedbør på 0 mm/t');
+      expect(html).toContain('Største faktor: temperaturen på 4°');
       expect(html).toContain('data-outfit-access-capability="today_home"');
       expect(html).not.toContain('planned-garments-title');
       expect(html).not.toContain('Tilgang:');

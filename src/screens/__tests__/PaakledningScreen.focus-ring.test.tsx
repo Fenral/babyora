@@ -231,7 +231,7 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
     const headings = [...screen.matchAll(/<h2\b[\s\S]*?\n\s*>/gu)]
       .map((m) => m[0])
       .filter((tag) => tag.includes('ref={titleRef}'));
-    expect(headings).toHaveLength(3);
+    expect(headings).toHaveLength(4);
     for (const tag of headings) {
       expect(tag).toContain('tabIndex={-1}');
       expect(tag).toContain('className="pkl-title"');
@@ -303,7 +303,7 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
     }
   });
 
-  it('6 · alle tre dialogene rendrer overskriften uten outline, med ringens CSS på plass', async () => {
+  it('6 · alle fire dialogtilstandene rendrer overskriften uten outline, med ringens CSS på plass', async () => {
     const allowed = plannedFixture(true);
     const denied = plannedFixture(false);
 
@@ -314,7 +314,7 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
     const { PaakledningScreen } = await import('../PaakledningScreen.js');
 
     const markups = [
-      // 1) tilgang nektet, 2) outfit-truth-grenen, 3) legacy-grenen (uten bundle)
+      // 1) tilgang nektet, 2) outfit-truth, 3) legacy uten bundle, 4) bundle-feil
       renderToStaticMarkup(
         <PaakledningScreen onBack={() => undefined} plannedContext={denied.context} outfitBundle={denied.bundle} />,
       ),
@@ -323,6 +323,13 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
       ),
       renderToStaticMarkup(
         <PaakledningScreen onBack={() => undefined} plannedContext={allowed.context} />,
+      ),
+      renderToStaticMarkup(
+        <PaakledningScreen
+          onBack={() => undefined}
+          plannedContext={allowed.context}
+          outfitBundle={{ kind: 'unavailable', bundleVersion: 1, reason: 'truth-build-failed' }}
+        />,
       ),
     ];
 

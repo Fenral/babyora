@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 17/56 tasks closed — 16 complete, 1 waived
+> **Roadmap status:** 18/56 tasks closed — 17 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -113,8 +113,8 @@
   Files: `src/screens/HjemScreen.tsx`, `src/components/`, `src/screens/__tests__/HjemScreen.interaction.test.tsx`, `docs/evidence/task-017-verification.md`
   Notes: Keep child, activity, weather status, and one primary action clear; do not add decorative work outside `docs/design.md` v0.1. Verify: a component test reaches calculation with keyboard and touch-sized controls.
 
-- [ ] **TASK-018** — Render one complete numbered outfit in dressing order.
-  Files: `src/screens/PaakledningScreen.tsx`, `src/screens/PaakledningScreen.test.tsx`
+- [x] **TASK-018** — Render one complete numbered outfit in dressing order.
+  Files: `src/screens/PaakledningScreen.tsx`, `src/screens/__tests__/PaakledningScreen.result.test.tsx`, `src/lib/outfit/outfit-bundle-producer.ts`, `docs/evidence/task-018-verification.md`
   Notes: Show layers, short reason, weather time, safety notices, and text fallbacks; never present a partial result as complete. Verify: populated, stale, missing-image, and engine-error states pass.
 
 - [ ] **TASK-019** — Re-run safety finalization after every garment substitution.

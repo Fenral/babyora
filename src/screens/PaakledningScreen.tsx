@@ -21,7 +21,7 @@
  * til rad-trigger ved lukk.
  */
 import './paakledning.css';
-import { useEffect, useRef, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 import type { Recommendation } from '../lib/wool-layers/types';
 import {
   avatarPng,
@@ -123,6 +123,25 @@ function symbolToLabel(symbolCode: string | undefined): string {
   }
 }
 
+const CURRENT_RESULT_FRESH_MS = 60 * 60 * 1000;
+
+function largestWeatherDriver(context: PlannedOutfitContext): string {
+  const { weather, activity } = context;
+  if (activity === 'soevn') {
+    return `romtemperaturen på ${Math.round(weather.tempC)}°`;
+  }
+  if (weather.precipMmH >= 1) {
+    return `nedbøren på ${weather.precipMmH.toLocaleString('nb-NO')} mm/t`;
+  }
+  if (weather.windMs >= 6) {
+    return `vinden på ${weather.windMs.toLocaleString('nb-NO')} m/s`;
+  }
+  if (Math.abs(weather.feelsLikeC - weather.tempC) >= 2) {
+    return `at det føles som ${Math.round(weather.feelsLikeC)}°`;
+  }
+  return `temperaturen på ${Math.round(weather.feelsLikeC)}°`;
+}
+
 
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -191,6 +210,7 @@ function PlannedPaakledningScreen({
   registerOutfitRow,
   transitionVisualState = 'settled',
   onOpenWarmColdGuide,
+  openedAtMs,
 }: Pick<PaakledningScreenProps,
   | 'onBack'
   | 'outfitBundle'
@@ -200,6 +220,7 @@ function PlannedPaakledningScreen({
 > & {
   plannedContext: PlannedOutfitContext;
   contextKind: 'current' | 'planned';
+  openedAtMs: number;
 }): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
@@ -254,8 +275,21 @@ function PlannedPaakledningScreen({
       : null;
   const weatherLabel = symbolToLabel(plannedContext.weather.symbolCode);
   const isCurrentContext = contextKind === 'current';
+  const currentResultAgeMs = openedAtMs - Date.parse(plannedContext.plannedForIso);
+  const isStaleCurrent = isCurrentContext
+    && currentResultAgeMs > CURRENT_RESULT_FRESH_MS;
+  const resultLabel = isStaleCurrent
+    ? 'Tidligere beregnet antrekk'
+    : isCurrentContext
+      ? 'Dagens antrekk'
+      : 'Planlagt antrekk';
+  const situationLabel = isStaleCurrent
+    ? 'Tidligere beregnet situasjon'
+    : isCurrentContext
+      ? 'Dagens situasjon'
+      : 'Planlagt situasjon';
   const accessLabel = plannedContext.access.allowed
-    ? isCurrentContext ? 'Dagens antrekk er tilgjengelig' : 'Planen er tilgjengelig'
+    ? `${resultLabel} er tilgjengelig`
     : `Planen er ikke tilgjengelig (${plannedContext.access.reason})`;
   const illustrativeAvatarAsset = avatarPng(
     tierFromGarmentLabels(plannedContext.recommendation.orderedGarments, plannedContext.activity),
@@ -302,6 +336,59 @@ function PlannedPaakledningScreen({
     );
   }
 
+  if (OUTFIT_TRUTH_V1_AVAILABLE && outfitBundle?.kind === 'unavailable') {
+    return (
+      <dialog
+        ref={dialogRef}
+        className="pkl-dialog"
+        aria-labelledby="planned-outfit-title"
+      >
+        <div className="pkl-spalte">
+          <header className="pkl-topp">
+            <button
+              type="button"
+              className="pkl-close"
+              onClick={onBack}
+              aria-label="Lukk antrekksfeil"
+            >
+              <CloseIcon />
+            </button>
+            <h2
+              id="planned-outfit-title"
+              className="pkl-title"
+              ref={titleRef}
+              tabIndex={-1}
+            >
+              Antrekket er ikke tilgjengelig
+            </h2>
+          </header>
+          <section className="pkl-plate-myk" role="alert">
+            <h3>Vi fikk ikke vist et komplett antrekk</h3>
+            <p className="pkl-brodtekst">
+              Ingen deler av svaret vises når beregningen ikke kan bekreftes.
+            </p>
+            <button type="button" className="pkl-result-recovery" onClick={onBack}>
+              Gå tilbake og beregn på nytt
+            </button>
+          </section>
+        </div>
+      </dialog>
+    );
+  }
+
+  const presentation = outfitBundle?.kind === 'supported'
+    || outfitBundle?.kind === 'unsupported-cardinality'
+    ? outfitBundle.presentation
+    : undefined;
+  const staleNotice = isStaleCurrent ? (
+    <section className="pkl-plate-myk" role="status">
+      <h3>Antrekket er ikke lenger oppdatert</h3>
+      <p className="pkl-brodtekst">
+        Værgrunnlaget er over én time gammelt. Gå tilbake og beregn på nytt før dere går ut.
+      </p>
+    </section>
+  ) : null;
+
   if (OUTFIT_TRUTH_V1_AVAILABLE && outfitBundle !== undefined) {
     return (
       <dialog
@@ -326,7 +413,7 @@ function PlannedPaakledningScreen({
             </button>
             <div>
               <p className="pkl-etikett">
-                {isCurrentContext ? 'Dagens antrekk' : 'Planlagt antrekk'}
+                {resultLabel}
               </p>
               <h2
                 id="planned-outfit-title"
@@ -342,12 +429,15 @@ function PlannedPaakledningScreen({
             </div>
           </header>
 
+          {staleNotice}
+
           <section
-            aria-label={isCurrentContext ? 'Dagens situasjon' : 'Planlagt situasjon'}
+            aria-label={situationLabel}
             className="pkl-plate"
           >
             <p className="pkl-naa">
-              {plannedDateTime}
+              Værgrunnlag:{' '}
+              <time dateTime={plannedContext.plannedForIso}>{plannedDateTime}</time>
             </p>
             <p className="pkl-linje">
               {plannedContext.place.label} · {activityLabel[plannedContext.activity]}
@@ -368,15 +458,28 @@ function PlannedPaakledningScreen({
             illustrativeAvatarAsset={illustrativeAvatarAsset}
           />
 
+          {presentation && presentation.safetyNotices.length > 0 && (
+            <section
+              aria-labelledby="planned-safety-title"
+              className="pkl-plate-myk pkl-luft"
+              data-severity={presentation.severity}
+            >
+              <h3 id="planned-safety-title">Sikkerhet</h3>
+              <ul className="pkl-liste">
+                {presentation.safetyNotices.map((notice) => (
+                  <li key={notice.code}>{notice.message}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <section
             aria-labelledby="planned-why-title"
             className="pkl-plate-myk pkl-luft"
           >
             <h3 id="planned-why-title">Hvorfor dette antrekket?</h3>
             <p className="pkl-brodtekst">
-              {isCurrentContext ? 'Antrekket' : 'Planen'} er laget for {weatherLabel.toLocaleLowerCase('nb-NO')}, vind på{' '}
-              {plannedContext.weather.windMs.toLocaleString('nb-NO')} m/s og nedbør på{' '}
-              {plannedContext.weather.precipMmH.toLocaleString('nb-NO')} mm/t.
+              Største faktor: {largestWeatherDriver(plannedContext)}.
             </p>
           </section>
         </div>
@@ -406,7 +509,7 @@ function PlannedPaakledningScreen({
           </button>
           <div>
             <p className="pkl-etikett">
-              {isCurrentContext ? 'Dagens antrekk' : 'Planlagt antrekk'}
+              {resultLabel}
             </p>
             <h2
               id="planned-outfit-title"
@@ -422,12 +525,15 @@ function PlannedPaakledningScreen({
           </div>
         </header>
 
+        {staleNotice}
+
         <section
-          aria-label={isCurrentContext ? 'Dagens situasjon' : 'Planlagt situasjon'}
+          aria-label={situationLabel}
           className="pkl-plate"
         >
           <p className="pkl-naa">
-            {plannedDateTime}
+            Værgrunnlag:{' '}
+            <time dateTime={plannedContext.plannedForIso}>{plannedDateTime}</time>
           </p>
           <p className="pkl-linje">
             {plannedContext.place.label} · {activityLabel[plannedContext.activity]}
@@ -470,9 +576,7 @@ function PlannedPaakledningScreen({
         >
           <h3 id="planned-why-title">Hvorfor dette antrekket?</h3>
           <p className="pkl-brodtekst">
-            {isCurrentContext ? 'Antrekket' : 'Planen'} er laget for {weatherLabel.toLocaleLowerCase('nb-NO')}, vind på{' '}
-            {plannedContext.weather.windMs.toLocaleString('nb-NO')} m/s og nedbør på{' '}
-            {plannedContext.weather.precipMmH.toLocaleString('nb-NO')} mm/t.
+            Største faktor: {largestWeatherDriver(plannedContext)}.
           </p>
           <p className="sr-only">
             {accessLabel}. Tilgang: {plannedContext.access.capability}.
@@ -498,6 +602,7 @@ function PlannedPaakledningScreen({
  */
 
 export function PaakledningScreen(props: PaakledningScreenProps): ReactElement | null {
+  const [openedAtMs] = useState(() => Date.now());
   const exactContext = props.currentContext ?? props.plannedContext;
   if (exactContext) {
     return (
@@ -509,6 +614,7 @@ export function PaakledningScreen(props: PaakledningScreenProps): ReactElement |
         registerOutfitRow={props.registerOutfitRow}
         transitionVisualState={props.transitionVisualState}
         onOpenWarmColdGuide={props.onOpenWarmColdGuide}
+        openedAtMs={openedAtMs}
       />
     );
   }

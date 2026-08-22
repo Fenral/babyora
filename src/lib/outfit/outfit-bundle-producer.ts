@@ -18,6 +18,8 @@ import {
   type OutfitTruthBuildResultV1,
   type OutfitTruthSnapshotV1,
 } from './outfit-truth.js';
+import type { SafetySource, Severity } from '../wool-layers/safety.js';
+import type { NoteCategory, Recommendation } from '../wool-layers/types.js';
 
 export type { OutfitBundleProducerSeedV1 };
 
@@ -36,6 +38,22 @@ export type OutfitBundleSourceV1 =
 export type OutfitBundleWeatherV1 = Readonly<{
   tempC: number;
   feelsLikeC: number;
+}>;
+
+export type OutfitBundlePresentationV1 = Readonly<{
+  summary: string;
+  notes: readonly Readonly<{
+    category: NoteCategory;
+    message: string;
+  }>[];
+  safetyNotices: readonly Readonly<{
+    code: string;
+    message: string;
+    sources: readonly SafetySource[];
+    severity: Severity;
+    category: NoteCategory;
+  }>[];
+  severity: Severity;
 }>;
 
 export type ProduceOutfitBundleArgsV1 = Readonly<{
@@ -60,6 +78,7 @@ export type OutfitBundleProducerResult =
       bundleVersion: 1;
       source: OutfitBundleSourceV1;
       weather: OutfitBundleWeatherV1;
+      presentation: OutfitBundlePresentationV1;
       base: OutfitTruthSnapshotV1;
       options: readonly OutfitAlternativeOptionV1[];
     }>
@@ -68,6 +87,7 @@ export type OutfitBundleProducerResult =
       bundleVersion: 1;
       source: OutfitBundleSourceV1;
       weather: OutfitBundleWeatherV1;
+      presentation: OutfitBundlePresentationV1;
       truth: UnsupportedOutfitTruth;
     }>
   | Readonly<{
@@ -123,6 +143,28 @@ function registerProducerResult<T extends OutfitBundleProducerResult>(
   const frozen = freezeDeep(result);
   producerResults.add(frozen as object);
   return frozen;
+}
+
+function presentationFrom(
+  recommendation: Recommendation,
+): OutfitBundlePresentationV1 {
+  return freezeDeep({
+    summary: recommendation.summary,
+    notes: recommendation.structuredNotes.map((note) => ({
+      category: note.category,
+      message: note.message,
+    })),
+    safetyNotices: (recommendation.safetyFlags ?? [])
+      .filter((flag) => flag.displayInSheet !== false)
+      .map((flag) => ({
+        code: flag.code,
+        message: flag.message,
+        sources: [...flag.sources],
+        severity: flag.severity,
+        category: flag.category,
+      })),
+    severity: recommendation.severity ?? 'NONE',
+  });
 }
 
 /**
@@ -341,12 +383,14 @@ function produceOutfitBundleUnchecked(
     tempC: rawSeed.input.weather.tempC,
     feelsLikeC: rawSeed.input.weather.feelsLikeC,
   });
+  const presentation = presentationFrom(finalizedRecommendation);
   if (truth.kind === 'unsupported-cardinality') {
     return freezeDeep({
       kind: 'unsupported-cardinality' as const,
       bundleVersion: 1 as const,
       source,
       weather,
+      presentation,
       truth,
     });
   }
@@ -369,6 +413,7 @@ function produceOutfitBundleUnchecked(
       bundleVersion: 1 as const,
       source,
       weather,
+      presentation,
       base,
       options: [] as const,
     });
@@ -398,6 +443,7 @@ function produceOutfitBundleUnchecked(
     bundleVersion: 1 as const,
     source,
     weather,
+    presentation,
     base,
     options: alternativeBuild.options,
   });

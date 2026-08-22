@@ -30,7 +30,7 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 | Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1329 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 11 | 22 | App.tsx lazy()-register | ja | 3 |
 | Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6397 | 190 CSSProperties + 50 `style={{` | 336 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
 | Onboarding | `src/screens/OnboardingScreen.tsx` | 1894 | 1 CSSProperties | 220 | 34 | App.tsx lazy()-register | ja | 3 |
-| Påkledning | `src/screens/PaakledningScreen.tsx` | 523 | — | 0 | 0 | App.tsx lazy()-register | nei | 4 |
+| Påkledning | `src/screens/PaakledningScreen.tsx` | 629 | — | 0 | 0 | App.tsx lazy()-register | nei | 4 |
 | Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 1086 | 1 `<style>` + 1 CSSProperties + 12 `style={{` | 101 | 4 | App.tsx lazy()-register | ja | 3 |
 | Tog-guide | `src/screens/TogGuideScreen.tsx` | 1227 | 54 CSSProperties + 3 `style={{` | 127 | 11 | App.tsx lazy()-register | ja | 3 |
 | Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1326 | `UkeScreen.css` + 1 CSSProperties | 129 | 0 | App.tsx lazy()-register | ja | 3 |

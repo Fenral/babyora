@@ -287,6 +287,7 @@ describe('produceOutfitBundle', () => {
       'bundleVersion',
       'source',
       'weather',
+      'presentation',
       'base',
       'options',
     ]);
@@ -669,6 +670,7 @@ describe('produceOutfitBundle', () => {
         'bundleVersion',
         'source',
         'weather',
+        'presentation',
         'truth',
       ]);
       if (result.kind !== 'unsupported-cardinality') return;
@@ -826,6 +828,20 @@ describe('produceOutfitBundle', () => {
         weather: {
           tempC: recommendInput.weather.tempC,
           feelsLikeC: recommendInput.weather.feelsLikeC,
+        },
+        presentation: {
+          summary: finalizedRecommendation.summary,
+          notes: finalizedRecommendation.structuredNotes,
+          safetyNotices: (finalizedRecommendation.safetyFlags ?? [])
+            .filter((flag) => flag.displayInSheet !== false)
+            .map((flag) => ({
+              code: flag.code,
+              message: flag.message,
+              sources: flag.sources,
+              severity: flag.severity,
+              category: flag.category,
+            })),
+          severity: finalizedRecommendation.severity ?? 'NONE',
         },
         base: expectedTruth.snapshot,
         options: [],
@@ -1128,6 +1144,8 @@ describe('produceOutfitBundle', () => {
       './alternative-options.js',
       './finalized-outfit-swap.js',
       './outfit-truth.js',
+      '../wool-layers/safety.js',
+      '../wool-layers/types.js',
     ]);
     expect(source).not.toMatch(/\brecommend\s*\(/u);
     expect(source).not.toMatch(
