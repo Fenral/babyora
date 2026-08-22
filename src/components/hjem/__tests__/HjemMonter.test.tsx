@@ -113,6 +113,7 @@ function baseProps() {
     childName: 'Lillian',
     ageMonths: 9,
     recommendation,
+    recommendationError: false,
     onStartDressing: vi.fn(),
     startDressingDisabled: false,
     reducedMotion: false,
@@ -121,6 +122,7 @@ function baseProps() {
     onOpenAdjust: vi.fn(),
     onOpenWarmColdGuide: vi.fn(),
     onRetryWeather: vi.fn(),
+    onOpenProfile: vi.fn(),
     // P6
     onOpenPlaggbib: vi.fn(),
   };
@@ -269,6 +271,19 @@ describe('HjemMonter — phase-driven view switching', () => {
     );
     expect(html).toContain('Vi klarer oss med sist kjente vær');
     expect(html).toContain('Prøv å hente været igjen');
+  });
+
+  it('shows a bounded recovery state instead of a disabled or partial outfit when the engine fails', () => {
+    mockedState = { phase: 'weather-ready' };
+    const html = renderToStaticMarkup(
+      <HjemMonter {...baseProps()} recommendation={null} recommendationError />,
+    );
+
+    expect(html).toContain('role="alert"');
+    expect(html).toContain('Vi fikk ikke laget et trygt antrekk');
+    expect(html).toContain('Sjekk barnets profil');
+    expect(html).not.toContain('Klar for en liten tur?');
+    expect(html).not.toContain('<ol');
   });
 });
 

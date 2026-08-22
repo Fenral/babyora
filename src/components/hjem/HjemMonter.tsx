@@ -128,8 +128,18 @@ import { resolveSwapTarget } from './swap-row.js';
 import { PlaggDetailSheet } from '../PlaggDetailSheet.js';
 import type { GarmentId } from '../../data/garment-illustrations.js';
 
-const ACTIVITY_CHILD_LINE: Readonly<Record<MonterActivity, string>> = { utelek: 'Utelek', vogn: 'Vogn' };
-const ACTIVITY_TOGGLE_LABEL: Readonly<Record<MonterActivity, string>> = { utelek: 'Utenfor vogn', vogn: 'I vogn' };
+const ACTIVITY_CHILD_LINE: Readonly<Record<MonterActivity, string>> = {
+  utelek: 'Utelek',
+  vogn: 'Vogn',
+  baeresele: 'Bæresele',
+  soevn: 'Søvn inne',
+};
+const ACTIVITY_TOGGLE_LABEL: Readonly<Record<MonterActivity, string>> = {
+  utelek: 'Utelek',
+  vogn: 'I vogn',
+  baeresele: 'Bæresele',
+  soevn: 'Søvn inne',
+};
 
 function ArrowIcon() {
   return (
@@ -210,10 +220,15 @@ export type HjemMonterProps = Readonly<{
   weatherLastKnownAt?: number | null;
   activity: MonterActivity;
   onActivityChange: (next: MonterActivity) => void;
+  roomTempC?: number;
+  onRoomTempChange?: (next: number) => void;
+  calculationContextKey?: string;
   childId: string;
   childName: string;
   ageMonths: number;
   recommendation: Recommendation | null;
+  /** True only when a present engine input failed its deterministic contract. */
+  recommendationError: boolean;
   onStartDressing: (event: MouseEvent<HTMLButtonElement>) => void;
   startDressingDisabled: boolean;
   reducedMotion: boolean;
@@ -233,6 +248,8 @@ export type HjemMonterProps = Readonly<{
   onOpenWarmColdGuide: () => void;
   /** P5: manual weather-refetch trigger for the offline ask-block's "Prøv å hente været igjen". */
   onRetryWeather: () => void;
+  /** Opens the local child/profile surface from the bounded engine recovery. */
+  onOpenProfile: () => void;
   /**
    * P6: opens the Plaggbibliotek drill — used both as PlaggDetailSheet's
    * "Se alternativer i biblioteket" affordance and as the no-dead-end
@@ -253,10 +270,14 @@ export function HjemMonter({
   weatherLastKnownAt = null,
   activity,
   onActivityChange,
+  roomTempC,
+  onRoomTempChange,
+  calculationContextKey = 'default',
   childId,
   childName,
   ageMonths,
   recommendation,
+  recommendationError,
   onStartDressing,
   startDressingDisabled,
   reducedMotion,
@@ -264,6 +285,7 @@ export function HjemMonter({
   onOpenAdjust,
   onOpenWarmColdGuide,
   onRetryWeather,
+  onOpenProfile,
   onOpenPlaggbib,
 }: HjemMonterProps) {
   const scan = useScanCoordinator();
@@ -283,10 +305,10 @@ export function HjemMonter({
   const identity = useMemo<ScanIdentity>(() => ({
     childId,
     dateKey: localDateKey(),
-    placeKey: `place:${lat.toFixed(3)},${lon.toFixed(3)}`,
+    placeKey: `place:${lat.toFixed(3)},${lon.toFixed(3)}|context:${calculationContextKey}`,
     activity,
     engineVersion: WOOL_LAYERS_ENGINE_VERSION,
-  }), [childId, lat, lon, activity]);
+  }), [childId, lat, lon, activity, calculationContextKey]);
 
   /** v4: nøkkelminnet er scopet til barn+dag — aktivitet/sted er BEVISST
    *  utenfor, siden det er nettopp de to som kan bytte fram og tilbake og
@@ -683,14 +705,59 @@ export function HjemMonter({
   }, [adjustSource, activity, cityLabel, onOpenAdjust]);
 
   const nuance = getWeatherNuance(now?.symbolCode ?? lastKnownNow?.symbolCode);
-  const conditionLabel = getConditionLabel(now?.symbolCode ?? lastKnownNow?.symbolCode);
-  const weatherIconSrc = getWeatherIcon(now?.symbolCode ?? lastKnownNow?.symbolCode);
+  const conditionLabel = activity === 'soevn'
+    ? 'Romtemperatur'
+    : getConditionLabel(now?.symbolCode ?? lastKnownNow?.symbolCode);
+  const weatherIconSrc = activity === 'soevn'
+    ? null
+    : getWeatherIcon(now?.symbolCode ?? lastKnownNow?.symbolCode);
   const childLine = `${childName} · ${ageMonths} måneder · ${ACTIVITY_CHILD_LINE[activity]}`;
   const canScan = currentResultKey !== null;
   // T9A: sann friskhetslinje (erstatter hardkodet «Oppdatert nå»).
-  const freshnessLine = freshnessLineFor(weatherFreshness, now !== null);
+  const freshnessLine = activity === 'soevn'
+    ? { label: 'Oppgitt romtemperatur', warn: false }
+    : freshnessLineFor(weatherFreshness, now !== null);
 
   const phase = scan.state.phase;
+
+  if (recommendationError) {
+    return (
+      <div className="hjem-monter">
+        <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
+        <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
+          <MascotIdle compact reducedMotion={reducedMotion} />
+          <WeatherScene
+            cityLabel={cityLabel}
+            nuance={nuance}
+            tempC={now?.tempC ?? null}
+            feelsLikeC={now?.feelsLikeC ?? null}
+            conditionText={now ? conditionLabel : null}
+            weatherIconSrc={weatherIconSrc}
+            weatherIconAlt={conditionLabel}
+            freshnessLabel={freshnessLine.label}
+            freshnessWarn={freshnessLine.warn}
+            activity={activity}
+            onActivityChange={onActivityChange}
+            roomTempC={roomTempC}
+            onRoomTempChange={onRoomTempChange}
+            onAdjustLocation={handleOpenAdjust}
+          />
+        </div>
+        <div className="hjm-body">
+          <div className="hjm-ask-block hjm-recovery" role="alert">
+            <h1 className="hjm-ask">Vi fikk ikke laget et trygt antrekk</h1>
+            <p className="hjm-child">
+              Svaret vises ikke før alle opplysninger kan beregnes trygt. Velg en annen aktivitet eller sjekk barnets profil.
+            </p>
+            <button type="button" className="hjm-cta" onClick={onOpenProfile}>
+              Sjekk barnets profil
+              <ArrowIcon />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (phase === 'scanning' || phase === 'recalculating') {
     const isFullScan = phase === 'scanning';
@@ -807,6 +874,8 @@ export function HjemMonter({
             freshnessWarn={freshnessLine.warn}
             activity={activity}
             onActivityChange={onActivityChange}
+            roomTempC={roomTempC}
+            onRoomTempChange={onRoomTempChange}
           />
         </div>
         <div className="hjm-body">
@@ -877,6 +946,8 @@ export function HjemMonter({
             staleBadgeLabel={lastKnownAt !== null ? `Sist kjente vær · ${formatClock(lastKnownAt)}` : null}
             activity={activity}
             onActivityChange={onActivityChange}
+            roomTempC={roomTempC}
+            onRoomTempChange={onRoomTempChange}
             onAdjustLocation={handleOpenAdjust}
           />
         </div>
@@ -929,6 +1000,8 @@ export function HjemMonter({
           freshnessWarn={freshnessLine.warn}
           activity={activity}
           onActivityChange={onActivityChange}
+          roomTempC={roomTempC}
+          onRoomTempChange={onRoomTempChange}
           onAdjustLocation={handleOpenAdjust}
         />
       </div>

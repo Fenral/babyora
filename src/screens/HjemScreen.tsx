@@ -60,7 +60,7 @@ import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
 import { DISCLAIMER_SHORT } from '../lib/copy/disclaimer';
 import { verifiedAvatarAsset } from '../lib/recommendation/verified-avatar';
 import { avatarPng, headwearFromRecommendation, tierFromRecommendation } from '../lib/avatar-tier';
-import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
+import type { Activity, Recommendation, RecommendInput } from '../lib/wool-layers/types';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { displayNameForDbString } from '../data/garment-display-names';
 // Gamle A1-A7-PNG-ene er byttet ut med clay-verdenen fra F79/F80.
@@ -113,7 +113,6 @@ const ELVERUM = { lat: 60.8867, lon: 11.5614, city: 'Elverum' };
 // og src/lib/avatar-stage.ts (react-refresh: komponentfiler eksporterer kun
 // komponenter). Samme funksjoner, samme adferd.
 
-type Activity = 'utelek' | 'vogn';
 type VognMode = 'awake' | 'sleeping';
 
 /**
@@ -363,7 +362,7 @@ function WeatherFallbackIcon({ size }: { size: number }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function HjemScreen({
-  onNavigate: _onNavigate,
+  onNavigate,
   onOpenSheet,
   createCurrentOutfitBundle,
   selectHomeSources,
@@ -374,9 +373,6 @@ export function HjemScreen({
   onOpenWarmColdGuide,
   onOpenPlaggbib,
 }: HjemScreenProps) {
-  // _onNavigate beholdes i signaturen (App passer den), men brukes ikke lokalt
-  // siden BottomTabBar nå mountes globalt i App.tsx.
-  void _onNavigate;
   const { active, needsOnboarding } = useChildren();
   const { reducedMotion } = useNativeSettings();
   const { fire } = useHapticSystem();
@@ -432,7 +428,11 @@ export function HjemScreen({
   const handleRetryWeather = useCallback(() => {
     setWeatherRefreshKey((key) => key + 1);
   }, []);
+  const handleOpenProfile = useCallback(() => {
+    onNavigate('familie');
+  }, [onNavigate]);
   const [activity, setActivity] = useState<Activity>('utelek');
+  const [roomTempC, setRoomTempC] = useState(18);
   // Søvn/våken-toggle på vogn fjernet (Sivert: ikke viktig nok). Antar våken.
   const vognMode: VognMode = 'awake';
 
@@ -445,28 +445,59 @@ export function HjemScreen({
   // videre til den endelige sikkerhetsgrensen ved session-swaps.
   const engineInput = useMemo<RecommendInput | null>(() => {
     if (!weather.now) return null;
+    const calculationWeather: RecommendInput['weather'] = activity === 'soevn'
+      ? {
+          tempC: roomTempC,
+          feelsLikeC: roomTempC,
+          windMs: 0,
+          precipMmH: 0,
+        }
+      : {
+          tempC: weather.now.tempC,
+          feelsLikeC: weather.now.feelsLikeC,
+          windMs: weather.now.windMs,
+          precipMmH: weather.now.precipMmH,
+          symbolCode: weather.now.symbolCode,
+        };
     return {
-      weather: {
-        tempC: weather.now.tempC,
-        feelsLikeC: weather.now.feelsLikeC,
-        windMs: weather.now.windMs,
-        precipMmH: weather.now.precipMmH,
-        symbolCode: weather.now.symbolCode,
+      weather: calculationWeather,
+      child: {
+        ageMonths,
+        ...(active.canRoll === 'yes'
+          ? { canRoll: true }
+          : active.canRoll === 'no'
+            ? { canRoll: false }
+            : {}),
       },
-      child: { ageMonths },
       activity,
       ...(activity === 'vogn' ? { vognMode } : {}),
     };
-  }, [weather.now, ageMonths, activity, vognMode]);
+  }, [weather.now, ageMonths, active.canRoll, activity, roomTempC, vognMode]);
 
-  const recommendation = useMemo<Recommendation | null>(() => {
-    if (!engineInput) return null;
+  const displayedNow = useMemo(() => {
+    if (!weather.now || activity !== 'soevn') return weather.now ?? null;
+    return {
+      ...weather.now,
+      tempC: roomTempC,
+      feelsLikeC: roomTempC,
+      windMs: 0,
+      precipMmH: 0,
+      symbolCode: 'indoor',
+    };
+  }, [activity, roomTempC, weather.now]);
+
+  const recommendationComputation = useMemo<Readonly<{
+    recommendation: Recommendation | null;
+    error: boolean;
+  }>>(() => {
+    if (!engineInput) return { recommendation: null, error: false };
     try {
-      return recommendCanonical(engineInput);
+      return { recommendation: recommendCanonical(engineInput), error: false };
     } catch {
-      return null;
+      return { recommendation: null, error: true };
     }
   }, [engineInput]);
+  const recommendation = recommendationComputation.recommendation;
 
   /**
    * Swap-resolved recommendation: items erstattes per session-swap-store.
@@ -478,10 +509,23 @@ export function HjemScreen({
    * endelige sikkerhetsgrensen (conflicts → soft-blocks → hard-safety) har
    * siste ord om hva en swap kan gjeninnføre.
    */
-  const resolvedRecommendation = useMemo<Recommendation | null>(() => {
-    if (!recommendation || !engineInput) return recommendation;
-    return applySwapsFinalized(engineInput, recommendation, swaps);
-  }, [recommendation, engineInput, swaps]);
+  const resolvedComputation = useMemo<Readonly<{
+    recommendation: Recommendation | null;
+    error: boolean;
+  }>>(() => {
+    if (recommendationComputation.error) return recommendationComputation;
+    if (!recommendation || !engineInput) return { recommendation, error: false };
+    try {
+      return {
+        recommendation: applySwapsFinalized(engineInput, recommendation, swaps),
+        error: false,
+      };
+    } catch {
+      return { recommendation: null, error: true };
+    }
+  }, [recommendation, recommendationComputation, engineInput, swaps]);
+  const resolvedRecommendation = resolvedComputation.recommendation;
+  const recommendationError = resolvedComputation.error;
 
   // P2 hard paywall (PRODUCT.md, 2026-07-31): Hjem er der «den første reelle
   // anbefalingen» faktisk vises — scenen under rendrer resolvedRecommendation
@@ -511,10 +555,10 @@ export function HjemScreen({
   });
 
   const currentOutfitContext = useMemo<PlannedOutfitContext | null>(() => {
-    const now = weather.now;
+    const observedNow = weather.now;
     const evaluatedAt = weather.evidence?.metadata.evaluatedAt;
     if (
-      !now
+      !observedNow
       || !engineInput
       || !resolvedRecommendation
       || effectivePlace === null
@@ -532,6 +576,10 @@ export function HjemScreen({
       .filter((layer) => layer.category === 'utstyr')
       .flatMap((layer) => layer.items);
     if (orderedGarments.length === 0) return null;
+    const now = {
+      ...engineInput.weather,
+      symbolCode: engineInput.weather.symbolCode ?? 'unknown',
+    };
     const fingerprint = `current-finalized:${JSON.stringify([
       orderedGarments,
       equipment,
@@ -629,7 +677,7 @@ export function HjemScreen({
 
   // ─── Avledede verdier ─────────────────────────────────────────────────────
 
-  const now = weather.now;
+  const now = displayedNow;
   const isWeatherLoading = now === null || now === undefined;
   const conditionLabelText = symbolToLabel(now?.symbolCode);
   const tempAxis = tempAxisFor(now?.feelsLikeC, now?.tempC);
@@ -1027,10 +1075,14 @@ export function HjemScreen({
         weatherLastKnownAt={weather.lastKnownAt}
         activity={activity}
         onActivityChange={handleActivityChange}
+        roomTempC={roomTempC}
+        onRoomTempChange={setRoomTempC}
+        calculationContextKey={activity === 'soevn' ? `room-temp:${roomTempC}` : 'outdoor'}
         childId={active.id}
         childName={active.name}
         ageMonths={ageMonths}
         recommendation={resolvedRecommendation}
+        recommendationError={recommendationError}
         onStartDressing={handleCta}
         startDressingDisabled={currentOutfitContext === null}
         reducedMotion={reducedMotion}
@@ -1039,6 +1091,7 @@ export function HjemScreen({
         onOpenWarmColdGuide={onOpenWarmColdGuide}
         onOpenPlaggbib={onOpenPlaggbib}
         onRetryWeather={handleRetryWeather}
+        onOpenProfile={handleOpenProfile}
       />
     );
   }

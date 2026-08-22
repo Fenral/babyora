@@ -78,6 +78,8 @@ describe('stale copy', () => {
   it('uses the exact mock contextual copy for an identity change', () => {
     expect(staleHeadline('identity-changed', 'vogn')).toBe('Nytt antrekk for vogn?');
     expect(staleCtaLabel('identity-changed', 'vogn')).toBe('Se antrekk for vogn');
+    expect(staleHeadline('identity-changed', 'baeresele')).toBe('Nytt antrekk for bæresele?');
+    expect(staleCtaLabel('identity-changed', 'soevn')).toBe('Se antrekk for søvn inne');
   });
 
   it('always offers "Beregn på nytt" for recalc failure, per the architecture note (not the contextual copy)', () => {
@@ -89,6 +91,7 @@ describe('stale copy', () => {
 describe('activityChangeChip', () => {
   it('renders the exact mock chip copy when activity changed', () => {
     expect(activityChangeChip('utelek', 'vogn')).toBe('Du byttet fra utelek til vogn');
+    expect(activityChangeChip('baeresele', 'soevn')).toBe('Du byttet fra bæresele til søvn inne');
   });
 
   it('returns null when there is no previous activity to compare, or nothing changed', () => {

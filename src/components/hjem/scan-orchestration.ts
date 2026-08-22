@@ -22,6 +22,7 @@
  * timer-varighetene over.
  */
 import type { ScanCacheSlot, ScanStaleReason } from '../../lib/scan/types.js';
+import type { Activity } from '../../lib/wool-layers/types.js';
 
 /**
  * Eier-override v3: HVERT trykk (ikke bare «første gang noensinne»)
@@ -150,14 +151,16 @@ export function decideScanEntry(exactSlot: ScanCacheSlot | null): HjemMonterScan
 }
 
 /** Kort form, brukt i «endret fra X til Y»-chip og stale-CTA-en. */
-const LOWERCASE_ACTIVITY_LABEL: Readonly<Record<'utelek' | 'vogn', string>> = {
+const LOWERCASE_ACTIVITY_LABEL: Readonly<Record<Activity, string>> = {
   utelek: 'utelek',
   vogn: 'vogn',
+  baeresele: 'bæresele',
+  soevn: 'søvn inne',
 };
 
 export function staleHeadline(
   reason: ScanStaleReason,
-  activity: 'utelek' | 'vogn',
+  activity: Activity,
 ): string {
   if (reason === 'identity-changed') {
     return `Nytt antrekk for ${LOWERCASE_ACTIVITY_LABEL[activity]}?`;
@@ -171,7 +174,7 @@ export function staleHeadline(
  *  identitetsendring IKKE gikk via auto-rekalkulering. */
 export function staleCtaLabel(
   reason: ScanStaleReason,
-  activity: 'utelek' | 'vogn',
+  activity: Activity,
 ): string {
   if (reason === 'identity-changed') {
     return `Se antrekk for ${LOWERCASE_ACTIVITY_LABEL[activity]}`;
@@ -180,8 +183,8 @@ export function staleCtaLabel(
 }
 
 export function activityChangeChip(
-  fromActivity: 'utelek' | 'vogn' | null,
-  toActivity: 'utelek' | 'vogn',
+  fromActivity: Activity | null,
+  toActivity: Activity,
 ): string | null {
   if (fromActivity === null || fromActivity === toActivity) return null;
   return `Du byttet fra ${LOWERCASE_ACTIVITY_LABEL[fromActivity]} til ${LOWERCASE_ACTIVITY_LABEL[toActivity]}`;

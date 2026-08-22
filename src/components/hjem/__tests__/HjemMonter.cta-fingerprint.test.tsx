@@ -120,6 +120,7 @@ function props(activity: 'utelek' | 'vogn' = 'utelek') {
     childName: 'Lillian',
     ageMonths: 9,
     recommendation: recommendationFor(activity),
+    recommendationError: false,
     onStartDressing: vi.fn(),
     startDressingDisabled: false,
     reducedMotion: false,
@@ -127,6 +128,7 @@ function props(activity: 'utelek' | 'vogn' = 'utelek') {
     onOpenAdjust: vi.fn(),
     onOpenWarmColdGuide: vi.fn(),
     onRetryWeather: vi.fn(),
+    onOpenProfile: vi.fn(),
     onOpenPlaggbib: vi.fn(),
   };
 }

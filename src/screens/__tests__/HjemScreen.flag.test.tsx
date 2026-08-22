@@ -34,14 +34,15 @@ describe('HjemScreen — P4 flag branch wiring', () => {
     expect(contents).toMatch(/if \(HJEM_SCAN_UI_ENABLED\) \{\s*\n\s*return \(\s*\n\s*<HjemMonter/);
   });
 
-  it('the ENTIRE engine chain (weather/recommendation/currentOutfitContext/outfit-transition wiring) sits ABOVE the flag branch, unmodified from its historical form', () => {
+  it('the entire engine chain and bounded error state sit above the flag branch', () => {
     const contents = source(screenPath);
     const flagBranchIndex = contents.indexOf('if (HJEM_SCAN_UI_ENABLED)');
     // Every one of these engine-chain anchors must appear BEFORE the branch —
     // i.e. they still run unconditionally regardless of which tree renders.
     const anchors = [
-      'const recommendation = useMemo<Recommendation | null>(',
-      'const resolvedRecommendation = useMemo<Recommendation | null>(',
+      'const recommendationComputation = useMemo<Readonly<{',
+      'const resolvedComputation = useMemo<Readonly<{',
+      'const recommendationError = resolvedComputation.error;',
       'const currentOutfitContext = useMemo<PlannedOutfitContext | null>(',
       'const currentOutfitBundle = useMemo(',
       'const homeSourceSelection = useMemo(',
@@ -71,8 +72,9 @@ describe('HjemScreen — P4 flag branch wiring', () => {
     const monterCall = contents.slice(monterCallStart, monterCallEnd);
     for (const prop of [
       'cityLabel', 'lat', 'lon', 'cacheScope', 'now', 'weatherStatus', 'activity',
-      'onActivityChange', 'childId', 'childName', 'ageMonths', 'recommendation',
+      'onActivityChange', 'childId', 'childName', 'ageMonths', 'recommendation', 'recommendationError',
       'onStartDressing', 'startDressingDisabled', 'reducedMotion', 'outfitTransitionStatus',
+      'onOpenProfile',
     ]) {
       expect(monterCall, `expected <HjemMonter> call to pass ${prop}`).toContain(`${prop}=`);
     }

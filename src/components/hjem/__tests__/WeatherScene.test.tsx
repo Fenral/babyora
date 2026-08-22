@@ -32,8 +32,10 @@ describe('WeatherScene', () => {
   it('renders the activity radiogroup with exact mock button labels and aria-checked wiring', () => {
     const html = renderToStaticMarkup(<WeatherScene {...baseProps()} activity="vogn" />);
     expect(html).toContain('role="radiogroup"');
-    expect(html).toContain('Utenfor vogn');
+    expect(html).toContain('Utelek');
     expect(html).toContain('I vogn');
+    expect(html).toContain('Bæresele');
+    expect(html).toContain('Søvn inne');
     expect(html).toMatch(/aria-checked="true"[^>]*>I vogn/);
   });
 
@@ -70,5 +72,23 @@ describe('WeatherScene', () => {
     expect(html).toContain('data-warn="true"');
     expect(html).toContain('Sist oppdatert 06:40');
     expect(html).toContain('data-dim="true"');
+  });
+
+  it('shows an editable indoor temperature only for indoor sleep', () => {
+    const sleepHtml = renderToStaticMarkup(
+      <WeatherScene
+        {...baseProps()}
+        activity="soevn"
+        roomTempC={18}
+        onRoomTempChange={vi.fn()}
+      />,
+    );
+    const outdoorHtml = renderToStaticMarkup(
+      <WeatherScene {...baseProps()} roomTempC={18} onRoomTempChange={vi.fn()} />,
+    );
+
+    expect(sleepHtml).toContain('aria-label="Romtemperatur for søvn"');
+    expect(sleepHtml).toContain('18°C');
+    expect(outdoorHtml).not.toContain('aria-label="Romtemperatur for søvn"');
   });
 });

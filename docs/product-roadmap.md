@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 16/56 tasks closed — 15 complete, 1 waived
+> **Roadmap status:** 17/56 tasks closed — 16 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -109,8 +109,8 @@
   Files: `src/lib/clothing-engine-v2/safety-rules.ts`, `src/lib/clothing-engine-v2/safety-rules.test.ts`, `docs/safety/rule-register.md`
   Notes: Give every rule stable ID, severity, source IDs, non-override flag, and NO/SE/DK review status. Verify: tests reject missing sources and production use of unreviewed country rules.
 
-- [ ] **TASK-017** — Implement the fast Home input-to-answer interaction.
-  Files: `src/screens/HjemScreen.tsx`, `src/components/`, `src/screens/HjemScreen.test.tsx`
+- [x] **TASK-017** — Implement the fast Home input-to-answer interaction.
+  Files: `src/screens/HjemScreen.tsx`, `src/components/`, `src/screens/__tests__/HjemScreen.interaction.test.tsx`, `docs/evidence/task-017-verification.md`
   Notes: Keep child, activity, weather status, and one primary action clear; do not add decorative work outside `docs/design.md` v0.1. Verify: a component test reaches calculation with keyboard and touch-sized controls.
 
 - [ ] **TASK-018** — Render one complete numbered outfit in dressing order.

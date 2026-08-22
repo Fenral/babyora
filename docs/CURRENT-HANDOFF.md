@@ -1,7 +1,26 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-016 are closed. TASK-006 was waived by owner, not passed. TASK-017 is next.
+**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-017 are closed. TASK-006 was waived by owner, not passed. TASK-018 is next.
+
+## 2026-08-22: TASK-017 fast Home input-to-answer interaction
+
+- Home now exposes outdoor play, stroller, carrier, and indoor sleep in one
+  accessible radio group. Arrow keys plus Home/End move selection, and every
+  control retains at least a 44 px touch target.
+- Indoor sleep has a visible 14–24 °C room-temperature control starting at
+  18 °C. Its value, not outdoor MET temperature, drives the engine and scan
+  identity; outdoor-only wind, rain, and weather symbols are excluded.
+- The active child's rolling state reaches the canonical engine. Engine and
+  post-swap contract failures render a bounded recovery with a profile action;
+  no partial outfit is presented as complete.
+- Verification passed: 75 focused interaction tests, 79 regression-contract
+  tests, typecheck, full lint, 216/216 test files with 3,306 passing and 1 todo,
+  main+bare build, and E2E 2/2. Record:
+  `docs/evidence/task-017-verification.md`.
+- `FR-004` and `FR-005` are now Verified. `FR-006` remains Partial only for
+  localized message keys in rule output. **Next:** TASK-018 renders the complete
+  numbered outfit, rationale, freshness, fallbacks, and error states.
 
 ## 2026-08-22: TASK-016 versioned Motor 2.0 safety register
 

@@ -11,11 +11,12 @@
  * interne lag OVENPÅ dette innholdet (panelet selv eier `overflow:hidden`
  * + `position:relative`, D1-doktrinens klippekontekst for scan-linjen).
  */
-import type { ReactNode } from 'react';
+import { useRef, type KeyboardEvent, type ReactNode } from 'react';
+import type { Activity } from '../../lib/wool-layers/types.js';
 import './hjem-monter.css';
 
 export type WeatherNuance = 'clear' | 'cloudy' | 'rain' | 'snow' | 'night';
-export type MonterActivity = 'utelek' | 'vogn';
+export type MonterActivity = Activity;
 
 function ChevronIcon() {
   return (
@@ -35,9 +36,18 @@ function ClockIcon() {
 }
 
 const ACTIVITY_TOGGLE_LABEL: Readonly<Record<MonterActivity, string>> = {
-  utelek: 'Utenfor vogn',
+  utelek: 'Utelek',
   vogn: 'I vogn',
+  baeresele: 'Bæresele',
+  soevn: 'Søvn inne',
 };
+
+const ACTIVITY_ORDER = Object.freeze([
+  'utelek',
+  'vogn',
+  'baeresele',
+  'soevn',
+] as const satisfies readonly MonterActivity[]);
 
 export type WeatherSceneProps = Readonly<{
   cityLabel: string;
@@ -77,6 +87,8 @@ export type WeatherSceneProps = Readonly<{
   onAdjustLocation?: () => void;
   activity: MonterActivity;
   onActivityChange: (next: MonterActivity) => void;
+  roomTempC?: number;
+  onRoomTempChange?: (next: number) => void;
   children?: ReactNode;
 }>;
 
@@ -104,8 +116,34 @@ export function WeatherScene({
   onAdjustLocation,
   activity,
   onActivityChange,
+  roomTempC,
+  onRoomTempChange,
   children,
 }: WeatherSceneProps) {
+  const activityButtons = useRef<Array<HTMLButtonElement | null>>([]);
+
+  function handleActivityKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ): void {
+    let nextIndex: number | null = null;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = (index + 1) % ACTIVITY_ORDER.length;
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = (index - 1 + ACTIVITY_ORDER.length) % ACTIVITY_ORDER.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = ACTIVITY_ORDER.length - 1;
+    }
+    if (nextIndex === null) return;
+
+    event.preventDefault();
+    const nextActivity = ACTIVITY_ORDER[nextIndex];
+    onActivityChange(nextActivity);
+    activityButtons.current[nextIndex]?.focus();
+  }
+
   return (
     <section className="hjm-panel" data-nuance={nuance} aria-label={`Været nå i ${cityLabel}`}>
       <div className="hjm-loc-row">
@@ -175,18 +213,38 @@ export function WeatherScene({
       {noteText ? <p className="hjm-note">{noteText}</p> : null}
 
       <div className="hjm-toggle" role="radiogroup" aria-label="Aktivitet">
-        {(Object.keys(ACTIVITY_TOGGLE_LABEL) as MonterActivity[]).map((value) => (
+        {ACTIVITY_ORDER.map((value, index) => (
           <button
             key={value}
+            ref={(element) => { activityButtons.current[index] = element; }}
             type="button"
             role="radio"
             aria-checked={activity === value}
+            tabIndex={activity === value ? 0 : -1}
             onClick={() => onActivityChange(value)}
+            onKeyDown={(event) => handleActivityKeyDown(event, index)}
           >
             {ACTIVITY_TOGGLE_LABEL[value]}
           </button>
         ))}
       </div>
+
+      {activity === 'soevn' && roomTempC !== undefined && onRoomTempChange !== undefined ? (
+        <label className="hjm-room-temp">
+          <span>Romtemperatur</span>
+          <output>{`${roomTempC}°C`}</output>
+          <input
+            type="range"
+            min={14}
+            max={24}
+            step={1}
+            value={roomTempC}
+            aria-label="Romtemperatur for søvn"
+            aria-valuetext={`${roomTempC} grader`}
+            onChange={(event) => onRoomTempChange(Number(event.currentTarget.value))}
+          />
+        </label>
+      ) : null}
 
       {children}
     </section>

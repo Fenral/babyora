@@ -409,6 +409,7 @@ function hvileProps(symbolCode: string) {
     childName: 'Lillian',
     ageMonths: 9,
     recommendation: recommend(motorinngang()),
+    recommendationError: false,
     onStartDressing: () => {},
     startDressingDisabled: false,
     reducedMotion: false,
@@ -416,6 +417,7 @@ function hvileProps(symbolCode: string) {
     onOpenAdjust: () => {},
     onOpenWarmColdGuide: () => {},
     onRetryWeather: () => {},
+    onOpenProfile: () => {},
     onOpenPlaggbib: () => {},
   };
 }
