@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 9/56 tasks closed — 8 complete, 1 waived
+> **Roadmap status:** 10/56 tasks closed — 9 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -67,8 +67,8 @@
   Files: `src/config/release-gates.ts`, `src/config/release-gates.test.ts`
   Notes: Model Norway production, Sweden pilot, and Denmark pilot status separately from selected language; default unknown countries to unavailable. Verify: unit tests cover every gate and unknown input.
 
-- [ ] **TASK-010** — Close Phase 0 with a reproducible working shell.
-  Files: `docs/evidence/phase-0-verification.md`, `docs/product-roadmap.md`
+- [x] **TASK-010** — Close Phase 0 with a reproducible working shell.
+  Files: `docs/evidence/phase-0-verification.md`, `docs/product-roadmap.md`, `docs/CURRENT-HANDOFF.md`, `e2e/smoke.ts`
   Notes: Re-run the baseline commands, open the current app shell, and record accepted exceptions plus next-phase blockers. Verify: the shell runs, navigation opens, and no product behavior was lost during documentation work.
 
 ## Phase 1: Core Recommendation & Safety Proof
@@ -305,9 +305,9 @@
   Files: `src/screens/`, `src/state/`, `e2e/recovery.spec.ts`
   Notes: Keep the user oriented, preserve safe inputs, distinguish unavailable from stale, and never show partial recommendations. Verify: recovery E2E scenarios pass without restart or data loss.
 
-- [ ] **TASK-052** — Meet launch performance and reliability budgets.
-  Files: `vite.config.ts`, `src/`, `docs/evidence/performance.md`
-  Notes: Measure cold start, returning answer time, bundle size, memory warnings, and crash-free sessions before optimization. Verify: PRD thresholds pass or an explicit documented exception blocks launch.
+- [ ] **TASK-052** — Meet launch performance, dependency-security, and reliability budgets.
+  Files: `package.json`, `package-lock.json`, `vite.config.ts`, `src/`, `docs/evidence/performance.md`
+  Notes: Measure cold start, returning answer time, bundle size, memory warnings, and crash-free sessions before optimization. Audit production dependencies; resolve critical/high findings or record evidence that they are not reachable in the shipped build. Verify: PRD thresholds pass, no critical/high dependency finding is unowned, or an explicit documented exception blocks launch.
 
 - [ ] **TASK-053** — Finalize Norwegian privacy, safety, source, support, and deletion surfaces.
   Files: `src/screens/`, `docs/privacy.md`, `docs/support.md`, `docs/safety/no-review.md`

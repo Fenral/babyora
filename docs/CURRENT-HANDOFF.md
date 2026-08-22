@@ -1,7 +1,21 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is active on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-009 are closed. TASK-006 was waived by owner, not passed. TASK-010 is next.
+**Phase:** Product roadmap Phase 0 is closed on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-010 are closed. TASK-006 was waived by owner, not passed. Phase 1 / TASK-011 is next.
+
+## 2026-08-22: Phase 0 closeout
+
+- Reproduced `npm ci`, Chromium installation, all 211 test files / 3,189
+  passing tests, lint, main+bare build, and E2E 2/2.
+- `e2e/smoke.ts` now permanently verifies Hjem → Planlegg → Familie → Hjem,
+  including page titles, current-tab semantics, and visible screen markers.
+- Accepted exceptions and Phase 1 blockers are recorded in
+  `docs/evidence/phase-0-verification.md`; critical/high production dependency
+  review is explicitly owned by TASK-052.
+- The current source shell has three root tabs while the owner-selected live
+  reference has four slots. TASK-011–016 can proceed; ask the owner before
+  TASK-017 changes root navigation.
+- **Next:** TASK-011 hardens the local child profile for ages 0–24 months.
 
 ## 2026-08-22: Country release gates
 

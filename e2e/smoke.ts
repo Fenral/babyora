@@ -6,7 +6,7 @@
  * Kjøres med `npm run e2e` ETTER `npm run build` (server dist/ via
  * vite preview). To scenarioer:
  *   1. Fersk bruker: onboarding-flaten rendres (main + h1).
- *   2. ?seed=demo: app-skallet rendres med bunn-nav «Hjem».
+ *   2. ?seed=demo: app-skallet rendres og alle rotnavigasjonene åpner.
  *
  * Feil = exit 1 (CI-gate). Vær-fetch mot met.no kan feile i CI — det er en
  * håndtert app-tilstand og feiler IKKE røyktesten (kun uncaught errors gjør).
@@ -134,6 +134,29 @@ async function checkPage(
   await page.close();
 }
 
+async function verifyRootNavigation(page: Page): Promise<void> {
+  const navigation = page.getByRole('navigation', { name: 'Hovednavigasjon' });
+  const roots = [
+    { name: 'Hjem', title: 'Hjem · Babyora', marker: 'Finn dagens antrekk' },
+    { name: 'Planlegg', title: 'Planlegg · Babyora', marker: 'Velg planvisning' },
+    { name: 'Familie', title: 'Familie · Babyora', marker: 'Innstillinger' },
+    { name: 'Hjem', title: 'Hjem · Babyora', marker: 'Finn dagens antrekk' },
+  ] as const;
+
+  for (const root of roots) {
+    const button = navigation.getByRole('button', { name: root.name, exact: true });
+    await button.click();
+    await page.waitForFunction((expectedTitle) => document.title === expectedTitle, root.title);
+
+    if (await button.getAttribute('aria-current') !== 'page') {
+      fail(`navigasjon: ${root.name} mangler aria-current="page"`);
+    }
+
+    await page.locator('#main').getByText(root.marker, { exact: false }).first()
+      .waitFor({ state: 'visible', timeout: 10_000 });
+  }
+}
+
 async function main(): Promise<void> {
   let server: ChildProcess | null = null;
   let browser: Browser | null = null;
@@ -171,8 +194,14 @@ async function main(): Promise<void> {
       await page.getByRole('heading', { name: 'Hvem kler vi på?' }).waitFor();
     });
 
-    // 2) Demo-seed → app-skall med bunn-nav
-    await checkPage(browser, `${BASE}/?seed=demo`, 'text=Hjem', 'app-skall (demo) rendrer');
+    // 2) Demo-seed → app-skall med fungerende Hjem/Planlegg/Familie-ruting.
+    await checkPage(
+      browser,
+      `${BASE}/?seed=demo`,
+      'text=Hjem',
+      'app-skall og rotnavigasjon (demo) rendrer',
+      verifyRootNavigation,
+    );
 
     console.log('SMOKE PASS: 2/2 scenarioer grønne');
   } finally {
