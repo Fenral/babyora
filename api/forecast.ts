@@ -12,11 +12,19 @@
  * URL-en via VITE_FORECAST_PROXY (native). Svar caches på Vercels edge i
  * 15 min for å avlaste met.no.
  */
+import { isSafeMetForecastPayload } from '../src/lib/met-no/forecast-contract.js';
+
 export const config = { runtime: 'edge' };
 
 const MET_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
-// met.no-vilkår: identifiser app + kontakt. Bytt e-post ved behov.
-const USER_AGENT = 'Babyora/1.0 (https://wool-app.vercel.app; sivertskotvold@gmail.com)';
+const DEFAULT_USER_AGENT = 'Snudly/1.0 (https://snudly.vercel.app; sivertskotvold@gmail.com)';
+// MET krever en stabil appidentitet og kontakt. Servervariabelen lar eier endre
+// kontakt uten ny klientbuild; fallbacken holder lokale/preview-bygg kompatible.
+const USER_AGENT = process.env.METNO_USER_AGENT?.trim() || DEFAULT_USER_AGENT;
+const UPSTREAM_TIMEOUT_MS = 8_000;
+const MAX_UPSTREAM_ATTEMPTS = 2;
+const RETRY_JITTER_MIN_MS = 25;
+const RETRY_JITTER_SPAN_MS = 50;
 const MEMORY_ONLY_RATE_LIMIT = 30;
 const MEMORY_ONLY_RATE_WINDOW_MS = 60_000;
 const MEMORY_ONLY_RATE_MAX_CLIENTS = 2_048;
@@ -50,7 +58,6 @@ function cacheHeaders(memoryOnly: boolean): Record<string, string> {
 function json(
   body: unknown,
   status: number,
-  memoryOnly = false,
   extraHeaders: Record<string, string> = {},
 ): Response {
   return new Response(JSON.stringify(body), {
@@ -58,10 +65,54 @@ function json(
     headers: {
       ...CORS,
       'Content-Type': 'application/json',
-      ...(memoryOnly ? cacheHeaders(true) : {}),
+      ...cacheHeaders(true),
       ...extraHeaders,
     },
   });
+}
+
+type ForecastProxyErrorCode =
+  | 'invalid_coordinates'
+  | 'invalid_payload'
+  | 'method_not_allowed'
+  | 'rate_limited'
+  | 'timeout'
+  | 'upstream_unavailable';
+
+function errorResponse(
+  code: ForecastProxyErrorCode,
+  message: string,
+  status: number,
+  retryable: boolean,
+  extraHeaders: Record<string, string> = {},
+): Response {
+  return json({ error: message, code, retryable }, status, extraHeaders);
+}
+
+function coordinate(searchParams: URLSearchParams, name: 'lat' | 'lon'): number | null {
+  const raw = searchParams.get(name);
+  if (raw === null || raw.trim() === '') return null;
+  const value = Number(raw);
+  const limit = name === 'lat' ? 90 : 180;
+  return Number.isFinite(value) && Math.abs(value) <= limit ? value : null;
+}
+
+function retryAfterHeader(upstream: Response): Record<string, string> {
+  const raw = upstream.headers.get('Retry-After')?.trim();
+  if (!raw || !/^\d+$/.test(raw)) return {};
+  const seconds = Number(raw);
+  if (!Number.isSafeInteger(seconds) || seconds < 0 || seconds > 3_600) return {};
+  return { 'Retry-After': String(seconds) };
+}
+
+function isTimeoutError(error: unknown): boolean {
+  return error instanceof Error
+    && (error.name === 'TimeoutError' || error.name === 'AbortError');
+}
+
+async function waitForRetry(): Promise<void> {
+  const delay = RETRY_JITTER_MIN_MS + Math.floor(Math.random() * RETRY_JITTER_SPAN_MS);
+  await new Promise<void>((resolve) => setTimeout(resolve, delay));
 }
 
 function clientAddress(req: Request): string | null {
@@ -102,24 +153,31 @@ export default async function handler(req: Request): Promise<Response> {
     return new Response(null, { status: 204, headers: CORS });
   }
   if (req.method !== 'GET') {
-    return json(
-      { error: 'Kun GET er tillatt' },
+    return errorResponse(
+      'method_not_allowed',
+      'Kun GET er tillatt',
       405,
-      true,
+      false,
       { Allow: 'GET, OPTIONS' },
     );
   }
 
   const { searchParams } = new URL(req.url);
   const memoryOnly = searchParams.get('cacheScope') === 'memory-only';
-  const lat = Number(searchParams.get('lat'));
-  const lon = Number(searchParams.get('lon'));
-  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
-    return json({ error: 'Ugyldig lat/lon' }, 400, memoryOnly);
+  const lat = coordinate(searchParams, 'lat');
+  const lon = coordinate(searchParams, 'lon');
+  if (lat === null || lon === null) {
+    return errorResponse(
+      'invalid_coordinates',
+      'Ugyldig posisjon. Velg stedet på nytt.',
+      400,
+      false,
+    );
   }
   if (memoryOnly && exceedsMemoryOnlyRateLimit(req)) {
-    return json(
-      { error: 'For mange forespørsler. Prøv igjen om litt.' },
+    return errorResponse(
+      'rate_limited',
+      'Værtjenesten har for mange forespørsler. Prøv igjen senere.',
       429,
       true,
       { 'Retry-After': '60' },
@@ -127,27 +185,58 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const url = `${MET_BASE}?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`;
-  let upstream: Response;
-  try {
-    upstream = await fetch(url, {
-      headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
-      ...(memoryOnly ? { cache: 'no-store' as const } : {}),
-    });
-  } catch {
-    return json({ error: 'met.no utilgjengelig' }, 502, memoryOnly);
+  let upstream: Response | null = null;
+  let timedOut = false;
+  for (let attempt = 0; attempt < MAX_UPSTREAM_ATTEMPTS; attempt += 1) {
+    try {
+      upstream = await fetch(url, {
+        headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
+        signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+        ...(memoryOnly ? { cache: 'no-store' as const } : {}),
+      });
+      if (upstream.status !== 502 && upstream.status !== 503) break;
+      if (attempt + 1 < MAX_UPSTREAM_ATTEMPTS) await waitForRetry();
+    } catch (error) {
+      timedOut = isTimeoutError(error);
+      upstream = null;
+      if (attempt + 1 < MAX_UPSTREAM_ATTEMPTS) await waitForRetry();
+    }
   }
 
+  if (!upstream) {
+    return timedOut
+      ? errorResponse('timeout', 'Værtjenesten svarte ikke i tide.', 504, true)
+      : errorResponse('upstream_unavailable', 'Værtjenesten er midlertidig utilgjengelig.', 502, true);
+  }
+  if (upstream.status === 429) {
+    return errorResponse(
+      'rate_limited',
+      'Værtjenesten har for mange forespørsler. Prøv igjen senere.',
+      429,
+      true,
+      retryAfterHeader(upstream),
+    );
+  }
   if (!upstream.ok) {
-    return json({ error: `met.no HTTP ${upstream.status}` }, upstream.status, memoryOnly);
+    return errorResponse(
+      'upstream_unavailable',
+      'Værtjenesten er midlertidig utilgjengelig.',
+      502,
+      true,
+    );
   }
 
-  let body: string;
+  let body: unknown;
   try {
-    body = await upstream.text();
+    body = await upstream.json();
   } catch {
-    return json({ error: 'met.no utilgjengelig' }, 502, memoryOnly);
+    return errorResponse('invalid_payload', 'Værtjenesten sendte et ugyldig svar.', 502, true);
   }
-  return new Response(body, {
+  if (!isSafeMetForecastPayload(body)) {
+    return errorResponse('invalid_payload', 'Værtjenesten sendte et ugyldig svar.', 502, true);
+  }
+
+  return new Response(JSON.stringify(body), {
     status: 200,
     headers: {
       ...CORS,

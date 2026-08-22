@@ -1,7 +1,26 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-012 are closed. TASK-006 was waived by owner, not passed. TASK-013 is next.
+**Phase:** Product roadmap Phase 0 is closed and Phase 1 is active on `codex/phase-1/core-recommendation`. TASK-001 through TASK-013 are closed. TASK-006 was waived by owner, not passed. TASK-014 is next.
+
+## 2026-08-22: TASK-013 MET forecast proxy contract
+
+- Missing, blank, non-finite, and out-of-range coordinates now fail before
+  cache or network access on both client and proxy boundaries.
+- MET requests use an eight-second timeout and one jittered retry for transient
+  network/502/503 failures. A 429 never loops and preserves bounded
+  `Retry-After` metadata.
+- Malformed JSON and structurally invalid forecasts are rejected before shared
+  caching. All failures are no-store; fixed-home success remains shared-cache
+  eligible and automatic-location traffic remains no-store end to end.
+- Browser failures are now typed `ForecastClientError` values. The proxy has a
+  server-safe parser and a contact-bearing Snudly identity with a server-only
+  override.
+- Verification passed: 112 focused tests, lint, 212/212 test files with 3,232
+  passing tests and 1 todo, main+bare build, and E2E 2/2. Record:
+  `docs/evidence/task-013-verification.md`. `FR-003` is now Verified.
+  **Next:** TASK-014 makes the canonical recommendation input explicit across
+  all activity contexts.
 
 ## 2026-08-22: TASK-012 privacy-bounded location
 

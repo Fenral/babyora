@@ -44,6 +44,89 @@ const MAX_SOURCE_AGE_MS = 6 * 60 * 60 * 1000;
 const MAX_SOURCE_FUTURE_SKEW_MS = 5 * 60 * 1000;
 const MAX_MEMORY_ONLY_ENTRIES = 32;
 
+export type ForecastClientErrorCode =
+  | 'invalid_coordinates'
+  | 'invalid_payload'
+  | 'network_unavailable'
+  | 'rate_limited'
+  | 'request_superseded'
+  | 'timeout'
+  | 'upstream_unavailable';
+
+export class ForecastClientError extends Error {
+  readonly code: ForecastClientErrorCode;
+  readonly retryable: boolean;
+  readonly status: number | null;
+  readonly retryAfterSeconds: number | null;
+
+  constructor(
+    code: ForecastClientErrorCode,
+    message: string,
+    options: Readonly<{
+      retryable: boolean;
+      status?: number;
+      retryAfterSeconds?: number;
+      cause?: unknown;
+    }>,
+  ) {
+    super(message, options.cause === undefined ? undefined : { cause: options.cause });
+    this.name = 'ForecastClientError';
+    this.code = code;
+    this.retryable = options.retryable;
+    this.status = options.status ?? null;
+    this.retryAfterSeconds = options.retryAfterSeconds ?? null;
+  }
+}
+
+function validCoordinates(lat: number, lon: number): boolean {
+  return Number.isFinite(lat)
+    && Number.isFinite(lon)
+    && Math.abs(lat) <= 90
+    && Math.abs(lon) <= 180;
+}
+
+function retryAfterSeconds(response: Response): number | undefined {
+  const raw = response.headers?.get('Retry-After')?.trim();
+  if (!raw || !/^\d+$/.test(raw)) return undefined;
+  const seconds = Number(raw);
+  return Number.isSafeInteger(seconds) && seconds >= 0 && seconds <= 3_600
+    ? seconds
+    : undefined;
+}
+
+function responseError(response: Response): ForecastClientError {
+  if (response.status === 400) {
+    return new ForecastClientError(
+      'invalid_coordinates',
+      'Ugyldig posisjon. Velg stedet på nytt.',
+      { retryable: false, status: 400 },
+    );
+  }
+  if (response.status === 429) {
+    return new ForecastClientError(
+      'rate_limited',
+      'Værtjenesten har for mange forespørsler. Prøv igjen senere.',
+      {
+        retryable: true,
+        status: 429,
+        retryAfterSeconds: retryAfterSeconds(response),
+      },
+    );
+  }
+  if (response.status === 504) {
+    return new ForecastClientError(
+      'timeout',
+      'Værtjenesten svarte ikke i tide.',
+      { retryable: true, status: 504 },
+    );
+  }
+  return new ForecastClientError(
+    'upstream_unavailable',
+    'Værtjenesten er midlertidig utilgjengelig.',
+    { retryable: true, status: response.status },
+  );
+}
+
 const CONSUMED_UNIT_CONTRACT = {
   air_temperature: 'celsius',
   precipitation_amount: 'mm',
@@ -448,6 +531,13 @@ export async function fetchForecast(
   lon: number,
   options?: LocationRequestOptions,
 ): Promise<ForecastFetchResult> {
+  if (!validCoordinates(lat, lon)) {
+    throw new ForecastClientError(
+      'invalid_coordinates',
+      'Ugyldig posisjon. Velg stedet på nytt.',
+      { retryable: false, status: 400 },
+    );
+  }
   const scope = locationCacheScope(options);
   if (scope === 'persistent') {
     alignCoordinatorWithStorage();
@@ -476,17 +566,41 @@ export async function fetchForecast(
   const scopeQuery = scope === 'memory-only' ? '&cacheScope=memory-only' : '';
   const url = `${PROXY}?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}${scopeQuery}`;
   try {
-    const res = await fetch(url, {
-      headers: { Accept: 'application/json' },
-      ...(scope === 'memory-only'
-        ? { cache: 'no-store' as const }
-        : {}),
-    });
-    if (!res.ok) {
-      throw new Error(`met.no HTTP ${res.status}`);
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        headers: { Accept: 'application/json' },
+        ...(scope === 'memory-only'
+          ? { cache: 'no-store' as const }
+          : {}),
+      });
+    } catch (error) {
+      throw new ForecastClientError(
+        'network_unavailable',
+        error instanceof Error ? error.message : 'Nettverket er utilgjengelig.',
+        { retryable: true, cause: error },
+      );
     }
-    const data: unknown = await res.json();
-    if (!isMetForecast(data)) throw new Error('met.no: ugyldig prognose');
+    if (!res.ok) {
+      throw responseError(res);
+    }
+    let data: unknown;
+    try {
+      data = await res.json();
+    } catch (error) {
+      throw new ForecastClientError(
+        'invalid_payload',
+        'met.no: ugyldig prognose',
+        { retryable: true, status: 502, cause: error },
+      );
+    }
+    if (!isMetForecast(data)) {
+      throw new ForecastClientError(
+        'invalid_payload',
+        'met.no: ugyldig prognose',
+        { retryable: true, status: 502 },
+      );
+    }
     const acceptedAt = Date.now();
 
     const committed = readMemoryCommit(key);
@@ -495,7 +609,11 @@ export async function fetchForecast(
       return committed.result;
     }
     if (memoryRequest && !memoryRequest.active) {
-      throw new Error('automatic request superseded');
+      throw new ForecastClientError(
+        'request_superseded',
+        'automatic request superseded',
+        { retryable: true },
+      );
     }
 
     const result: ForecastFetchResult = {

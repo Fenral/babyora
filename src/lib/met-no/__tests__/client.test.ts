@@ -4,6 +4,7 @@ import {
   extractHourly,
   extractNow,
   fetchForecast,
+  ForecastClientError,
   memoryOnlyForecastCoordinatorSize,
 } from '../client';
 import type { MetForecast, MetTimePoint } from '../types';
@@ -84,7 +85,12 @@ function validForecast(...updatedAt: [unknown?]): MetForecast {
 }
 
 function response(data: unknown, ok = true, status = 200): Response {
-  return { ok, status, json: vi.fn().mockResolvedValue(data) } as unknown as Response;
+  return {
+    ok,
+    status,
+    headers: new Headers(),
+    json: vi.fn().mockResolvedValue(data),
+  } as unknown as Response;
 }
 
 function installStorage(initial: Record<string, string> = {}) {
@@ -123,6 +129,83 @@ describe('fetchForecast provenance and cache recovery', () => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it.each([
+    [Number.NaN, 10],
+    [91, 10],
+    [63, Number.POSITIVE_INFINITY],
+    [63, -181],
+  ])('rejects invalid coordinates before cache or network access', async (lat, lon) => {
+    const { storage } = installStorage();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const error = await fetchForecast(lat, lon).catch((reason: unknown) => reason);
+
+    expect(error).toBeInstanceOf(ForecastClientError);
+    expect(error).toMatchObject({
+      code: 'invalid_coordinates',
+      retryable: false,
+      status: 400,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(storage.getItem).not.toHaveBeenCalled();
+  });
+
+  it('maps proxy 429 metadata to a typed safe client error', async () => {
+    installStorage();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      headers: new Headers({ 'Retry-After': '45' }),
+    } as Response));
+
+    const error = await fetchForecast(63.4305, 10.3951).catch((reason: unknown) => reason);
+
+    expect(error).toBeInstanceOf(ForecastClientError);
+    expect(error).toMatchObject({
+      code: 'rate_limited',
+      retryable: true,
+      status: 429,
+      retryAfterSeconds: 45,
+    });
+  });
+
+  it.each([
+    [504, 'timeout'],
+    [502, 'upstream_unavailable'],
+  ])('maps proxy HTTP %s to typed %s failure', async (status, code) => {
+    installStorage();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status,
+      headers: new Headers(),
+    } as Response));
+
+    const error = await fetchForecast(63.4305, 10.3951).catch((reason: unknown) => reason);
+
+    expect(error).toBeInstanceOf(ForecastClientError);
+    expect(error).toMatchObject({ code, retryable: true, status });
+  });
+
+  it('maps malformed proxy JSON to a typed invalid-payload error', async () => {
+    installStorage();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: vi.fn().mockRejectedValue(new SyntaxError('bad json')),
+    } as unknown as Response));
+
+    const error = await fetchForecast(63.4305, 10.3951).catch((reason: unknown) => reason);
+
+    expect(error).toBeInstanceOf(ForecastClientError);
+    expect(error).toMatchObject({
+      code: 'invalid_payload',
+      retryable: true,
+      status: 502,
+    });
   });
 
   it('returns explicit network provenance and writes a versioned envelope under the existing key', async () => {

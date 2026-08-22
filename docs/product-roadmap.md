@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 12/56 tasks closed — 11 complete, 1 waived
+> **Roadmap status:** 13/56 tasks closed — 12 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -93,7 +93,7 @@
   Files: `src/state/location-pref-store.ts`, `src/state/__tests__/location-pref-store.test.ts`, `src/hooks/useAutoLocationRefresh.ts`, `src/state/scan-cache-store.ts`, `src/components/hjem/HjemMonter.tsx`, `src/lib/widget/use-widget-snapshot.ts`, `src/screens/HjemScreen.tsx`, related tests, `docs/evidence/task-012-verification.md`
   Notes: Persist only manual home details and location mode; keep automatic coordinates in memory and discard stale generation responses. Verify: storage inspection and tests show automatic coordinates never persist.
 
-- [ ] **TASK-013** — Validate the MET forecast proxy contract and failure behavior.
+- [x] **TASK-013** — Validate the MET forecast proxy contract and failure behavior.
   Files: `api/forecast.ts`, `api/__tests__/forecast.test.ts`, `src/lib/met-no/`
   Notes: Validate coordinates/payloads, preserve compliant identification, implement bounded retry and cache scope, and return typed safe errors. Verify: tests cover invalid coordinates, timeout, 429, malformed upstream data, fixed cache, and memory-only no-store.
 

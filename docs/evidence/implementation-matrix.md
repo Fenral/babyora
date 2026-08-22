@@ -24,7 +24,7 @@ Method: inspect runtime code and its automated tests. Absence findings were conf
 |---|---|---|---|
 | FR-001 — Local child profile | **Partial** | [TASK-011 verification](task-011-verification.md) | Strict required-field and ISO birth-date validation now protects new profiles and edits; known shapes migrate, corrupt storage recovers, and 0–24/future/25+ boundaries are covered in unit and E2E tests. Older stored profiles remain intact by design, but the recommendation screens do not yet consume their validation status to exclude every existing 25+ profile from pilot results. |
 | FR-002 — Privacy-bounded location | **Verified** | [TASK-012 verification](task-012-verification.md) | Only location mode persists; fixed and automatic coordinates validate before requests; automatic weather/geocode, scan results, and widget output remain memory-only. Stale generations fail closed, permission/geocode failure preserves manual mode, and the versioned scan-cache migration purges indistinguishable legacy coordinate slots. |
-| FR-003 — Forecast proxy and freshness | **Partial** | [Forecast proxy contract tests](../../api/__tests__/forecast.test.ts) | The proxy validates coordinates, sets no-store browser headers, uses a bounded upstream cache, exposes 400/429/502 outcomes, and the UI provides attribution/freshness. `src/lib/met-no/client.ts` still collapses non-success responses into generic `Error` objects instead of the required typed client errors. |
+| FR-003 — Forecast proxy and freshness | **Verified** | [TASK-013 verification](task-013-verification.md) | Client and proxy validate coordinates, the proxy parses MET payloads before caching, fixed-home and memory-only scopes retain their reviewed headers, and timeout/400/429/upstream failures map to safe `ForecastClientError` values. Source attribution and freshness remain visible in the weather UI. |
 | FR-004 — Four activity modes | **Conflicting** | [Home activity selector](../../src/screens/HjemScreen.tsx) | The engine type supports four activities, but the shipped Home and adjustment selectors expose only outdoor play and stroller; carrier and indoor sleep are unavailable to parents. Activity changes do recalculate, while the shared legacy result fingerprint also excludes activity/situation, so the user-facing choice and fingerprint acceptance criteria both conflict with the requirement. |
 | FR-005 — Deterministic rules engine | **Partial** | [Deployed engine contract tests](../../src/lib/wool-layers/__tests__/engine.test.ts) | The deployed `wool-layers/recommend()` engine is synchronous and pure, and its tests cover all activities, temperature bands, and major safety boundaries. The suite does not explicitly prove byte-equivalent repeat output across named boundary fixtures; when this engine throws in `HjemScreen`, the error is silently collapsed to `null`, leaving the primary outfit CTA disabled instead of rendering the required bounded error state. Engine V2 has stronger deterministic fixtures but is not called by a production screen, so its disabled flags are not the FR-005 implementation gap. |
 | FR-006 — Non-disableable safety finalization | **Partial** | [Safety finalization tests](../../src/lib/wool-layers/__tests__/finalize-safety.test.ts) | Safety is reapplied after overrides, hard removals are tested, and flags carry stable code, severity, message, and source IDs. `SafetyFlag` in `src/lib/wool-layers/safety.ts` lacks a localized message key and explicit override-behavior field. In addition, `HjemScreen` omits the active child's `canRoll` value from its engine input, so a child under four months who can already roll may miss the HB-6 swaddle removal. |
@@ -43,10 +43,10 @@ Method: inspect runtime code and its automated tests. Absence findings were conf
 
 | Status | Count |
 |---|---:|
-| Verified | 0 |
-| Partial | 9 |
+| Verified | 2 |
+| Partial | 8 |
 | Missing | 2 |
-| Conflicting | 5 |
+| Conflicting | 4 |
 | **Total** | **16** |
 
-The highest-risk conflicts are the production entitlement bypass (`FR-010`), automatic-location result persistence (`FR-009`), and store-price handling (`FR-011`). The largest launch blockers are the missing country gates, Sentry integration, and pilot export (`FR-013`, `FR-015`, `FR-016`).
+The highest-risk conflicts are the production entitlement bypass (`FR-010`), the non-renderable recommendation cache (`FR-009`), and store-price handling (`FR-011`). The largest missing launch capabilities are Sentry integration and the privacy-minimized pilot export (`FR-015`, `FR-016`).
