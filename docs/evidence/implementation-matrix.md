@@ -1,6 +1,6 @@
 # PRD Implementation Matrix
 
-Assessment date: 2026-08-19
+Assessment date: 2026-08-22
 
 Scope: `docs/prd.md` functional requirements `FR-001`–`FR-016` against the current repository.
 
@@ -34,7 +34,7 @@ Method: inspect runtime code and its automated tests. Absence findings were conf
 | FR-010 — First-value paywall | **Conflicting** | [Subscription grace-window tests](../../src/state/__tests__/subscription-store.test.ts) | First recommendation time persists and the grace-window flag is session-only. The PRD's later-session gate conflicts with the authoritative free-today boundary in `AGENTS.md`; separately, the demo entitlement override is compiled into ordinary builds and activates for any URL containing any `seed` parameter, creating a production entitlement bypass. |
 | FR-011 — RevenueCat offerings | **Conflicting** | [RevenueCat wrapper tests](../../src/lib/billing/__tests__/revenuecat.test.ts) | Monthly and annual plans map by RevenueCat package type without runtime product IDs. The paywall still renders static anchor prices from `src/lib/premium/products.ts`, and `purchasePlan()` selects the first matching package rather than blocking duplicate package types, conflicting with live-price and duplicate-blocking requirements. |
 | FR-012 — Purchase and restore states | **Partial** | [Paywall purchase-flow tests](../../src/components/__tests__/PaywallDialog.test.tsx) | Success, cancellation, unavailable offering/plan, missing entitlement, and store failure have user-facing purchase states; restore exists in the paywall. Pending is not modeled, restore collapses unavailable/no-entitlement/failure to `false`, no restore action was found in settings, and no physical-iPhone sandbox evidence is recorded. |
-| FR-013 — Country release gates | **Missing** | [Current locale registry](../../src/i18n/index.ts) | Norwegian, Swedish, and Danish locale resources exist, but no country release-gate module or tests separate translation completeness from safety review. Norway production and Sweden/Denmark pilot states therefore cannot be enforced independently. |
+| FR-013 — Country release gates | **Partial** | [Country release-gate contract](../../src/config/release-gates.test.ts) | A typed, fail-closed table separates country from selected locale: Norway is production-approved, Sweden and Denmark are pilot-only with pending safety review, and unknown inputs are unavailable. TASK-030–032 still own missing-core-string localization tests, and later build-policy work must consume the gate before it can enforce runtime promotion. |
 | FR-014 — Privacy-safe pilot analytics | **Partial** | [Analytics wrapper and event contract](../../src/lib/analytics/track.ts) | Tracking is centralized, opt-out is checked before initialization, autocapture/session recording are disabled, and obvious sensitive keys are stripped. Several properties remain unrestricted strings, the sanitizer is not directly behavior-tested, and the event union does not cover every requested funnel outcome. |
 | FR-015 — Sentry observability | **Missing** | [Current dependency manifest](../../package.json) | No Sentry SDK or integration exists in the dependency manifest or source tree; `beforeSend` scrubbing, release/environment setup, a test-error path, and source-map upload configuration are absent. |
 | FR-016 — Privacy-minimized pilot export | **Missing** | [Current analytics event surface](../../src/lib/analytics/track.ts) | No cohort export or threshold-calculation artifact was found. The repository has no implementation that emits only anonymous user, country, day, and funnel-stage data or computes the validation thresholds from such an export. |
@@ -44,8 +44,8 @@ Method: inspect runtime code and its automated tests. Absence findings were conf
 | Status | Count |
 |---|---:|
 | Verified | 0 |
-| Partial | 8 |
-| Missing | 3 |
+| Partial | 9 |
+| Missing | 2 |
 | Conflicting | 5 |
 | **Total** | **16** |
 

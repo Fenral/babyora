@@ -1,7 +1,23 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is active on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-008 are closed. TASK-006 was waived by owner, not passed. TASK-009 is next.
+**Phase:** Product roadmap Phase 0 is active on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-009 are closed. TASK-006 was waived by owner, not passed. TASK-010 is next.
+
+## 2026-08-22: Country release gates
+
+- Typed policy: `src/config/release-gates.ts`; contract tests:
+  `src/config/release-gates.test.ts`.
+- Norway is production-approved. Sweden and Denmark are controlled pilots with
+  public release blocked while safety review is pending. Unknown country input
+  fails closed to unavailable.
+- Selected language is structurally independent from country status; choosing
+  Norwegian, Swedish, Danish, English, or German cannot grant country access.
+- Candidate `eb9abaf` passed final fresh Sonnet/high exact-commit review with no
+  P0–P3 findings. Full gate: 211/211 test files, 3,189 tests, lint, main+bare
+  build, and 2/2 E2E PASS.
+- Verification record: `docs/evidence/task-009-verification.md`.
+- **Next:** TASK-010 closes Phase 0 by reproducing the working shell and
+  recording accepted exceptions and next-phase blockers.
 
 ## 2026-08-22: Runtime configuration inventory
 
@@ -17,8 +33,8 @@
 - Candidate `fb24caa` passed independent content/security review. Full gate:
   210/210 test files, 3,168 tests, lint, main+bare build, and 2/2 E2E PASS.
 - Verification record: `docs/evidence/task-008-verification.md`.
-- **Next:** TASK-009 models Norway production, Sweden pilot, and Denmark pilot
-  release gates independently from the selected language.
+- TASK-009 subsequently modeled Norway production and Sweden/Denmark pilots
+  independently from selected language; see the current section above.
 
 ## 2026-08-22: Provisional Snudly Ro v0.1
 

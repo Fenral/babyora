@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 8/56 tasks closed — 7 complete, 1 waived
+> **Roadmap status:** 9/56 tasks closed — 8 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -63,7 +63,7 @@
   Files: `.env.example`, `docs/evidence/environment-inventory.md`, `tools/verify-environment-inventory.mjs`
   Notes: List required Vercel, MET, RevenueCat, PostHog, Sentry, Apple, and deferred Supabase settings without real secrets. Verify: secret values are absent and every variable in PRD section 2 has an owner and environment.
 
-- [ ] **TASK-009** — Define release and country gates independently of locale.
+- [x] **TASK-009** — Define release and country gates independently of locale.
   Files: `src/config/release-gates.ts`, `src/config/release-gates.test.ts`
   Notes: Model Norway production, Sweden pilot, and Denmark pilot status separately from selected language; default unknown countries to unavailable. Verify: unit tests cover every gate and unknown input.
 
