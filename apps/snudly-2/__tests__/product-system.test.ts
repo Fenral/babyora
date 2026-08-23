@@ -53,9 +53,11 @@ describe('Snudly 2 product system', () => {
     expect(home).toContain('/snudly-owner/avatar-a-home-gold.webp');
     expect(home).toContain('className="home-avatar"');
     expect(home).toContain('className="garment-list"');
+    expect(home).toContain('className="home-reason"');
     expect(parity).toContain('.snudly-app');
     expect(surfaces).toContain('radial-gradient(circle at 12% 14%');
     expect(parity).toContain('.home-avatar { position: absolute; z-index: 8; top: -82px;');
+    expect(parity).toContain('.home-reason { white-space: nowrap; }');
     expect(surfaces).toContain('.garment-list');
   });
 

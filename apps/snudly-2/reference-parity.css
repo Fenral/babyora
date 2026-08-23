@@ -34,6 +34,7 @@
 .home-title { margin: 0; font-size: 29px; line-height: 1; letter-spacing: -.036em; }
 .home-subtitle { max-width: 56%; margin: 4px 0 0; color: var(--ink-mid); font-size: 10px; font-weight: 650; line-height: 1.3; }
 .home-subtitle b { color: var(--sage-deep); font-weight: 740; }
+.home-reason { white-space: nowrap; }
 .home-avatar { position: absolute; z-index: 8; top: -82px; right: -15px; width: 196px; pointer-events: none; filter: drop-shadow(0 13px 14px color-mix(in srgb, var(--sn-palette-shadow-c) 14%, transparent)); transform-origin: 76% 88%; }
 .garment-index { color: var(--ink-mid); font-size: 10px; font-variant-numeric: tabular-nums; }
 .garment-thumb { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 13px; background: var(--sn-palette-vitrine); box-shadow: var(--shadow-chip); }

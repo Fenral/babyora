@@ -228,7 +228,7 @@ export function HomeScreen({
               <img className="home-avatar" src="/snudly-owner/avatar-a-home-gold.webp" alt="" aria-hidden="true" />
               <header className="home-heading">
                 <h1 className="home-title">Dagens antrekk</h1>
-                <p className="home-subtitle">{model.summary} — <b>{model.reason}</b></p>
+                <p className="home-subtitle">{model.summary} <span className="home-reason">— <b>{model.reason}</b></span></p>
               </header>
 
               <ol className="garment-list" aria-label={`${model.garmentCount} anbefalte plagg`}>
