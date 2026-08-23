@@ -136,7 +136,7 @@ export const AGE_BANDS: AgeBandData[] = [
     surfaceAreaToMassRatio: 420,
     metabolicHeatProductionPeak: false,
     antiColdLayerOffset: 1,
-    antiHeatGuidance: 'Voksen-tilpasning. Babyora v1 stopper her — v2 dekker 24+ mnd.',
+    antiHeatGuidance: 'Voksen-tilpasning. Snudly v1 stopper her — v2 dekker 24+ mnd.',
     sourceIds: ['capital-area-peds'],
   },
 ];

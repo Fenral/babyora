@@ -1,20 +1,20 @@
 /**
- * P1 (nav 4→3 skeleton, 2026-07-30): tre-rots-navigasjonen — Hjem · Planlegg ·
- * Familie. Guide-tab-roten er fjernet; alle tidligere Guide-skjermer forblir
- * nåbare via drills (se App.tsx sin Drill-union) i stedet for en egen root-tab.
+ * Fire rotfaner etter eierens Snudly-mal: Hjem · Planlegg · Verktøy · Familie.
+ * Verktøy samler kalkulatorer og guider uten å blande dem inn i familieprofilen.
  * Innstillinger er ikke en rot — innholdet bor bak Familie (R7 Task 7).
  *
  * TAB_DEFS (nøkler + labels) bor her som ren data slik at copy/struktur kan
  * testes uten DOM; ikonene bor i BottomTabBar.
  */
 
-export type TabKey = 'hjem' | 'plan' | 'familie';
+export type TabKey = 'hjem' | 'plan' | 'verktoy' | 'familie';
 
 export type TabDefData = { key: TabKey; label: string };
 
 export const TAB_DEFS: ReadonlyArray<TabDefData> = [
   { key: 'hjem', label: 'Hjem' },
   { key: 'plan', label: 'Planlegg' },
+  { key: 'verktoy', label: 'Verktøy' },
   { key: 'familie', label: 'Familie' },
 ];
 
@@ -26,6 +26,9 @@ export const TAB_DEFS: ReadonlyArray<TabDefData> = [
  * VarmEllerKaldScreen, VinterprogramScreen) er uendret.
  */
 export type FamilieToolTarget = 'tog' | 'varm-kald' | 'forste-vinter';
+
+/** Alle destinasjonene som eies av Verktøy-roten. */
+export type VerktoyTarget = FamilieToolTarget | 'finn-antrekk';
 
 /**
  * P6 (GuideHubScreen-sletting): union for de seks drill-målene som tidligere

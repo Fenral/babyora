@@ -30,7 +30,7 @@
   },
   "guide": {
     "title": "Explore dressing",
-    "intro": "Move the sliders to see what Babyora suggests in different conditions.",
+    "intro": "Move the sliders to see what Snudly suggests in different conditions.",
     "temperatureLabel": "Temperature",
     "indoorTemperatureLabel": "Room temperature",
     "ageLabel": "Age in months",
@@ -55,7 +55,7 @@
       },
       "disclaimer": {
         "title": "A note",
-        "body": "Babyora is a guide, not a verdict. You know your baby best. Speak to a health professional if something feels off."
+        "body": "Snudly is a guide, not a verdict. You know your baby best. Speak to a health professional if something feels off."
       }
     },
     "wind": {
@@ -72,7 +72,7 @@
     }
   },
   "ageWarning": {
-    "title": "Babyora is built for 0–2 years",
+    "title": "Snudly is built for 0–2 years",
     "body": "You can still use the app, but suggestions are most accurate for the youngest babies."
   },
   "settings": {

@@ -12,6 +12,7 @@
     "src/screens/TogGuideScreen.tsx": "Tog-guide",
     "src/screens/UkeScreen.tsx": "Planlegg / Uke",
     "src/screens/VarmEllerKaldScreen.tsx": "Varm eller kald",
+    "src/screens/VerktoyScreen.tsx": "Verktøy",
     "src/screens/VinterprogramScreen.tsx": "Vinterprogram"
   },
 
@@ -27,11 +28,11 @@
     "src/screens/VinterprogramScreen.tsx": "Vinterprogram"
   },
 
-  "_unntak": "De TO skjermene som IKKE gaar i fase 3-migreringen. De ni andre gaar dit automatisk - de staar bevisst ikke oppfort noe sted, slik at en ny skjerm arver fase 3 uten at noen husker aa skrive den inn.",
+  "_unntak": "De TO skjermene som IKKE gaar i den eldre fase 3-migreringen. De ti andre gaar dit automatisk - de staar bevisst ikke oppfort noe sted, slik at en ny skjerm arver fase 3 uten at noen husker aa skrive den inn.",
   "unntak": {
     "src/screens/FamilieScreen.tsx": {
       "fase": "—",
-      "grunn": "21-linjers passthrough uten egen stilflate: null CSS-fil, null <style>-blokk, null CSSProperties, null var(). Den rendrer InnstillingerScreen og har bokstavelig talt ingenting aa migrere. Flaten brukeren ser migreres som InnstillingerScreen."
+      "grunn": "Familie-skallet er erstattet av den eiergodkjente Snudly-flaten og bruker Snudly-designsystemet direkte. Den gamle fase 3-tokenmigreringen gjelder fortsatt InnstillingerScreen som aapnes herfra, ikke det nye skallet."
     },
     "src/screens/PaakledningScreen.tsx": {
       "fase": "4",

@@ -160,8 +160,8 @@ describe('Snart plan model', () => {
         available_if_needed: 'Kan være greit å ha tilgjengelig',
         not_highlighted: 'Ikke fremhevet for perioden',
       },
-      note: 'Dette er en Babyora-planleggingsregel basert på historiske månedsnormaler. Sjekk dagens vær og egne behov nærmere datoen.',
-      source: 'Månedsnormaler 1991–2020: Meteorologisk institutt (MET Norway). Bearbeidet av Babyora.',
+      note: 'Dette er en Snudly-planleggingsregel basert på historiske månedsnormaler. Sjekk dagens vær og egne behov nærmere datoen.',
+      source: 'Månedsnormaler 1991–2020: Meteorologisk institutt (MET Norway). Bearbeidet av Snudly.',
     });
     expect(result.items.every((item) => (
       item.copy === SNART_COPY.rules[item.ruleId as keyof typeof SNART_COPY.rules]
@@ -190,7 +190,7 @@ describe('Snart plan model', () => {
       expect(empty.copy).toEqual({
         title: 'Planlegg for 2026-01-29–2026-02-12',
         empty: 'Ingenting å forberede akkurat nå.',
-        source: 'Månedsnormaler 1991–2020: Meteorologisk institutt (MET Norway). Bearbeidet av Babyora.',
+        source: 'Månedsnormaler 1991–2020: Meteorologisk institutt (MET Norway). Bearbeidet av Snudly.',
       });
       expectDeepFrozen(empty);
     }

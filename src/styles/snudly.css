@@ -1,0 +1,199 @@
+/* Snudly production layer — derived from loop/referanse/snudly-mock.html.
+   Loaded after the legacy token files so verified behavior can stay in place
+   while the owner-approved visual contract becomes the visible shell. */
+
+:root,
+:root[data-theme='light'],
+:root:not([data-theme='dark']) {
+  color-scheme: light;
+  --sn-canvas: #f3f7f5;
+  --sn-plate: #fffdf9;
+  --sn-plate-soft: #edf4f1;
+  --sn-weather: #dcebe5;
+  --sn-line: #d7e4df;
+  --sn-ink: #182720;
+  --sn-ink-mid: #566b63;
+  --sn-sage-deep: #20594f;
+  --sn-sage-light: #dcebe5;
+  --sn-rust: #b0512a;
+  --sn-rust-soft: #f5e2d6;
+  --sn-rust-ink: #8a3d1c;
+  --sn-focus: #0d685a;
+  --sn-on-accent: #ffffff;
+  --sn-care-ring: #91c0b5;
+  --sn-care-border: #9bbdb4;
+  --sn-material-a: #c6b89c;
+  --sn-material-b: #ded3bc;
+  --sn-r-card: 17px;
+  --sn-r-inset: 13px;
+  --sn-r-nav: 22px;
+  --sn-shadow-card: 0 13px 28px rgba(37, 67, 59, .11), inset 0 1px 0 rgba(255,255,255,.86);
+  --sn-shadow-chip: 0 7px 15px rgba(37, 67, 59, .09);
+
+  --dw-canvas: var(--sn-canvas);
+  --dw-canvas-glow: #e5f0eb;
+  --dw-rom-naer: var(--sn-canvas);
+  --dw-rom-fjern: #e5f0eb;
+  --dw-panel: var(--sn-weather);
+  --dw-raised: var(--sn-plate);
+  --dw-plate: var(--sn-plate-soft);
+  --dw-plate-kant: var(--sn-line);
+  --dw-accent: var(--sn-sage-deep);
+  --dw-accent-pressed: #17483f;
+  --dw-accent-300: #447c70;
+  --dw-accent-surface: var(--sn-sage-light);
+  --dw-ink-hi: var(--sn-ink);
+  --dw-ink-mid: var(--sn-ink-mid);
+  --dw-ink-low: #647970;
+  --dw-ink-panel-hi: var(--sn-ink);
+  --dw-ink-panel-mid: var(--sn-ink-mid);
+  --dw-ink-panel-low: #647970;
+  --dw-ink-on-accent: #ffffff;
+  --dw-focus: var(--sn-focus);
+  --dw-w-clear: var(--sn-weather);
+  --dw-w-cloudy: var(--sn-weather);
+  --dw-w-rain: #d8e8e7;
+  --dw-w-snow: #e6efed;
+  --dw-w-night: #d6e4e1;
+  --dw-r-panel: var(--sn-r-card);
+  --dw-r-raised: var(--sn-r-inset);
+  --dw-r-control: var(--sn-r-inset);
+  --dw-r-pill: 999px;
+  --dw-tabbar-height: 66px;
+  --dw-tabbar-radius: var(--sn-r-nav);
+  --dw-tabbar-inset: 14px;
+  --dw-tabbar-gap: 10px;
+  --dw-tabbar-surface: rgba(255,253,249,.96);
+  --dw-tabbar-surface-blur: rgba(255,253,249,.90);
+  --bg-canvas: var(--sn-canvas);
+  --surface: var(--sn-plate);
+  --surface-soft: var(--sn-plate-soft);
+  --ink-900: var(--sn-ink);
+  --ink-800: var(--sn-ink);
+  --ink-700: var(--sn-ink-mid);
+  --ink-500: var(--sn-ink-mid);
+  --accent-cta: var(--sn-sage-deep);
+  --accent-cta-ink: #fff;
+  --font-sans: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', Arial, sans-serif;
+  --font-serif: 'Fraunces', 'Fraunces Fallback', Georgia, serif;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --sn-canvas: #111c17;
+  --sn-plate: #1c2b23;
+  --sn-plate-soft: #22332b;
+  --sn-weather: #0f3134;
+  --sn-line: #3a4a41;
+  --sn-ink: #f1e9da;
+  --sn-ink-mid: #b9c4b3;
+  --sn-sage-deep: #b9c4b3;
+  --sn-sage-light: #22332b;
+  --sn-rust-soft: #3b2b23;
+  --sn-rust-ink: #e8b48f;
+  --sn-shadow-card: 0 14px 30px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.05);
+  --dw-canvas: var(--sn-canvas);
+  --dw-canvas-glow: #17261f;
+  --dw-panel: var(--sn-weather);
+  --dw-raised: var(--sn-plate);
+  --dw-plate: var(--sn-plate-soft);
+  --dw-plate-kant: var(--sn-line);
+  --dw-accent: #8fb4aa;
+  --dw-accent-surface: var(--sn-sage-light);
+  --dw-ink-hi: var(--sn-ink);
+  --dw-ink-mid: var(--sn-ink-mid);
+  --dw-ink-low: #a5b0a1;
+  --dw-ink-panel-hi: var(--sn-ink);
+  --dw-ink-panel-mid: var(--sn-ink-mid);
+  --dw-tabbar-surface: rgba(28,43,35,.97);
+  --dw-tabbar-surface-blur: rgba(28,43,35,.90);
+}
+
+html, body, #root { background: var(--sn-canvas); color: var(--sn-ink); }
+body { font-family: var(--font-sans); }
+.app-shell { background: var(--sn-canvas); }
+
+/* Four-tab floating bar from the live Snudly template. */
+.bottom-tab-bar {
+  left: var(--dw-space-14);
+  right: var(--dw-space-14);
+  bottom: calc(var(--dw-space-10) + env(safe-area-inset-bottom, 0px));
+  min-height: 66px;
+  gap: 0;
+  padding: var(--dw-space-6);
+  border: 1px solid rgba(59,103,92,.11);
+  border-radius: var(--sn-r-nav);
+  background: rgba(255,253,249,.90);
+  box-shadow: 0 14px 30px rgba(37,67,59,.15), inset 0 1px 0 rgba(255,255,255,.9);
+}
+:root[data-theme='dark'] .bottom-tab-bar { background: rgba(28,43,35,.92); }
+.bottom-tab-bar::before { display: none; }
+@supports (backdrop-filter: blur(18px)) {
+  .bottom-tab-bar { background: color-mix(in srgb, var(--sn-plate) 90%, transparent); backdrop-filter: blur(18px) saturate(1.08); }
+}
+.bottom-tab-bar__button { gap: var(--dw-space-4); min-height: 52px; padding: var(--dw-space-4) var(--dw-space-2); border-radius: 17px; color: var(--sn-ink-mid); }
+.bottom-tab-bar__indicator { inset: 0; border-radius: 17px; background: var(--sn-rust-soft); opacity: 1; }
+.bottom-tab-bar__button--active { color: var(--sn-rust-ink); }
+.bottom-tab-bar__content { gap: var(--dw-space-4); }
+.bottom-tab-bar__icon { width: 20px; aspect-ratio: 1; stroke-width: 1.7; }
+.bottom-tab-bar__label { font-size: 9px; font-weight: 690; }
+
+/* Home: keep the live weather/recommendation engine, replace its frame. */
+.hjem-monter {
+  min-height: 100%;
+  padding: var(--dw-space-20) var(--dw-space-16) calc(var(--dw-tabbar-clearance) + var(--dw-space-24));
+  background: radial-gradient(circle at 16% 4%, rgba(220,235,229,.95), transparent 245px), var(--sn-canvas);
+  color: var(--sn-ink);
+}
+.hjem-monter::before { display: none; }
+.hjm-brand { color: var(--sn-ink); font-size: 11px; font-weight: 800; letter-spacing: .24em; }
+.hjem-monter .hjm-panel-slot { margin-top: var(--dw-space-14); min-height: 0 !important; }
+.hjm-panel-slot[data-with-mascot='true'],
+.hjm-panel-slot[data-with-mascot='true'][data-compact='true'] { margin-top: calc(var(--dw-space-32) + var(--dw-space-32) + var(--dw-space-32) + var(--dw-space-14)); }
+.hjm-panel { border: 1px solid rgba(55,97,86,.10); border-radius: var(--sn-r-card); background: var(--sn-weather); color: var(--sn-ink); box-shadow: var(--sn-shadow-card); }
+.hjm-strip,
+.hjm-strip[data-nuance] { min-height: 132px; align-items: flex-start; padding: var(--dw-space-18); border: 1px solid var(--sn-line); border-radius: var(--sn-r-card); background: var(--sn-weather); color: var(--sn-ink); box-shadow: none; }
+.hjm-strip::before { display: none; }
+.hjm-strip .hjm-s-temp { font-family: var(--font-serif); font-size: 54px; font-weight: 470; line-height: .9; }
+.hjm-strip .hjm-s-meta { padding-top: 2px; color: var(--sn-ink-mid); font-size: 12px; line-height: 1.45; }
+.hjm-s-primary, .hjm-s-location { display: block; }
+.hjm-s-stats { display: flex; gap: var(--dw-space-14); margin-top: var(--dw-space-18); color: var(--sn-sage-deep); font-size: 10px; font-weight: 680; }
+.hjm-strip .hjm-s-adjust { margin-left: auto; padding: var(--dw-space-8) var(--dw-space-10); border-radius: 999px; background: rgba(255,253,249,.85); color: var(--sn-sage-deep); font-size: 10px; }
+.hjm-strip .hjm-s-adjust svg { color: inherit; }
+.hjm-body { margin-top: var(--dw-space-18); }
+.sn-result-mascot { position: absolute !important; z-index: 4 !important; top: calc(var(--dw-space-32) + var(--dw-space-32) + var(--dw-space-32) + var(--dw-space-32) + var(--dw-space-10)); right: -6px; width: 170px; height: auto; pointer-events: none; filter: drop-shadow(0 10px 10px rgba(42,73,64,.12)); }
+.hjm-result h1 { font-size: 29px; line-height: 1; letter-spacing: -.036em; }
+.hjm-result .hjm-sub { max-width: 60%; color: var(--sn-ink-mid); font-size: 11px; line-height: 1.35; }
+.hjm-rows { margin-top: var(--dw-space-8); padding: 0 var(--dw-space-10); border: 1px solid var(--sn-line); border-radius: var(--sn-r-card); background: var(--sn-plate); box-shadow: var(--sn-shadow-card); }
+.hjm-rows::before { display: none; }
+.hjm-row-item + .hjm-row-item { box-shadow: inset 0 1px 0 var(--sn-line); }
+.hjm-row { min-height: 67px; gap: var(--dw-space-10); padding: var(--dw-space-8) 0; }
+.hjm-row:active { background: var(--sn-plate-soft); }
+.hjm-num { min-width: 20px; color: var(--sn-ink-mid); font-size: 10px; font-weight: 500; }
+.hjm-thumb { width: 48px; height: 48px; border: 0; border-radius: var(--sn-r-inset); background: var(--sn-plate-soft); box-shadow: var(--sn-shadow-chip); }
+.hjm-thumb img { width: 43px; height: 43px; object-fit: contain; }
+.hjm-g-name { color: var(--sn-ink); font-size: 14px; font-weight: 700; }
+.hjm-g-role { margin-top: var(--dw-space-4); color: var(--sn-ink-mid); font-size: 10px; }
+.hjem-monter .hjm-swap { color: var(--sn-rust); font-size: 0 !important; }
+.hjm-swap svg { width: 18px; height: 18px; }
+.hjm-actions { padding-top: var(--dw-space-12); }
+.hjm-why { color: var(--sn-ink-mid); }
+.hjm-ask { color: var(--sn-ink); }
+.hjm-child { color: var(--sn-ink-mid); }
+
+/* Onboarding keeps its validated flow, but now belongs to the Snudly family. */
+.ob-screen { background: radial-gradient(circle at 20% 6%, rgba(220,235,229,.92), transparent 260px), var(--sn-canvas) !important; color: var(--sn-ink) !important; }
+.ob-screen::before, .ob-screen::after { display: none !important; }
+.ob-s1-brand { color: var(--sn-ink) !important; letter-spacing: .24em !important; }
+.ob-card, .ob-step-card, .ob-summary-card { border-color: var(--sn-line) !important; background: color-mix(in srgb, var(--sn-plate) 97%, transparent) !important; box-shadow: var(--sn-shadow-card) !important; }
+.ob-screen input, .ob-screen select { border-color: var(--sn-line) !important; background: var(--sn-plate) !important; color: var(--sn-ink) !important; }
+
+/* Planning already contains the real graph and states; map its surfaces into
+   the template palette without replacing the planning logic. */
+.uke-screen, .planlegg-screen { background: var(--sn-canvas) !important; color: var(--sn-ink) !important; }
+.uke-screen h1, .planlegg-screen h1 { color: var(--sn-ink) !important; letter-spacing: -.038em; }
+.uke-screen [class*='card'], .uke-screen [class*='surface'], .planlegg-screen [class*='card'] { border-color: var(--sn-line) !important; background-color: var(--sn-plate) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hjm-row, .bottom-tab-bar__button { transition: none !important; animation: none !important; }
+}

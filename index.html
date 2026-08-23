@@ -8,14 +8,14 @@
          mellomframe». Sto som #DBD8D2 — en grå fra systemet FØR Monter, i
          BEGGE temaer. Statuslinja var altså feil farge fra første frame.
          Nå to metaer, én per tema, med lerretstokenets faktiske verdi. -->
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1E140C" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F9F5EB" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111C17" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F3F7F5" />
     <meta name="robots" content="noindex,nofollow" />
     <meta
       name="description"
-      content="Babyora — norsk påkledningsapp for foreldre med barn 0–3 år. Vær, aktivitet og ull-lag i ett."
+      content="Snudly — nordisk påkledningsapp for foreldre med små barn. Vær, aktivitet og lag i ett."
     />
-    <meta name="apple-mobile-web-app-title" content="Babyora" />
+    <meta name="apple-mobile-web-app-title" content="Snudly" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <!-- FOUC-guard: les persistert theme-mode FØR React/CSS laster og
@@ -60,29 +60,30 @@
         /* Venstrejustert, ikke sentrert — samme ankring som ordmerket har
            i onboarding og på Hjem, slik at det ikke hopper ved overlevering. */
         padding-inline-start: max(24px, env(safe-area-inset-left, 0px) + 24px);
-        background: #1E140C;
+        background: #111C17;
         color: #F1E9DA;
         transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1);
       }
       @media (prefers-color-scheme: light) {
-        #launch { background: #F9F5EB; color: #2A1D12; }
+        #launch { background: #F3F7F5; color: #182720; }
       }
       /* Temavelgeren stemples på <html> av FOUC-vakten over, og må vinne
          over medieforespørselen i BEGGE retninger. */
-      :root[data-theme="dark"] #launch { background: #1E140C; color: #F1E9DA; }
-      :root[data-theme="light"] #launch { background: #F9F5EB; color: #2A1D12; }
+      :root[data-theme="dark"] #launch { background: #111C17; color: #F1E9DA; }
+      :root[data-theme="light"] #launch { background: #F3F7F5; color: #182720; }
 
       /* Ordmerket materialiserer seg rolig. Appen brukes ved sovende barn
          (§3: lydløs oppstart) — åpningen skal være like stille visuelt.
          Ingen sprett, ingen skalering: opacity og 6 px løft, samme verdi
          som panelet setter seg med i §2. */
-      #launch svg {
-        width: min(58vw, 232px);
-        height: auto;
+      #launch .launch-wordmark {
+        font: 800 18px/1 Arial, sans-serif;
+        letter-spacing: .28em;
         opacity: 0;
         transform: translateY(6px);
         animation: launch-inn 520ms cubic-bezier(0.22, 1, 0.36, 1) 60ms forwards;
       }
+      #launch > svg { display: none; }
       @keyframes launch-inn {
         to { opacity: 1; transform: translateY(0); }
       }
@@ -107,15 +108,15 @@
       /* Redusert bevegelse: ingen forflytning, ingen glød som toner inn.
          Ordmerket er der med én gang, og flaten forsvinner med ren opacity. */
       @media (prefers-reduced-motion: reduce) {
-        #launch, #launch svg, #launch::before {
+        #launch, #launch .launch-wordmark, #launch::before {
           animation: none !important;
           transition-duration: 100ms;
         }
-        #launch svg { opacity: 1; transform: none; }
+        #launch .launch-wordmark { opacity: 1; transform: none; }
         #launch::before { opacity: 1; }
       }
     </style>
-    <title>Babyora</title>
+    <title>Snudly</title>
     <!-- T9A fontberedskap (aapningskontrakt §4): preload av NØYAKTIG de
          woff2-filene appen bruker — variable latin-subset self-hostet i
          public/fonts/ med stabile navn (deklarert i src/styles/fonts.css).
@@ -150,7 +151,8 @@
          den likevel etter et tak — en åpningsflate som blir stående er en
          app som ser ut til å henge. -->
     <div id="launch">
-      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1260 260" >
+      <span class="launch-wordmark" aria-hidden="true">SNUDLY</span>
+      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1260 260" >
         
         
         <svg x="10" y="10" width="240" height="240" viewBox="620 640 760 760" aria-hidden="true">

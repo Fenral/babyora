@@ -1,0 +1,56 @@
+.sn-tools {
+  min-height: 100%;
+  padding: var(--dw-space-20) var(--dw-space-16) calc(var(--dw-tabbar-clearance) + var(--dw-space-32));
+  color: var(--sn-ink);
+  background: var(--sn-canvas);
+}
+
+.sn-page-header { margin: 0 var(--dw-space-4) var(--dw-space-18); }
+.sn-wordmark { display: block; margin-bottom: calc(var(--dw-space-14) + var(--dw-space-14)); font-size: 11px; font-weight: 800; letter-spacing: .24em; }
+.sn-page-header h1 { margin: 0; font-size: 34px; line-height: 1; letter-spacing: -.038em; }
+.sn-page-header p { max-width: 26ch; margin: var(--dw-space-8) 0 0; color: var(--sn-ink-mid); font-size: 14px; line-height: 1.45; }
+
+.sn-tools button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+.sn-tools button:focus-visible { outline: 2px solid var(--sn-focus); outline-offset: 2px; }
+.sn-tools button:active { transform: scale(.985); }
+
+.sn-tools__hero {
+  position: relative;
+  width: 100%;
+  min-height: 230px;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 148px;
+  overflow: hidden;
+  padding: var(--dw-space-22) var(--dw-space-18) calc(var(--dw-space-32) + var(--dw-space-22));
+  border: 1px solid var(--sn-line);
+  border-radius: var(--sn-r-card);
+  background: var(--sn-plate);
+  box-shadow: var(--sn-shadow-card);
+  text-align: left;
+}
+
+.sn-tools__copy { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; }
+.sn-tools__chip { margin-bottom: var(--dw-space-14); padding: var(--dw-space-6) var(--dw-space-10); border-radius: 999px; background: var(--sn-rust-soft); color: var(--sn-rust-ink); font-size: 10px; font-weight: 760; }
+.sn-tools__copy strong { font-size: 29px; line-height: 1.02; letter-spacing: -.035em; }
+.sn-tools__copy > span:last-child { max-width: 20ch; margin-top: var(--dw-space-10); color: var(--sn-ink-mid); font-size: 12px; line-height: 1.4; }
+.sn-tools__art { width: 148px; height: 148px; align-self: center; margin: -8px -14px 0 0; border-radius: 38px; background: var(--sn-weather); }
+.sn-tools__art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 13px 13px rgba(37,71,62,.15)); }
+.sn-tools__action { position: absolute; left: var(--dw-space-18); right: var(--dw-space-18); bottom: 0; min-height: 54px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--sn-line); color: var(--sn-rust-ink); font-size: 13px; font-weight: 760; }
+.sn-tools svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.sn-tools__list { overflow: hidden; margin: var(--dw-space-18) 0 0; padding: 0; list-style: none; border: 1px solid var(--sn-line); border-radius: var(--sn-r-card); background: var(--sn-plate); box-shadow: var(--sn-shadow-card); }
+.sn-tools__list li + li { border-top: 1px solid var(--sn-line); }
+.sn-tools__list button { width: 100%; min-height: 76px; display: grid; grid-template-columns: 54px minmax(0,1fr) 24px; align-items: center; gap: var(--dw-space-12); padding: var(--dw-space-10); border: 0; background: transparent; text-align: left; }
+.sn-tools__thumb { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 14px; background: var(--sn-plate-soft); }
+.sn-tools__thumb img { width: 48px; height: 48px; object-fit: contain; }
+.sn-tools__row-copy strong, .sn-tools__row-copy span { display: block; }
+.sn-tools__row-copy strong { font-size: 15px; }
+.sn-tools__row-copy span { margin-top: var(--dw-space-4); color: var(--sn-ink-mid); font-size: 11px; }
+.sn-tools__list button > svg { color: var(--sn-rust); }
+
+.sn-tools__last { width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: space-between; margin-top: var(--dw-space-10); padding: var(--dw-space-4) var(--dw-space-8); border: 0; background: transparent; color: var(--sn-ink-mid) !important; font-size: 11px !important; }
+.sn-tools__last strong { color: var(--sn-ink); }
+.sn-tools__last > span:last-child { display: flex; align-items: center; gap: var(--dw-space-4); color: var(--sn-rust-ink); font-weight: 760; }
+.sn-tools__note { margin: 0 var(--dw-space-8); color: var(--sn-ink-mid); font-size: 10px; line-height: 1.4; }
+
+@media (prefers-reduced-motion: reduce) { .sn-tools button { transition: none !important; } }

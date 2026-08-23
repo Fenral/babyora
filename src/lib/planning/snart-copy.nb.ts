@@ -14,8 +14,8 @@ const copy = {
     available_if_needed: 'Kan være greit å ha tilgjengelig',
     not_highlighted: 'Ikke fremhevet for perioden',
   },
-  note: 'Dette er en Babyora-planleggingsregel basert på historiske månedsnormaler. Sjekk dagens vær og egne behov nærmere datoen.',
-  source: 'Månedsnormaler 1991–2020: Meteorologisk institutt (MET Norway). Bearbeidet av Babyora.',
+  note: 'Dette er en Snudly-planleggingsregel basert på historiske månedsnormaler. Sjekk dagens vær og egne behov nærmere datoen.',
+  source: 'Månedsnormaler 1991–2020: Meteorologisk institutt (MET Norway). Bearbeidet av Snudly.',
   rules: {
     'SNART-H2-BASE-CHECK': 'Sjekk om dere har et lett innerlag tilgjengelig for perioden.',
     'SNART-H2-BASE-AVAILABLE': 'Et lett innerlag kan være greit å finne fram dersom perioden blir kjøligere enn det historiske mønsteret.',

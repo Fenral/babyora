@@ -211,7 +211,7 @@ describe('buildPlanViewModel', () => {
       }));
 
       expect(model.status).toBe('partial');
-      expect(model.message).toBe('Planen viser bare tidspunktene Babyora har værdata for.');
+      expect(model.message).toBe('Planen viser bare tidspunktene Snudly har værdata for.');
       expect(model.nextAction).toBe('Ta på lue');
     },
   );
@@ -462,7 +462,7 @@ describe('buildPlanViewModel', () => {
     expect(model).toMatchObject({
       status: 'empty',
       heading: 'Ingen antrekksendringer',
-      body: 'Babyora fant ingen endringer i perioden som er vurdert.',
+      body: 'Snudly fant ingen endringer i perioden som er vurdert.',
       nextAction: null,
       events: [],
     });

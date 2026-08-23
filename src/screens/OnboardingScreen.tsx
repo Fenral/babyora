@@ -461,8 +461,8 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                 entirely. Step 1 gets the mock's own micro-brand treatment
                 (13px/700/0.24em tracking, uppercase); steps 2-4/5 keep their
                 existing larger serif wordmark unchanged. */}
-            {step === 1 && <span className="ob-s1-brand">BABYORA</span>}
-            {step !== 1 && <span className="ob-top-brand">Babyora</span>}
+            {step === 1 && <span className="ob-s1-brand">SNUDLY</span>}
+            {step !== 1 && <span className="ob-top-brand">Snudly</span>}
           </div>
 
           <span className="ob-top-spacer" aria-hidden="true" />
@@ -723,7 +723,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                 <h1 id="ob-title" className="ob-h2">
                   Alt er <em>klart</em> for {nameTrim || 'babyen'}
                 </h1>
-                <p>Kontroller opplysningene før Babyora lager det første rådet.</p>
+                <p>Kontroller opplysningene før Snudly lager det første rådet.</p>
               </div>
 
               <ul className="ob-summary" aria-label="Sammendrag">
@@ -781,7 +781,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               />
 
               <div className="ob-welcome-greet">
-                <p className="ob-eyebrow">Babyora er klar</p>
+                <p className="ob-eyebrow">Snudly er klar</p>
                 <h1 id="ob-title" className="ob-h2-hero">
                   Dagens råd er klart for <em>{nameTrim || 'babyen'}</em>
                 </h1>

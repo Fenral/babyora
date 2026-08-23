@@ -1101,7 +1101,7 @@ export function PaywallDialog({
       <div style={innerSurfaceStyle(dismissable)}>
         <div style={scrollAreaStyle(dismissable)}>
           <div style={topRowStyle}>
-            <span style={brandStyle}>BABYORA</span>
+            <span style={brandStyle}>SNUDLY</span>
             {dismissable && (
               <button
                 type="button"

@@ -146,7 +146,7 @@ describe('HjemMonter — phase-driven view switching', () => {
     expect(html).toContain('Finn dagens antrekk');
     expect(html).toContain('Lillian · 9 måneder · Utelek');
     expect(html).toContain('data-nuance="rain"');
-    expect(html).toContain('BABYORA');
+    expect(html).toContain('SNUDLY');
     // Eier-override v3: åpningsklatringen er fjernet — ingen ekstra
     // body/hands-lag, ingen kantlys, ingen panel-lift-wrapper.
     expect(html).not.toContain('hjm-opening-mascot-body');

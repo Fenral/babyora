@@ -94,9 +94,9 @@ describe('OnboardingScreen — step 1 v2 (Monter re-skin)', () => {
     expect(html).not.toMatch(/>1 av 4</);
   });
 
-  it('P10.1 (judge finding D3): the BABYORA brand row is present on step 1 (was previously suppressed entirely)', () => {
+  it('P10.1 (judge finding D3): the SNUDLY brand row is present on step 1', () => {
     const html = renderScreen();
-    expect(html).toContain('class="ob-s1-brand">BABYORA<');
+    expect(html).toContain('class="ob-s1-brand">SNUDLY<');
   });
 
   it('P10.1 (judge finding D4): no leading person-icon inside the name input — not in the contract, amber is action-only', () => {

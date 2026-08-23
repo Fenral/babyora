@@ -248,7 +248,7 @@ export function VinterprogramScreen({ onBack, onOpenTarget }: VinterprogramScree
             const erLast = state.kind === 'pluss';
             const stateText =
               state.kind === 'pluss'
-                ? 'Med Babyora Pluss'
+                ? 'Med Snudly Pluss'
                 : state.kind === 'anbefalt'
                   ? isPremium
                     ? 'Anbefalt denne uka'

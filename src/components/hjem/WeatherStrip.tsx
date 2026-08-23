@@ -23,6 +23,8 @@ export type WeatherStripProps = Readonly<{
   nuance: WeatherNuance;
   tempC: number;
   feelsLikeC: number;
+  windMs?: number;
+  precipMmH?: number;
   conditionLabel: string;
   cityLabel: string;
   activityToggleLabel: string;
@@ -38,6 +40,8 @@ export function WeatherStrip({
   nuance,
   tempC,
   feelsLikeC,
+  windMs = 0,
+  precipMmH = 0,
   conditionLabel,
   cityLabel,
   activityToggleLabel,
@@ -53,9 +57,12 @@ export function WeatherStrip({
     >
       <span className="hjm-s-temp">{formatTempDisplay(tempC)}°</span>
       <span className="hjm-s-meta">
-        {`Føles som ${formatTempDisplay(feelsLikeC)}° · ${conditionLabel}`}
-        <br />
-        {`${cityLabel} · ${activityToggleLabel}`}
+        <span className="hjm-s-primary">{`Føles som ${formatTempDisplay(feelsLikeC)}° · ${conditionLabel}`}</span>
+        <span className="hjm-s-location">{`${cityLabel} · ${activityToggleLabel}`}</span>
+        <span className="hjm-s-stats">
+          <span>{`Vind ${Math.round(windMs)} m/s`}</span>
+          <span>{`Regn ${precipMmH.toLocaleString('nb-NO', { maximumFractionDigits: 1 })} mm`}</span>
+        </span>
       </span>
       <span className="hjm-s-adjust" aria-hidden="true">
         Juster

@@ -23,7 +23,7 @@ import {
 } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { AnimatePresence, motion } from 'motion/react';
-import type { FamilieToolTarget, GuideTarget, TabKey } from './types/nav';
+import type { FamilieToolTarget, GuideTarget, TabKey, VerktoyTarget } from './types/nav';
 import { useChildren } from './state/children-store';
 import { useTheme } from './state/theme-store';
 import { useAutoLocationRefresh } from './hooks/useAutoLocationRefresh';
@@ -99,6 +99,9 @@ const KlePaaOverlay = lazy(() =>
 const UkeScreen = lazy(() =>
   import('./screens/UkeScreen').then((m) => ({ default: m.UkeScreen })),
 );
+const VerktoyScreen = lazy(() =>
+  import('./screens/VerktoyScreen').then((m) => ({ default: m.VerktoyScreen })),
+);
 // P1 (nav 4→3 skeleton): Guide-roten er fjernet (se types/nav.ts) — de gamle
 // Guide-sub-sidene rutes direkte som drills under i stedet. GuideHubScreen.tsx
 // selv var avmontert siden P1 og er slettet i P6 (`GuideTarget`, tidligere
@@ -148,9 +151,10 @@ function RouteSkeleton(): ReactElement {
 }
 
 const TAB_TITLES: Record<TabKey, string> = {
-  hjem: 'Hjem · Babyora',
-  plan: 'Planlegg · Babyora',
-  familie: 'Familie · Babyora',
+  hjem: 'Hjem · Snudly',
+  plan: 'Planlegg · Snudly',
+  verktoy: 'Verktøy · Snudly',
+  familie: 'Familie · Snudly',
 };
 
 /**
@@ -374,7 +378,11 @@ export default function App(): ReactElement {
   // P1: opener for Familie sin nye "Verktøy"-seksjon (ToolsSection) — samme
   // drill-kind som onOpenWarmColdGuide/onOpenGuideTarget bruker for
   // tog/varm-kald/forste-vinter.
-  const onOpenTool = useCallback((target: FamilieToolTarget) => {
+  const onOpenTool = useCallback((target: VerktoyTarget) => {
+    if (target === 'finn-antrekk') {
+      setDrill({ kind: 'finn-antrekk' });
+      return;
+    }
     setDrill({ kind: 'familie-tool', target });
   }, []);
 
@@ -674,8 +682,7 @@ export default function App(): ReactElement {
 
   // Active tab for global BottomTabBar:
   //  - drill === null                 → use current tab
-  //  - drill.kind === 'familie-tool'  → 'familie' (åpnet via Familie sin
-  //    Verktøy-seksjon — tog/varm-kald/forste-vinter)
+  //  - drill.kind === 'familie-tool'  → 'verktoy' (guidene eies av Verktøy)
   //  - drill.kind === 'finn-antrekk' / 'plaggbib' → 'hjem' (åpnet via Hjems
   //    resultat — finn-antrekk siden P5; plaggbib venter fortsatt på en
   //    synlig opener, se Drill-union-kommentaren)
@@ -685,7 +692,7 @@ export default function App(): ReactElement {
   if (activeDrill === null) {
     activeTabForBar = tab;
   } else if (activeDrill.kind === 'familie-tool') {
-    activeTabForBar = 'familie';
+    activeTabForBar = 'verktoy';
   } else {
     activeTabForBar = 'hjem';
   }
@@ -750,6 +757,9 @@ export default function App(): ReactElement {
         onConsumeRequestedPlanView={onConsumeRequestedPlanView}
       />
     );
+  } else if (tab === 'verktoy') {
+    routeKey = 'tab:verktoy';
+    routeContent = <VerktoyScreen onOpenTool={onOpenTool} />;
   } else {
     // R7 Task 3: Familie-roten hoster innstillingsinnholdet til Task 7
     // restrukturerer den (barn/omsorgspersoner/steder/Plus-seksjoner).

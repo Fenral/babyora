@@ -1147,7 +1147,7 @@ export function HjemScreen({
             style={weatherHero}
             aria-label={`Vær nå i ${cityLabel}`}
           >
-            <h1 id="ba-hjem-title" style={srOnly}>Babyora – Hjem</h1>
+            <h1 id="ba-hjem-title" style={srOnly}>Snudly – Hjem</h1>
             <div
               style={sunWrap}
               aria-hidden="true"

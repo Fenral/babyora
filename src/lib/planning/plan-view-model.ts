@@ -72,12 +72,12 @@ export type PlanViewModel =
   }> & EvaluatedAdvice)
   | (Readonly<{
     status: 'partial';
-    message: 'Planen viser bare tidspunktene Babyora har værdata for.';
+    message: 'Planen viser bare tidspunktene Snudly har værdata for.';
   }> & EvaluatedAdvice)
   | (Readonly<{
     status: 'empty';
     heading: 'Ingen antrekksendringer';
-    body: 'Babyora fant ingen endringer i perioden som er vurdert.';
+    body: 'Snudly fant ingen endringer i perioden som er vurdert.';
   }> & EvaluatedAdvice)
   | (Readonly<{
     status: 'ready';
@@ -363,7 +363,7 @@ export function buildPlanViewModel(input: PlanViewModelInput): PlanViewModel {
   if (coverage.status === 'sampled' || coverage.status === 'gapped') {
     return {
       status: 'partial',
-      message: 'Planen viser bare tidspunktene Babyora har værdata for.',
+      message: 'Planen viser bare tidspunktene Snudly har værdata for.',
       ...advice,
     };
   }
@@ -372,7 +372,7 @@ export function buildPlanViewModel(input: PlanViewModelInput): PlanViewModel {
     return {
       status: 'empty',
       heading: 'Ingen antrekksendringer',
-      body: 'Babyora fant ingen endringer i perioden som er vurdert.',
+      body: 'Snudly fant ingen endringer i perioden som er vurdert.',
       ...advice,
     };
   }

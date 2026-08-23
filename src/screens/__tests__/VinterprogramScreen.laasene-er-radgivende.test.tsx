@@ -163,7 +163,7 @@ describe('Første vinter — ukerytmen er anbefalt tempo, ikke en sperre', () =>
 
     // Sju Pluss-rader, én gratis smakebit.
     expect((gratis.match(/data-tilstand="pluss"/gu) ?? [])).toHaveLength(7);
-    expect(gratis).toMatch(/Med Babyora Pluss/u);
+    expect(gratis).toMatch(/Med Snudly Pluss/u);
     expect(gratis).toMatch(/Gratis smakebit/u);
     // Hengelåsen: rect + bøyle. Står i tallsirkelen på de låste radene.
     expect(gratis).toMatch(/<rect x="1" y="6" width="10" height="7" rx="2"/u);

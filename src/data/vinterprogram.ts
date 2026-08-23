@@ -49,7 +49,7 @@ export const LESSONS: readonly Lesson[] = [
     sections: [
       {
         heading: 'Hvorfor ull er førstevalget',
-        body: 'Ull holder på varmen selv når den blir fuktig, og transporterer svette bort fra huden bedre enn de fleste andre materialer. Den er også luktsvak, så du vasker sjeldnere. Derfor foreslår Babyora ull som førstevalg innerst.',
+        body: 'Ull holder på varmen selv når den blir fuktig, og transporterer svette bort fra huden bedre enn de fleste andre materialer. Den er også luktsvak, så du vasker sjeldnere. Derfor foreslår Snudly ull som førstevalg innerst.',
       },
       {
         heading: 'Prisen for godene',
@@ -75,7 +75,7 @@ export const LESSONS: readonly Lesson[] = [
     sections: [
       {
         heading: 'Modellen: innerst, mellomlag, yttertøy',
-        body: 'Innerst ligger tynt mot huden og leder fukt vekk. Mellomlaget bygger varmen. Yttertøyet stopper vind og vann. Babyoras anbefalinger er alltid bygget opp i denne rekkefølgen, uansett vær.',
+        body: 'Innerst ligger tynt mot huden og leder fukt vekk. Mellomlaget bygger varmen. Yttertøyet stopper vind og vann. Snudlys anbefalinger er alltid bygget opp i denne rekkefølgen, uansett vær.',
       },
       {
         heading: 'Hvorfor lag slår volum',
@@ -87,7 +87,7 @@ export const LESSONS: readonly Lesson[] = [
       },
       {
         heading: 'Én ekstra ull-regel for de minste',
-        body: 'For barn under 3 måneder legger Babyora automatisk til et ekstra ull-lag i kaldere vær, fordi de yngste regulerer varme dårligere enn eldre barn.',
+        body: 'For barn under 3 måneder legger Snudly automatisk til et ekstra ull-lag i kaldere vær, fordi de yngste regulerer varme dårligere enn eldre barn.',
       },
     ],
     tryDet: { label: 'Bygg lagene i kalkulatoren', target: 'finn-antrekk' },
@@ -101,7 +101,7 @@ export const LESSONS: readonly Lesson[] = [
     sections: [
       {
         heading: 'Vind stjeler varme du ikke ser',
-        body: 'To dager med samme gradestokk kan føles helt ulikt. Fuktig kulde og vind trekker varme fra huden raskere enn stillestående tørr luft. Babyora regner derfor alltid på føles-som-temperatur, ikke rå temperatur.',
+        body: 'To dager med samme gradestokk kan føles helt ulikt. Fuktig kulde og vind trekker varme fra huden raskere enn stillestående tørr luft. Snudly regner derfor alltid på føles-som-temperatur, ikke rå temperatur.',
       },
       {
         heading: 'Når vinden krever et ekstra lag',
@@ -131,7 +131,7 @@ export const LESSONS: readonly Lesson[] = [
       },
       {
         heading: 'Bæresele: du varmer barnet',
-        body: 'Kroppsvarmen din gjør jobben. Har barnet innerjakke inne i selen din, dropper Babyora yttertøyet helt fra rundt 10 grader og nedover, for å unngå at det blir for varmt.',
+        body: 'Kroppsvarmen din gjør jobben. Har barnet innerjakke inne i selen din, dropper Snudly yttertøyet helt fra rundt 10 grader og nedover, for å unngå at det blir for varmt.',
       },
       {
         heading: 'Utelek: bevegelse lager varme',
@@ -139,7 +139,7 @@ export const LESSONS: readonly Lesson[] = [
       },
       {
         heading: 'Samme gradestokk, tre ulike svar',
-        body: 'Det er derfor Babyora alltid spør om aktivitet før den anbefaler noe. Samme kalde dag kan bety varmepose i vogna, tynnere jakke i selen, og en robust dress i lek.',
+        body: 'Det er derfor Snudly alltid spør om aktivitet før den anbefaler noe. Samme kalde dag kan bety varmepose i vogna, tynnere jakke i selen, og en robust dress i lek.',
       },
     ],
     tryDet: { label: 'Bytt aktivitet i kalkulatoren', target: 'finn-antrekk' },

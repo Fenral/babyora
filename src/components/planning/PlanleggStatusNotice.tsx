@@ -86,8 +86,8 @@ export function PlanleggStatusNotice({ state, subject = 'plan' }: Props) {
     <div className="planlegg-status" role="status" aria-live="polite">
       <p>
         {subject === 'weather'
-          ? 'Værprognosen viser bare tidspunktene Babyora har værdata for.'
-          : 'Planen viser bare tidspunktene Babyora har værdata for.'}
+          ? 'Værprognosen viser bare tidspunktene Snudly har værdata for.'
+          : 'Planen viser bare tidspunktene Snudly har værdata for.'}
       </p>
     </div>
   );

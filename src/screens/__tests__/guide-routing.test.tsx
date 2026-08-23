@@ -67,7 +67,7 @@ describe('Guide route migration', () => {
       const vinterprogram = source('src/data/vinterprogram.ts');
       const vinterprogramScreen = source('src/screens/VinterprogramScreen.tsx');
 
-      expect(app).toContain("import type { FamilieToolTarget, GuideTarget, TabKey } from './types/nav';");
+      expect(app).toContain('FamilieToolTarget, GuideTarget, TabKey, VerktoyTarget');
       expect(vinterprogram).toContain("import type { GuideTarget } from '../types/nav';");
       expect(vinterprogramScreen).toContain("import type { GuideTarget } from '../types/nav';");
 
@@ -105,11 +105,11 @@ describe('Guide route migration', () => {
       expect(app).toContain('onOpenTarget={onOpenGuideTarget}');
     });
 
-    it('activeTabForBar mapper familie-tool til familie og finn-antrekk/plaggbib til hjem', () => {
+    it('activeTabForBar mapper familie-tool til verktøy og finn-antrekk/plaggbib til hjem', () => {
       const app = source('src/App.tsx');
 
       expect(app).toContain("activeDrill.kind === 'familie-tool'");
-      expect(app).toMatch(/activeTabForBar = 'familie';/u);
+      expect(app).toMatch(/activeTabForBar = 'verktoy';/u);
     });
 
     it('Familie sin nye Verktøy-seksjon åpner de tre gjenværende Guide-skjermene', () => {
@@ -128,7 +128,7 @@ describe('Guide route migration', () => {
     it('nav.ts sin TabKey-union har ingen guide-medlem lenger', () => {
       const nav = source('src/types/nav.ts');
 
-      expect(nav).toContain("export type TabKey = 'hjem' | 'plan' | 'familie';");
+      expect(nav).toContain("export type TabKey = 'hjem' | 'plan' | 'verktoy' | 'familie';");
       expect(nav).toContain('FamilieToolTarget');
     });
   });

@@ -123,7 +123,7 @@ struct BabyoraWidgetEntryView: View {
                     aktivVisning(snap)
                 }
             } else {
-                Text("Åpne Babyora for dagens antrekk")
+                Text("Åpne Snudly for dagens antrekk")
                     .font(.caption)
             }
         }
@@ -157,7 +157,7 @@ struct BabyoraWidgetEntryView: View {
                     .font(.caption2).foregroundStyle(.secondary)
             }
             if entry.isStale {
-                Text("Sjekk Babyora").font(.caption2).foregroundStyle(.orange)
+                Text("Sjekk Snudly").font(.caption2).foregroundStyle(.orange)
             }
         }
     }
@@ -189,7 +189,7 @@ struct BabyoraWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             BabyoraWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("Babyora")
+        .configurationDisplayName("Snudly")
         .description("Dagens antrekk for barnet.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }

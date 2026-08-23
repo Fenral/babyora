@@ -58,7 +58,7 @@ export const PLAN_PER_LABEL: Record<PlanKey, string> = {
 export const PAYWALL_COPY = {
   legend: 'Velg plan',
   closeLabel: 'Lukk',
-  genericHeadline: 'Babyora Pluss',
+  genericHeadline: 'Snudly Pluss',
   /** Plan-agnostisk CTA — BEHOLDT for bakoverkompatibilitet (products.test.ts
    *  låser denne eksakte verdien). IKKE lenger det som faktisk rendres i
    *  v2-redesignet — se `ctaResting`/`buildArmedCtaLabel` under, som
@@ -81,13 +81,13 @@ export const PAYWALL_COPY = {
   chooseHintDefault: 'Alle planer starter med 7 gratisdager. Velg planen som passer dere.',
   chooseHintSelected: 'Alle planer starter med 7 gratisdager.',
   /** v2: sheetens tilgjengelige navn (aria-label på plan-seksjonen, paywall-v2.html). */
-  sheetAriaLabel: 'Fortsett med Babyora',
+  sheetAriaLabel: 'Fortsett med Snudly',
   /** v2: forklarings-etiketten over "I dag / <fornyelsesdato>"-oppstillingen. */
   breakdownAriaPrefix: 'Prisoversikt for',
   restoreLabel: 'Gjenopprett kjøp',
   statusProcessing: 'Behandler kjøp …',
-  statusActivated: 'Babyora Pluss aktivert.',
-  statusActivatedTestmode: 'Babyora Pluss aktivert (testmodus).',
+  statusActivated: 'Snudly Pluss aktivert.',
+  statusActivatedTestmode: 'Snudly Pluss aktivert (testmodus).',
   statusRestoreChecking: 'Sjekker tidligere kjøp …',
   statusNoRestore: 'Fant ingen aktive kjøp å gjenopprette.',
   errorPurchaseFailed: 'Kjøpet ble ikke fullført. Prøv igjen, eller sjekk nettilkoblingen din.',
@@ -152,7 +152,7 @@ export function buildCapabilityPaywallCopy(): CapabilityPaywallCopy {
     // v2 (§8): "Du har sett dagens gratis antrekk" — samme headline uansett
     // trigger (hele-produktet-pitchen varierer aldri, se testen under).
     heading: 'Du har sett dagens gratis antrekk',
-    body: 'Fortsett med Babyora for morgendagen, uken og hvert av barna dine.',
+    body: 'Fortsett med Snudly for morgendagen, uken og hvert av barna dine.',
     previewItems: PAYWALL_VALUE_BULLETS,
   };
 }

@@ -30,7 +30,7 @@
   },
   "guide": {
     "title": "Utforsk påkledning",
-    "intro": "Dra på slidere for å se hva Babyora anbefaler ved ulike forhold.",
+    "intro": "Dra på slidere for å se hva Snudly anbefaler ved ulike forhold.",
     "temperatureLabel": "Temperatur",
     "indoorTemperatureLabel": "Romtemperatur",
     "ageLabel": "Alder i måneder",
@@ -55,7 +55,7 @@
       },
       "disclaimer": {
         "title": "Husk",
-        "body": "Babyora er en guide, ikke en fasit. Du kjenner barnet ditt best. Ved bekymring, kontakt helsestasjon eller lege."
+        "body": "Snudly er en guide, ikke en fasit. Du kjenner barnet ditt best. Ved bekymring, kontakt helsestasjon eller lege."
       }
     },
     "wind": {
@@ -72,7 +72,7 @@
     }
   },
   "ageWarning": {
-    "title": "Babyora er optimert for 0–2 år",
+    "title": "Snudly er optimert for 0–2 år",
     "body": "Du kan fortsatt bruke appen, men anbefalingene er mest presise for de minste."
   },
   "settings": {

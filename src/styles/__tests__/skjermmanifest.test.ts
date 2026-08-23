@@ -15,7 +15,7 @@
  * regenererer manifestet og feiler hvis filen på disk avviker.
  *
  * ─── HULLET PORTEN FINNES FOR ──────────────────────────────────────────────
- * `lazy()`-registeret i `App.tsx` gir TI moduler, ikke elleve.
+ * `lazy()`-registeret i `App.tsx` gir ELLEVE moduler, ikke tolv.
  * `InnstillingerScreen` — 6230 linjer, 190 `CSSProperties`-objekter, null
  * `var(--dw-*)` — står ikke der. Den nås via `FamilieScreen.tsx:19`, en
  * 21-linjers passthrough. Genereres skjermlista fra `lazy()`, forsvinner
@@ -67,12 +67,12 @@ import {
 
 /**
  * BASELINE — dagens antall, gulvet porten feiler ved ØKNING av.
- * Tallene kan bare KRYMPE. Fase 3 ratsjer `umigrerteIFase3` til 0 over de ni
+ * Tallene kan bare KRYMPE. Fase 3 ratsjer `umigrerteIFase3` til 0 over de ti
  * skjermene i manifestet; når den står i 0 er 0 nytt låst gulv.
  * `eierpunkter` er IKKE en baseline — se kommentaren over og testen under.
  */
 const BASELINE = {
-  /** Skjermer i fase 3-kohorten med gjenstående migreringsgjeld: 9 av 9. */
+  /** Låst maksimum for gjenstående migreringsgjeld; ny skjerm hever det ikke. */
   umigrerteIFase3: 9,
 } as const;
 
@@ -82,7 +82,7 @@ const BASELINE = {
  * Dette tallet skal bare kunne VOKSE, og en bevisst sletting (slik
  * MinGarderobeScreen ble slettet 2026-08-04) senker det med et eget vedtak.
  */
-const MINST_ANTALL_SKJERMER = 11;
+const MINST_ANTALL_SKJERMER = 12;
 
 /**
  * ANKRENE porten må finne igjen. Ikke «minst n filer» — navngitte mål.
@@ -99,10 +99,10 @@ const ANKERSKJERMER = [
 
 /** De fem rutekildene, med det utvalget de MÅ gi for at lesningen skal telle. */
 const RUTEKILDER = {
-  lazyRegister: 10,
-  ruteNokler: 8,
+  lazyRegister: 11,
+  ruteNokler: 9,
   drillKinds: 4,
-  tabDefs: 3,
+  tabDefs: 4,
   familieToolTargets: 3,
 } as const;
 
@@ -249,9 +249,9 @@ describe('skjermmanifestet genereres — filen på disk', () => {
     ).toBe(generert);
   });
 
-  it('manifestet deler 11 skjermer i 9 som migreres + 2 unntatt', () => {
+  it('manifestet deler 12 skjermer i 10 som migreres + 2 unntatt', () => {
     expect(m.tall.skjermer).toBe(m.tall.migreres + m.tall.unntatt);
-    expect(m.tall.migreres, 'fase 3 er én runde over ni skjermer (DoD fase 3)').toBe(9);
+    expect(m.tall.migreres, 'fase 3 omfatter ti shipping-skjermer etter Verktøy-tillegget').toBe(10);
     expect(m.tall.unntatt, 'to skjermer er unntatt, med skriftlig grunn hver').toBe(2);
     for (const r of m.rader.filter((x) => !x.migreres)) {
       expect(r.unntaksgrunn, `${r.sti} er unntatt uten begrunnelse`).toBeTruthy();

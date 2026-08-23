@@ -1162,7 +1162,7 @@ function PlanleggData({
                 <p className="planlegg-screen__empty">
                   {emptyStableUntil
                     ? `Ingen endringer frem til kl. ${emptyStableUntil}.`
-                    : 'Babyora fant ingen endringer i perioden som er vurdert.'}
+                    : 'Snudly fant ingen endringer i perioden som er vurdert.'}
                 </p>
               </>
             ) : (
@@ -1215,8 +1215,8 @@ function PlanleggData({
                 <ol
                   className="planlegg-dagslinje"
                   aria-label={isTodayView
-                    ? 'Tidspunktene Babyora har vurdert i dag'
-                    : 'Dagene Babyora har vurdert'}
+                    ? 'Tidspunktene Snudly har vurdert i dag'
+                    : 'Dagene Snudly har vurdert'}
                 >
                   {timelinePoints.map((point) => {
                     const label = timelinePointLabel(point.atIso, isTodayView);

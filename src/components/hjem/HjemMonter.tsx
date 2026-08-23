@@ -723,7 +723,7 @@ export function HjemMonter({
   if (recommendationError) {
     return (
       <div className="hjem-monter">
-        <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
+        <div className="hjm-top"><span className="hjm-brand">SNUDLY</span></div>
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
           <MascotIdle compact reducedMotion={reducedMotion} />
           <WeatherScene
@@ -767,7 +767,7 @@ export function HjemMonter({
     const tempLabel = now ? `${formatTemp(now.tempC)}°, ${conditionLabel.toLowerCase()}` : '–';
     return (
       <div className="hjem-monter">
-        <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
+        <div className="hjm-top"><span className="hjm-brand">SNUDLY</span></div>
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="false">
           {/* Del 3 (nysgjerrig maskot under scannen): bøyer hodet ned og
               retter blikket mot scan-animasjonen under seg — se
@@ -813,13 +813,15 @@ export function HjemMonter({
     const rows = deriveResultRows(recommendation);
     return (
       <div className="hjem-monter">
-        <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
+        <div className="hjm-top"><span className="hjm-brand">SNUDLY</span></div>
         <div className="hjm-panel-slot" data-with-mascot="false">
           {now && (
             <WeatherStrip
               nuance={nuance}
               tempC={now.tempC}
               feelsLikeC={now.feelsLikeC}
+              windMs={now.windMs}
+              precipMmH={now.precipMmH}
               conditionLabel={conditionLabel}
               cityLabel={cityLabel}
               activityToggleLabel={ACTIVITY_TOGGLE_LABEL[activity]}
@@ -827,6 +829,13 @@ export function HjemMonter({
             />
           )}
         </div>
+        <img
+          className="sn-result-mascot"
+          src="/monter/maskot.webp"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
         <div className="hjm-body">
           <ResultSurface
             rows={rows}
@@ -859,7 +868,7 @@ export function HjemMonter({
       : null;
     return (
       <div className="hjem-monter">
-        <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
+        <div className="hjm-top"><span className="hjm-brand">SNUDLY</span></div>
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
           <MascotIdle compact reducedMotion={reducedMotion} />
           <WeatherScene
@@ -929,7 +938,7 @@ export function HjemMonter({
   if (offline) {
     return (
       <div className="hjem-monter">
-        <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
+        <div className="hjm-top"><span className="hjm-brand">SNUDLY</span></div>
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
           <MascotIdle compact reducedMotion={reducedMotion} />
           <WeatherScene
@@ -980,7 +989,7 @@ export function HjemMonter({
 
   return (
     <div className="hjem-monter">
-      <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
+      <div className="hjm-top"><span className="hjm-brand">SNUDLY</span></div>
       <div className="hjm-panel-slot" data-with-mascot="true" data-compact="false">
         {/* Eier-override v3 (2026-08-01): Hjem er statisk til CTA-trykk —
             åpningsklatringen (OpeningSequence) er fjernet. MascotIdle tar

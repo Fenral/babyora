@@ -30,7 +30,7 @@
   },
   "guide": {
     "title": "Anziehen erkunden",
-    "intro": "Schiebe die Regler, um zu sehen, was Babyora bei verschiedenen Bedingungen vorschlägt.",
+    "intro": "Schiebe die Regler, um zu sehen, was Snudly bei verschiedenen Bedingungen vorschlägt.",
     "temperatureLabel": "Temperatur",
     "indoorTemperatureLabel": "Zimmertemperatur",
     "ageLabel": "Alter in Monaten",
@@ -55,7 +55,7 @@
       },
       "disclaimer": {
         "title": "Hinweis",
-        "body": "Babyora ist ein Ratgeber, kein Urteil. Du kennst dein Kind am besten. Sprich mit dem Kinderarzt, wenn du dir Sorgen machst."
+        "body": "Snudly ist ein Ratgeber, kein Urteil. Du kennst dein Kind am besten. Sprich mit dem Kinderarzt, wenn du dir Sorgen machst."
       }
     },
     "wind": {
@@ -72,7 +72,7 @@
     }
   },
   "ageWarning": {
-    "title": "Babyora ist für 0–2 Jahre optimiert",
+    "title": "Snudly ist für 0–2 Jahre optimiert",
     "body": "Du kannst die App weiterhin benutzen, aber die Empfehlungen sind für die Kleinsten am genauesten."
   },
   "settings": {

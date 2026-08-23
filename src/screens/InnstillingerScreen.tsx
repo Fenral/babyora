@@ -1588,9 +1588,9 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
     void fire('medium');
     const platform = Capacitor.getPlatform();
     const version = APP_VERSION;
-    const subject = `Tilbakemelding Babyora v${version}`;
+    const subject = `Tilbakemelding Snudly v${version}`;
     const bodyLines = [
-      'Hei Babyora-teamet,',
+      'Hei Snudly-teamet,',
       '',
       '',
       '— — — — — — — — — — — — — — — — — — —',
@@ -1922,7 +1922,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
       {/* Header */}
       <header style={headerStyle}>
         <div style={titlesStyle}>
-          <span style={eyebrowTopStyle}>Babyora</span>
+          <span style={eyebrowTopStyle}>Snudly</span>
           <span aria-hidden="true" style={appTitleStyle}>Innstillinger</span>
         </div>
         {/* FUNN 2026-08-06 ([MINDRE] Innstillinger, «Trondheim står tre ganger»):
@@ -2326,7 +2326,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
 
         {/* BABYORA PLUSS (R7 Task 7: Familie-rot-IA — Plus-seksjon) */}
         <section style={sectionStyle} aria-labelledby="sec-abo">
-          <h2 id="sec-abo" style={sectionEyebrowStyle}>Babyora Pluss</h2>
+          <h2 id="sec-abo" style={sectionEyebrowStyle}>Snudly Pluss</h2>
           <button
             ref={premiumRowRef}
             type="button"
@@ -2335,10 +2335,10 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
             disabled={accessLoading || subscriptionActionPending}
             aria-label={
               accessLoading
-                ? 'Sjekker Babyora Pluss-status'
+                ? 'Sjekker Snudly Pluss-status'
                 : isPremium
-                ? 'Babyora Pluss aktiv — administrer abonnement og fakturering'
-                : 'Ikke aktivert — start 7 dager gratis med Babyora Pluss'
+                ? 'Snudly Pluss aktiv — administrer abonnement og fakturering'
+                : 'Ikke aktivert — start 7 dager gratis med Snudly Pluss'
             }
             aria-haspopup={!accessLoading && !isPremium ? 'dialog' : undefined}
           >
@@ -2352,10 +2352,10 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
                 {accessLoading
                   ? 'Sjekker abonnement …'
                   : isPremium
-                    ? 'Babyora Pluss aktiv'
+                    ? 'Snudly Pluss aktiv'
                     : 'Ikke aktivert'}
               </span>
-              <span style={premiumTitleStyle}>Babyora Pluss</span>
+              <span style={premiumTitleStyle}>Snudly Pluss</span>
               <span style={premiumSubStyle}>
                 {accessLoading
                   ? 'Henter status fra butikken'
@@ -2386,7 +2386,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               </span>
               <span style={rowBodyStyle}>
                 <span style={rowLabelStyle}>Hjelp og veiledning</span>
-                <span style={rowSubStyle}>Vanlige spørsmål om Babyora</span>
+                <span style={rowSubStyle}>Vanlige spørsmål om Snudly</span>
               </span>
               <Chevron />
             </button>
@@ -2432,7 +2432,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               </span>
               <span style={rowBodyStyle}>
                 <span style={rowLabelStyle}>Vurder appen</span>
-                <span style={rowSubStyle}>Liker du Babyora? Gi oss en stjerne</span>
+                <span style={rowSubStyle}>Liker du Snudly? Gi oss en stjerne</span>
               </span>
               <Chevron />
             </button>
@@ -2534,9 +2534,9 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
 
         <div
           style={footerMetaStyle}
-          aria-label={`App-info: Babyora versjon ${APP_VERSION}, laget i Trondheim`}
+          aria-label={`App-info: Snudly versjon ${APP_VERSION}, laget i Trondheim`}
         >
-          <span style={footerBrandStyle}>Babyora</span>
+          <span style={footerBrandStyle}>Snudly</span>
           <span>versjon {APP_VERSION} · laget i Trondheim</span>
         </div>
       </div>
@@ -2934,7 +2934,7 @@ function MorningHourDialog({
       </header>
       <div style={bodyStyle}>
         <p id="morning-hour-desc" style={helpStyle}>
-          Velg når på morgenen Babyora skal sende dagens påkledningsforslag.
+          Velg når på morgenen Snudly skal sende dagens påkledningsforslag.
         </p>
         <div
           role="radiogroup"
@@ -2980,9 +2980,9 @@ interface HelpFaqItem {
 
 const HELP_FAQ: ReadonlyArray<HelpFaqItem> = [
   {
-    q: 'Hva er Babyora?',
+    q: 'Hva er Snudly?',
     a: [
-      'Babyora er en norsk påkledningsapp for barn 0–3 år. Vi anbefaler antall lag ull og bomull basert på været akkurat der du er, og barnets alder.',
+      'Snudly er en nordisk påkledningsapp for små barn. Vi anbefaler lag basert på været akkurat der du er, aktivitet og barnets alder.',
       'Appen er laget av norske foreldre i Trondheim — for norske vintre, høster og kalde sommermorgener.',
     ],
   },
@@ -2990,7 +2990,7 @@ const HELP_FAQ: ReadonlyArray<HelpFaqItem> = [
     q: 'Hvordan endrer jeg sted?',
     a: [
       'Gå til Innstillinger → Vær & sted → Sted, og skriv inn poststed eller kommune.',
-      'Du kan også slå på «Bruk posisjon automatisk» for at Babyora skal hente vær der enheten er akkurat nå. Da trenger vi tilgang til posisjon — du blir spurt første gang du slår det på.',
+      'Du kan også slå på «Bruk posisjon automatisk» for at Snudly skal hente vær der enheten er akkurat nå. Da trenger vi tilgang til posisjon — du blir spurt første gang du slår det på.',
     ],
   },
   {
@@ -3004,7 +3004,7 @@ const HELP_FAQ: ReadonlyArray<HelpFaqItem> = [
     q: 'Hvordan slår jeg på varsler?',
     a: [
       'Gå til Innstillinger → Varsler og slå på «Morgenvarsel». Første gang blir du spurt om å tillate varsler — velg «Tillat».',
-      'Hvis varsler er blokkert fra før, må du skru dem på i systeminnstillingene til telefonen (Innstillinger → Babyora → Varsler).',
+      'Hvis varsler er blokkert fra før, må du skru dem på i systeminnstillingene til telefonen (Innstillinger → Snudly → Varsler).',
       'Du kan også justere klokkeslett for morgenvarselet ved å trykke på rad-teksten når varselet er på.',
     ],
   },
@@ -3241,7 +3241,7 @@ function HelpDialog({
 
         <div style={bodyStyle}>
           <p id="help-desc" style={introStyle}>
-            Vanlige spørsmål om Babyora. Finner du ikke svar her, send oss en
+            Vanlige spørsmål om Snudly. Finner du ikke svar her, send oss en
             tilbakemelding fra Innstillinger.
           </p>
 
@@ -3547,7 +3547,7 @@ function FeedbackDialog({
           <p id="feedback-desc" style={introStyle}>
             Vi leser alt og svarer så fort vi kan. Fortell hva du liker, hva som ikke
             funker, eller hva du savner — vi er to foreldre i Trondheim som bygger
-            Babyora ved siden av jobb.
+            Snudly ved siden av jobb.
           </p>
 
           <p style={helpStyle}>
@@ -3620,7 +3620,7 @@ interface PrivacySummaryItem {
 
 const PRIVACY_SUMMARY: ReadonlyArray<PrivacySummaryItem> = [
   {
-    q: 'Hva lagrer Babyora om barnet?',
+    q: 'Hva lagrer Snudly om barnet?',
     a: [
       'Vi lagrer kun det du selv skriver inn: navn, fødselsdato og poststed. Disse dataene blir værende på enheten din og blir aldri sendt til våre servere.',
       'Hvis du logger inn med Premium-abonnement, lagrer vi i tillegg kjøpsstatus hos vår betalingsleverandør (RevenueCat) — ikke barnets navn eller alder.',
@@ -3972,7 +3972,7 @@ function PrivacyDialog({
 
         <div style={bodyStyle}>
           <p id="privacy-desc" style={introStyle}>
-            Babyora er laget i Norge og følger GDPR. Vi samler så lite data som
+            Snudly er laget i Norge og følger GDPR. Vi samler så lite data som
             mulig — barnets profil ligger kun på enheten din. Under finner du et
             kort sammendrag og lenker til den fulle teksten.
           </p>
@@ -4276,7 +4276,7 @@ function SwitchChildDialog({
           lineHeight: 1.4,
         }}
       >
-        Velg hvilket barn Babyora skal vise vær- og påkledningsforslag for.
+        Velg hvilket barn Snudly skal vise vær- og påkledningsforslag for.
       </p>
       {!isPremium && children.length > 1 && (
         <p
@@ -4289,7 +4289,7 @@ function SwitchChildDialog({
             lineHeight: 1.4,
           }}
         >
-          Barn nr. 1 er gratis. Å bytte til flere barn krever Babyora Pluss.
+          Barn nr. 1 er gratis. Å bytte til flere barn krever Snudly Pluss.
         </p>
       )}
       <div style={bodyStyle} role="radiogroup" aria-labelledby="switch-child-title">
@@ -4314,7 +4314,7 @@ function SwitchChildDialog({
             const label = isActive
               ? `${child.name || 'Uten navn'} — aktivt barn`
               : gated
-                ? `Bytt til ${child.name || 'uten navn'} — krever Babyora Pluss`
+                ? `Bytt til ${child.name || 'uten navn'} — krever Snudly Pluss`
                 : `Bytt til ${child.name || 'uten navn'}`;
             return (
               <button
@@ -4878,7 +4878,7 @@ function AddChildDialog({
 
         <div style={bodyStyle}>
           <p id="add-child-desc" style={introStyle}>
-            Babyora kan ha flere barn — søsken får hver sin profil med navn,
+            Snudly kan ha flere barn — søsken får hver sin profil med navn,
             alder og sted. Du kan bytte mellom barna fra Innstillinger.
           </p>
 
@@ -5237,7 +5237,7 @@ function AutoLocationDialog({
 
         <div style={bodyStyle}>
           <p id="auto-location-desc" style={introStyle}>
-            Babyora kan hente lokalt vær basert på telefonens posisjon i stedet
+            Snudly kan hente lokalt vær basert på telefonens posisjon i stedet
             for et fast sted. Det er praktisk når dere er på reise eller på
             hytta.
           </p>
@@ -5516,12 +5516,12 @@ function WeatherChangeDialog({
 
         <div style={bodyStyle}>
           <p id="weather-change-desc" style={introStyle}>
-            Babyora kan varsle deg når temperaturen faller mer enn 5° fra siste
+            Snudly kan varsle deg når temperaturen faller mer enn 5° fra siste
             sjekk — så slipper du å bli overrasket på vei ut med barnevogn.
           </p>
           <p style={helpStyle}>
             Når du trykker «Tillat varsler» spør telefonen om tilgang. Vi sender
-            kun korte påminnelser fra Babyora — ingen reklame. Du kan skru
+            kun korte påminnelser fra Snudly — ingen reklame. Du kan skru
             varsler av igjen når som helst her i Innstillinger.
           </p>
         </div>
@@ -5801,7 +5801,7 @@ function DeleteDataDialog({
             Dette kan ikke angres.
           </p>
           <p style={helpStyle}>
-            Alle lokale data i Babyora blir slettet fra denne enheten:
+            Alle lokale data i Snudly blir slettet fra denne enheten:
           </p>
           <ul style={bulletListStyle} aria-label="Hva blir slettet">
             <li>Barn-profiler (navn, fødselsdato, sted)</li>
@@ -5810,7 +5810,7 @@ function DeleteDataDialog({
             <li>Tooltip- og onboarding-status</li>
           </ul>
           <p style={helpStyle}>
-            Du blir sendt tilbake til oppstarten og må sette opp Babyora på
+            Du blir sendt tilbake til oppstarten og må sette opp Snudly på
             nytt. Vi anbefaler å eksportere dataene først hvis du vil ta vare
             på dem.
           </p>
@@ -6078,7 +6078,7 @@ function WeatherSourceDialog({
             Vi bruker met.no for vær-data.
           </p>
           <p style={helpStyle}>
-            All værinformasjon i Babyora kommer fra Meteorologisk institutt
+            All værinformasjon i Snudly kommer fra Meteorologisk institutt
             (met.no) — samme kilde som yr.no. Data leveres under lisensen
             CC BY 4.0, og vi sender kun posisjon eller poststed anonymt for
             å hente lokalt vær.
@@ -6347,7 +6347,7 @@ function RateAppDialog({
       <div style={innerSurfaceStyle}>
         <header style={dialogHeaderStyle}>
           <h2 id="rate-app-title" style={titleStyle}>
-            Vurder Babyora
+            Vurder Snudly
           </h2>
           <button
             type="button"
@@ -6376,7 +6376,7 @@ function RateAppDialog({
             </svg>
           </div>
           <p id="rate-app-desc" style={introStyle}>
-            Liker du Babyora? En kort vurdering hjelper andre norske foreldre å
+            Liker du Snudly? En kort vurdering hjelper andre norske foreldre å
             finne appen.
           </p>
           <p style={helpStyle}>
