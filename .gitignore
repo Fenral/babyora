@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+/dist-snudly-2-product-review/
 *.local
 
 # Editor directories and files

@@ -1,0 +1,183 @@
+@font-face {
+  font-family: "Schibsted Local";
+  src: url("/fonts/schibsted-grotesk-latin-wght-normal.woff2") format("woff2");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fraunces Local";
+  src: url("/fonts/fraunces-latin-wght-normal.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root {
+  color: var(--sn-color-ink);
+  background: var(--sn-color-canvas);
+  --sn-font-body: "Schibsted Local", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --sn-font-display: "Fraunces Local", Georgia, serif;
+  font-family: var(--sn-font-body);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+
+  /* Primitive palette: the only place Snudly 2 owns literal colors. */
+  --sn-palette-black: #000;
+  --sn-palette-island: #101614;
+  --sn-palette-forest-950: #182720;
+  --sn-palette-sage-800: #20594f;
+  --sn-palette-sage-600: #566b63;
+  --sn-palette-sage-500: #62746d;
+  --sn-palette-rust-800: #8a3d1c;
+  --sn-palette-rust-700: #a4512c;
+  --sn-palette-gold-500: #d89953;
+  --sn-palette-canvas: #f3f7f5;
+  --sn-palette-plate: #fffdf9;
+  --sn-palette-white: #fff;
+  --sn-palette-weather: #dcebe5;
+  --sn-palette-line: #d7e4df;
+  --sn-palette-line-strong: #cbd9d4;
+  --sn-palette-disabled: #cdd9d5;
+  --sn-palette-mint-soft: #d5e5df;
+  --sn-palette-canvas-deep: #e8f2ee;
+  --sn-palette-canvas-alt: #e8f1ee;
+  --sn-palette-canvas-glow: #e9f2ef;
+  --sn-palette-vitrine: #f0f4f1;
+  --sn-palette-peach: #f5e2d6;
+  --sn-palette-paper: #fbfcfb;
+  --sn-palette-paper-cool: #f8faf8;
+  --sn-palette-shadow-a: #20594f;
+  --sn-palette-shadow-b: #2d5046;
+  --sn-palette-shadow-c: #26483e;
+  --sn-palette-shadow-d: #254a40;
+  --sn-palette-shadow-e: #2a4e45;
+  --sn-palette-shadow-f: #376156;
+  --sn-palette-shadow-g: #3b675c;
+  --sn-palette-mint: #cae6dc;
+
+  /* Semantic roles. Components consume these, never the palette directly. */
+  --sn-color-canvas: var(--sn-palette-canvas);
+  --sn-color-plate: var(--sn-palette-plate);
+  --sn-color-weather: var(--sn-palette-weather);
+  --sn-color-ink: var(--sn-palette-forest-950);
+  --sn-color-ink-muted: var(--sn-palette-sage-600);
+  --sn-color-line: var(--sn-palette-line);
+  --sn-color-action: var(--sn-palette-sage-800);
+  --sn-color-action-ink: var(--sn-palette-white);
+  --sn-color-accent: var(--sn-palette-rust-800);
+  --sn-color-accent-soft: var(--sn-palette-peach);
+  --sn-color-focus: #0d685a;
+  --sn-color-danger: var(--sn-palette-rust-700);
+  --sn-color-disabled-bg: var(--sn-palette-disabled);
+  --sn-color-disabled-ink: var(--sn-palette-sage-500);
+
+  --sn-space-1: 4px;
+  --sn-space-2: 8px;
+  --sn-space-3: 12px;
+  --sn-space-4: 16px;
+  --sn-space-5: 20px;
+  --sn-space-6: 24px;
+  --sn-space-8: 32px;
+
+  --sn-radius-control: 14px;
+  --sn-radius-card: 17px;
+  --sn-radius-shell: 22px;
+  --sn-radius-pill: 999px;
+  --sn-target-min: 44px;
+  --sn-row-min: 67px;
+
+  --sn-text-caption: 0.75rem;
+  --sn-text-body: 1rem;
+  --sn-text-title: clamp(1.75rem, 7vw, 2.25rem);
+  --sn-leading-body: 1.45;
+
+  --sn-shadow-card: 0 16px 34px color-mix(in srgb, var(--sn-palette-shadow-b) 11%, transparent), 0 3px 8px color-mix(in srgb, var(--sn-palette-shadow-b) 6%, transparent);
+  --sn-shadow-control: 0 6px 16px color-mix(in srgb, var(--sn-palette-shadow-c) 7%, transparent);
+  --sn-shadow-floating: 0 14px 30px color-mix(in srgb, var(--sn-palette-shadow-d) 15%, transparent);
+  --sn-ease-standard: cubic-bezier(.2, .8, .2, 1);
+  --sn-duration-standard: 180ms;
+}
+
+* { box-sizing: border-box; }
+html, body, #snudly-root { width: 100%; min-width: 320px; min-height: 100%; margin: 0; }
+body { overflow-x: hidden; background: var(--sn-color-canvas); }
+button, input, select, textarea { color: inherit; font: inherit; -webkit-tap-highlight-color: transparent; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--sn-color-focus);
+  outline-offset: 2px;
+}
+svg { display: block; }
+
+.snudly-app {
+  --canvas: var(--sn-color-canvas);
+  --plate: var(--sn-color-plate);
+  --weather: var(--sn-color-weather);
+  --ink: var(--sn-color-ink);
+  --ink-mid: var(--sn-color-ink-muted);
+  --line: var(--sn-color-line);
+  --sage-deep: var(--sn-color-action);
+  --sage-light: var(--sn-color-weather);
+  position: relative;
+  width: min(100%, 390px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  color: var(--sn-color-ink);
+}
+
+.sn-button {
+  min-height: var(--sn-target-min);
+  border: 0;
+  border-radius: var(--sn-radius-control);
+  background: var(--sn-color-action);
+  color: var(--sn-color-action-ink);
+  font-weight: 750;
+  transition: background-color var(--sn-duration-standard) var(--sn-ease-standard), transform var(--sn-duration-standard) var(--sn-ease-standard);
+}
+
+.sn-button:disabled { background: var(--sn-color-disabled-bg); color: var(--sn-color-disabled-ink); }
+.sn-button:not(:disabled):active { transform: translateY(1px); }
+
+.sn-card {
+  border: 1px solid color-mix(in srgb, var(--sn-color-action) 10%, transparent);
+  border-radius: var(--sn-radius-card);
+  background: var(--sn-color-plate);
+  box-shadow: var(--sn-shadow-card);
+}
+
+.sn-screen-scroll {
+  position: absolute;
+  inset: 112px 0 82px;
+  overflow-y: auto;
+  padding: var(--sn-space-2) 17px var(--sn-space-8);
+  scrollbar-width: none;
+}
+.sn-screen-scroll::-webkit-scrollbar { display: none; }
+
+.sn-segmented {
+  display: grid;
+  grid-template-columns: repeat(var(--sn-segment-count, 2), minmax(0, 1fr));
+  gap: var(--sn-space-1);
+  padding: var(--sn-space-1);
+  border: 1px solid var(--sn-color-line);
+  border-radius: var(--sn-radius-card);
+  background: color-mix(in srgb, var(--sn-color-plate) 92%, transparent);
+}
+.sn-segmented button {
+  min-height: var(--sn-target-min);
+  border: 0;
+  border-radius: var(--sn-radius-control);
+  background: transparent;
+  font-weight: 720;
+}
+.sn-segmented button[aria-pressed="true"] { background: var(--sn-color-action); color: var(--sn-color-action-ink); }
+
+.sn-slider { width: 100%; min-height: var(--sn-target-min); accent-color: var(--sn-color-action); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}
+
+@media (forced-colors: active) {
+  .sn-button, .sn-card, .sn-segmented, .tabbar { border: 1px solid ButtonBorder; }
+  .sn-button:disabled, button:disabled { color: GrayText; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline-color: Highlight; }
+}

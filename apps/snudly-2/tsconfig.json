@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "types": ["vite/client"]
+  },
+  "include": ["./*.ts", "./*.tsx", "../../packages/snudly-engine/**/*.ts", "../../src/data/**/*.ts", "../../src/lib/billing/revenuecat.ts", "../../src/lib/geocode/**/*.ts", "../../src/lib/location/**/*.ts", "../../src/lib/met-no/**/*.ts", "../../src/lib/monter-assets.ts", "../../src/lib/premium/products.ts", "../../src/lib/premium/store-offering.ts", "../../src/lib/research/tog-table.ts", "../../src/lib/wool-layers/**/*.ts"]
+}
