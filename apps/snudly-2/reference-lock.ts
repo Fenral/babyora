@@ -25,15 +25,12 @@ export const SPLASH_ONBOARDING_CANDIDATE = Object.freeze({
   note: 'The approved Vercel source contains the app surfaces, but no launch or onboarding screens.',
 } as const);
 
-export const PRODUCT_TOUR_PAYWALL_CANDIDATE = Object.freeze({
+export const PRODUCT_TOUR_CANDIDATE = Object.freeze({
   status: 'AWAITING_OWNER_REVIEW',
   sourceRole: 'DIRECT_EXTENSION_OF_APPROVED_VERCEL_PRODUCT_SURFACES',
   directReferenceAvailable: true,
-  screens: ['tour-home', 'tour-plan', 'tour-tools', 'tour-family', 'paywall'],
+  screens: ['tour-home', 'tour-plan', 'tour-tools', 'tour-family'],
   viewport: '390x844',
   visualSource: 'https://snudly.vercel.app/',
-  paywallReferenceAvailable: false,
-  billingConnection: 'BLOCKED_EXTERNAL_STORE_CONFIGURATION',
-  prices: 'STORE_PROVIDED_NOT_GUESSED',
-  trial: 'OWNER_DECIDED_7_DAYS_AWAITING_STORE_VERIFICATION',
+  commercialModel: 'FREE_V1_OWNER_DECISION_2026_08_24',
 } as const);

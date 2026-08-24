@@ -75,21 +75,16 @@ describe('Snudly 2 product system', () => {
     expect(model).toContain("from '../../src/lib/research/tog-table'");
   });
 
-  it('connects the hard paywall to verified store entitlement', () => {
+  it('keeps free v1 independent from billing and paywall availability', () => {
     expect(existsSync(resolve(APP, 'billing-adapter.ts'))).toBe(true);
     const app = source('SnudlyApp.tsx');
-    const paywall = source('PaywallScreen.tsx');
-    const billing = source('billing-adapter.ts');
+    const tour = source('ProductTour.tsx');
 
-    expect(app).toContain('loadBillingSnapshot');
-    expect(app).not.toContain('entitlementActive: false');
-    expect(paywall).toContain('purchaseVerifiedPlan');
-    expect(paywall).toContain('restoreVerifiedPurchase');
-    expect(paywall).not.toContain('Kjøp er ikke aktivert i denne forhåndsvisningen');
-    expect(billing).toContain('initRevenueCat');
-    expect(billing).toContain('checkPremium');
-    expect(billing).toContain('getStoreOfferSnapshot');
-    expect(billing).toContain('purchasePlan');
+    expect(app).not.toContain('loadBillingSnapshot');
+    expect(app).not.toContain('<PaywallScreen');
+    expect(app).not.toContain('entitlementActive');
+    expect(tour).toContain("family: 'Start med Snudly'");
+    expect(tour).not.toContain('Se abonnementet');
   });
 
   it('does not render enabled controls without an action', () => {

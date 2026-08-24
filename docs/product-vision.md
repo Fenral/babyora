@@ -1,5 +1,9 @@
 # Product Vision — Snudly
 
+> **Owner decision 2026-08-24:** V1 launches free without a paywall or trial.
+> Payment requirements below are deferred until real usage evidence supports a
+> paid model. `docs/DECISION-LOG.md` is authoritative where they conflict.
+
 ## 1. Vision & Mission
 
 ### Vision Statement

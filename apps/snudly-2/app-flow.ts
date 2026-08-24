@@ -14,17 +14,15 @@ export type OnboardingDraft = {
 export type AppFlowSnapshot = {
   onboardingComplete: boolean;
   tourComplete: boolean;
-  entitlementActive: boolean;
   profile?: OnboardingDraft;
 };
 
-type LaunchDestination = 'onboarding' | 'tour' | 'paywall' | 'home';
+type LaunchDestination = 'onboarding' | 'tour' | 'home';
 
 export type AppFlowState =
   | { screen: 'launch'; destination: LaunchDestination; profile: OnboardingDraft }
   | { screen: 'onboarding'; step: OnboardingStep; draft: OnboardingDraft }
   | { screen: 'tour'; page: TourPage; profile: OnboardingDraft }
-  | { screen: 'paywall'; profile: OnboardingDraft }
   | { screen: 'home'; profile: OnboardingDraft };
 
 export type AppFlowAction =
@@ -38,9 +36,7 @@ export type AppFlowAction =
   | { type: 'start-tour' }
   | { type: 'select-tour'; page: TourPage }
   | { type: 'next-tour' }
-  | { type: 'finish-tour' }
-  | { type: 'grant-entitlement' }
-  | { type: 'replay-tour' };
+  | { type: 'finish-tour' };
 
 const EMPTY_DRAFT: OnboardingDraft = {
   name: '',
@@ -60,11 +56,9 @@ export function createInitialFlow(snapshot: AppFlowSnapshot): AppFlowState {
   const profile = snapshot.profile ?? DEFAULT_PROFILE;
   const destination: LaunchDestination = !snapshot.onboardingComplete
     ? 'onboarding'
-    : snapshot.entitlementActive
+    : snapshot.tourComplete
       ? 'home'
-      : snapshot.tourComplete
-        ? 'paywall'
-        : 'tour';
+      : 'tour';
 
   return { screen: 'launch', destination, profile: { ...profile } };
 }
@@ -86,17 +80,10 @@ export function reduceAppFlow(state: AppFlowState, action: AppFlowAction): AppFl
   if (state.screen === 'launch') {
     if (action.type !== 'release-launch') return state;
     if (state.destination === 'home') return { screen: 'home', profile: state.profile };
-    if (state.destination === 'paywall') return { screen: 'paywall', profile: state.profile };
     if (state.destination === 'tour') return { screen: 'tour', page: 'home', profile: state.profile };
     return { screen: 'onboarding', step: 1, draft: { ...EMPTY_DRAFT } };
   }
 
-  if (state.screen === 'paywall') {
-    if (action.type === 'grant-entitlement') return { screen: 'home', profile: state.profile };
-    return action.type === 'replay-tour'
-      ? { screen: 'tour', page: 'home', profile: state.profile }
-      : state;
-  }
   if (state.screen === 'home') return state;
 
   if (state.screen === 'tour') {
@@ -107,7 +94,7 @@ export function reduceAppFlow(state: AppFlowState, action: AppFlowAction): AppFl
       return { ...state, page: nextPage };
     }
     if (action.type === 'finish-tour' && state.page === 'family') {
-      return { screen: 'paywall', profile: state.profile };
+      return { screen: 'home', profile: state.profile };
     }
     return state;
   }

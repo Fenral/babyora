@@ -22,7 +22,7 @@ const TOUR_CTA: Record<TourPage, string> = {
   home: 'Se Planlegg',
   plan: 'Se Verktøy',
   tools: 'Se Familie',
-  family: 'Se abonnementet',
+  family: 'Start med Snudly',
 };
 
 function ArrowIcon() {

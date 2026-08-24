@@ -2,6 +2,23 @@
 
 This log records current product decisions that override older exploratory material.
 
+## 2026-08-24
+
+### Gratis v1 uten betalingsvegg
+
+**Decision:** Snudly v1 lanseres gratis. Onboarding og produktvisningen skal
+føre direkte til Hjem uten abonnement, prøveperiode eller betalingsvegg.
+RevenueCat-integrasjonen og de provisjonerte produktene beholdes urørt som
+mulig senere infrastruktur, men initialiseres ikke av den aktive v1-flyten.
+Supabase er ikke nødvendig for v1; barnets profil og preferanser forblir lokale
+på enheten.
+
+**Reason:** Sivert besluttet 24.08.2026 å prøve produktet gratis først for å
+validere faktisk bruk før en betalingsmodell innføres. Dette overstyrer eldre
+krav om hard betalingsvegg og syv dagers prøveperiode for v1. Betaling kan
+revurderes etter bruksevidens, uten å endre bundle-id eller eksisterende
+butikkprodukt-IDer.
+
 ## 2026-08-19
 
 ### Product-roadmap execution authorized

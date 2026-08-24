@@ -1,6 +1,6 @@
 # Snudly 2 designsystem
 
-Dette er den bindende UI-kontrakten for launch, onboarding, produktvisning, betalingsvegg og de fire produktsidene. Visuell referanse for Hjem er fortsatt Figma-node `5KN5PHFXBfmTgRTiTlITs0:9:3`; øvrige sider bygger på de samme rollene og komponentene.
+Dette er den bindende UI-kontrakten for launch, onboarding, produktvisning og de fire produktsidene. V1 er gratis og har ingen betalingsvegg. Visuell referanse for Hjem er fortsatt Figma-node `5KN5PHFXBfmTgRTiTlITs0:9:3`; øvrige sider bygger på de samme rollene og komponentene.
 
 ## Grunnregler
 

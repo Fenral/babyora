@@ -1,5 +1,9 @@
 # Product Roadmap — Snudly
 
+> **Owner decision 2026-08-24:** V1 launches free without a paywall or trial.
+> Payment tasks below are retained as deferred monetization work, not v1 gates.
+> `docs/DECISION-LOG.md` is authoritative where they conflict.
+
 > **Roadmap status:** 25/56 tasks closed — 24 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release

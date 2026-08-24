@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 import {
   createInitialFlow,
   ONBOARDING_STORAGE_KEY,
@@ -8,10 +8,8 @@ import {
   type AppFlowSnapshot,
   type OnboardingDraft,
 } from './app-flow';
-import { loadBillingSnapshot, type BillingSnapshot } from './billing-adapter';
 import { LaunchScreen } from './LaunchScreen';
 import { OnboardingFlow } from './OnboardingFlow';
-import { PaywallScreen } from './PaywallScreen';
 import { ProductApp } from './ProductApp';
 import { ProductTour } from './ProductTour';
 import { ageInCompleteMonths } from './home-model';
@@ -34,12 +32,11 @@ function readProfile(): OnboardingDraft | undefined {
   }
 }
 
-function readFlowSnapshot(entitlementActive: boolean): AppFlowSnapshot {
+function readFlowSnapshot(): AppFlowSnapshot {
   const profile = readProfile();
   return {
     onboardingComplete: readBoolean(ONBOARDING_STORAGE_KEY) && Boolean(profile),
     tourComplete: readBoolean(TOUR_STORAGE_KEY),
-    entitlementActive,
     profile,
   };
 }
@@ -48,11 +45,11 @@ function writeStorage(key: string, value: string): void {
   try { window.localStorage.setItem(key, value); } catch { /* Private browsing stays in memory. */ }
 }
 
-function ResolvedSnudlyApp({ billing }: { billing: BillingSnapshot }) {
+function ResolvedSnudlyApp() {
   const [flow, dispatch] = useReducer(
     reduceAppFlow,
     undefined,
-    () => createInitialFlow(readFlowSnapshot(billing.entitlementActive)),
+    () => createInitialFlow(readFlowSnapshot()),
   );
 
   useEffect(() => {
@@ -86,26 +83,9 @@ function ResolvedSnudlyApp({ billing }: { billing: BillingSnapshot }) {
       />
     );
   }
-  if (flow.screen === 'paywall') {
-    return (
-      <PaywallScreen
-        plans={billing.plans}
-        onEntitlementGranted={() => dispatch({ type: 'grant-entitlement' })}
-        onReplayTour={() => dispatch({ type: 'replay-tour' })}
-      />
-    );
-  }
   return <ProductApp initialProfile={flow.profile} />;
 }
 
 export function SnudlyApp() {
-  const [billing, setBilling] = useState<BillingSnapshot | null>(null);
-
-  useEffect(() => {
-    let current = true;
-    void loadBillingSnapshot().then((snapshot) => { if (current) setBilling(snapshot); });
-    return () => { current = false; };
-  }, []);
-
-  return billing ? <ResolvedSnudlyApp billing={billing} /> : <LaunchScreen />;
+  return <ResolvedSnudlyApp />;
 }

@@ -12,7 +12,6 @@ describe('Snudly 2 app flow', () => {
   const newUser = {
     onboardingComplete: false,
     tourComplete: false,
-    entitlementActive: false,
   } as const;
 
   it('always shows launch before routing a new user into onboarding', () => {
@@ -25,14 +24,14 @@ describe('Snudly 2 app flow', () => {
     });
   });
 
-  it('routes returning users through tour, paywall or home from stored truth', () => {
+  it('routes returning users through tour or directly home in free v1', () => {
     const profile = { name: 'Lillian', birthDate: '2025-10-17', city: 'Trondheim' };
     const tour = createInitialFlow({ ...newUser, onboardingComplete: true, profile });
-    const paywall = createInitialFlow({ ...newUser, onboardingComplete: true, tourComplete: true, profile });
-    const home = createInitialFlow({ ...newUser, onboardingComplete: true, tourComplete: true, entitlementActive: true, profile });
+    const freeHome = createInitialFlow({ ...newUser, onboardingComplete: true, tourComplete: true, profile });
+    const home = createInitialFlow({ ...newUser, onboardingComplete: true, tourComplete: true, profile });
 
     expect(reduceAppFlow(tour, { type: 'release-launch' })).toMatchObject({ screen: 'tour', page: 'home', profile });
-    expect(reduceAppFlow(paywall, { type: 'release-launch' })).toMatchObject({ screen: 'paywall', profile });
+    expect(reduceAppFlow(freeHome, { type: 'release-launch' })).toMatchObject({ screen: 'home', profile });
     expect(reduceAppFlow(home, { type: 'release-launch' })).toEqual({ screen: 'home', profile });
   });
 
@@ -76,7 +75,7 @@ describe('Snudly 2 app flow', () => {
     expect(state).toMatchObject({ screen: 'onboarding', step: 1 });
   });
 
-  it('moves from welcome through all four real product pages into hard paywall', () => {
+  it('moves from welcome through all four real product pages into free v1', () => {
     let state = reduceAppFlow(createInitialFlow(newUser), { type: 'release-launch' });
     state = reduceAppFlow(state, { type: 'next' });
     state = reduceAppFlow(state, { type: 'set-birth-date', value: '2025-10-17' });
@@ -96,29 +95,23 @@ describe('Snudly 2 app flow', () => {
     expect(state).toMatchObject({ screen: 'tour', page: 'family' });
     state = reduceAppFlow(state, { type: 'finish-tour' });
     expect(state).toMatchObject({
-      screen: 'paywall',
+      screen: 'home',
       profile: { name: '', birthDate: '2025-10-17', city: 'Trondheim' },
     });
-    state = reduceAppFlow(state, { type: 'replay-tour' });
-    expect(state).toMatchObject({ screen: 'tour', page: 'home' });
 
     expect(ONBOARDING_STORAGE_KEY).toBe('snudly.v2.onboarding.complete');
     expect(PROFILE_STORAGE_KEY).toBe('snudly.v2.profile');
     expect(TOUR_STORAGE_KEY).toBe('snudly.v2.tour.complete');
   });
 
-  it('keeps the paywall hard until a verified entitlement is supplied at launch', () => {
-    const paywall = reduceAppFlow(
+  it('never routes a completed free-v1 user back to a paywall', () => {
+    const home = reduceAppFlow(
       createInitialFlow({ ...newUser, onboardingComplete: true, tourComplete: true }),
       { type: 'release-launch' },
     );
 
-    expect(paywall).toMatchObject({ screen: 'paywall' });
-    expect(reduceAppFlow(paywall, { type: 'release-launch' })).toEqual(paywall);
-    expect(reduceAppFlow(paywall, { type: 'start-tour' })).toEqual(paywall);
-    expect(reduceAppFlow(paywall, { type: 'replay-tour' })).toMatchObject({
-      screen: 'tour',
-      page: 'home',
-    });
+    expect(home).toMatchObject({ screen: 'home' });
+    expect(reduceAppFlow(home, { type: 'release-launch' })).toEqual(home);
+    expect(reduceAppFlow(home, { type: 'start-tour' })).toEqual(home);
   });
 });
